@@ -1,7 +1,7 @@
 import styled from '@emotion/styled';
 import '@fontsource/bakbak-one';
 import '@fontsource/poppins';
-import {Card as AntCard, Space } from 'antd';
+import {Card as AntCard, Space, Modal as Md} from 'antd';
 
 export namespace S {
     export const Title = styled.span    `
@@ -97,5 +97,26 @@ export namespace S {
         :hover {
             color: #3841AA;
         }
+    `;
+
+    export const Modal = styled(Md)`
+        .ant-modal-content{
+            background: #11121E;
+            padding: 24px;
+
+            color: #fff;
+            width: 100%;
+            max-height: 750px;
+            overflow: auto;
+        }
+    `;
+
+    export const stroyImg = styled.img`
+        max-width: 300px;
+    `;
+
+    export const StoryModalContainer = styled(Space)`
+        color: #999;
+        font-family: 'Poppins', sans-serif;
     `;
 }
