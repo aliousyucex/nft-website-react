@@ -55,6 +55,7 @@ export namespace S {
     `;
 
     export const Logo = styled.img`
+        cursor: pointer;
         width: 200px;
     `;
 
