@@ -1,8 +1,6 @@
 import {Collapse, ConfigProvider, CollapsePanelProps, Space} from 'antd';
 import { S } from './index.styles';
 
-
-
 export const FAQ = () => {
     const items: CollapsePanelProps[] = [
         {
