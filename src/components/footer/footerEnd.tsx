@@ -1,4 +1,3 @@
-import React from 'react';
 import {S} from './footerEnd.styles';
 import {Space} from 'antd';
 import Twitter from '../../assets/social-media-small/twitter.png';

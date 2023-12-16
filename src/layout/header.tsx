@@ -1,4 +1,4 @@
-import react, {useEffect, useState} from 'react';
+import {useEffect, useState} from 'react';
 import {S} from './header.styles';
 import {ConfigProvider, Space, type MenuProps} from 'antd';
 

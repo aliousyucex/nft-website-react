@@ -1,7 +1,5 @@
 import {S} from './App.styled';
 import {Countdown} from './components/countdown';
-// import { Game } from './components/game/index.tsx';
-import background from './assets/background.png';
 import {Header} from './layout/header.tsx';
 import {Layout} from './layout/index.tsx';
 import {Story} from './components/story/story.tsx';

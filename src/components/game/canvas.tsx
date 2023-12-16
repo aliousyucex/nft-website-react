@@ -1,4 +1,3 @@
-import react from 'react';
 import {Player} from './classes/player';
 import {Peanut} from './classes/peanut';
 import {Platform} from './classes/platform';
@@ -27,7 +26,6 @@ const context = Canvas.getContext('2d');
 context!.fillStyle = '#000';
 context?.fillRect(0, 0, Canvas.width, Canvas.height);
 const sayacLabel = document.createElement('label');
-let weFuckedUp: string;
 
 const gameBgImages = [
     createImage(gameBackGroundLevel1),
@@ -49,8 +47,6 @@ const groundImages = [
 ]
 
 const keys = {right: {pressed: false }, left: {pressed: false}};
-
-const peanutImg = createImage(peanutImage);
 
 // GAME SETTINGS
 const playerSpeed = 8;
@@ -186,7 +182,6 @@ export const GameCanvas = () => {
                 }
                 ramdomEx = random;
             }
-            weFuckedUp = Canvas.toDataURL();
         })
     }
 

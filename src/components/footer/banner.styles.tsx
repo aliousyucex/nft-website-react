@@ -1,7 +1,6 @@
 import styled from '@emotion/styled';
 import '@fontsource/bakbak-one';
 import '@fontsource/poppins';
-import { Space } from 'antd';
 
 export namespace S {
     export const BannerContainer = styled.div`

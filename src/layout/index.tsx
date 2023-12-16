@@ -1,5 +1,4 @@
-import react from 'react';
-import { S } from './index.styles';
+import {S} from './index.styles';
 
 type LayoutProps = {
     children: React.ReactNode

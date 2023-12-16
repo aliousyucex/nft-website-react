@@ -1,6 +1,5 @@
-import React from 'react';
-import { Carousel, Space } from 'antd';
-import { S } from './index.styles';
+import {Space} from 'antd';
+import {S} from './index.styles';
 
 import nft1 from '../../assets/Roadmap/nft1.png';
 import nft2 from '../../assets/Roadmap/nft2.png';

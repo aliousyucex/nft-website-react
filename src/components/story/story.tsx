@@ -1,11 +1,8 @@
-import react from 'react';
 import {S} from './story.styles';
-import {Card, Space} from 'antd';
+import {Space} from 'antd';
+import FreyR from '../../assets/OurTeam/freyr.png'
 
-export const Story = () => {
-    console.log('object');
-
-    return (
+export const Story = () => (
         <S.StoryContainer align="center">
             <Space size={72} direction="vertical">
                 <Space direction="vertical">
@@ -37,8 +34,8 @@ export const Story = () => {
 
             <Space>
                 <Space direction="vertical">
-                    <S.Card title="Explore The NFTs">
-                        Don't forget to fallow us on <S.TwitterLink href="https://twitter.com/" target="_blank">Twitter</S.TwitterLink> and join to <S.DiscordLink href="https://discord.com/" target="_blank">Discord</S.DiscordLink>.
+                    <S.Card>
+                        <img src={FreyR} style={{width: '100%', height: 'auto'}} />
                     </S.Card>
                     <S.Card title="We Are Not Alone">
                         Elephants, which have been illegally hunted for accessories and ornaments
@@ -57,4 +54,3 @@ export const Story = () => {
             </Space>
         </S.StoryContainer>
     );
-};

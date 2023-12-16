@@ -1,6 +1,5 @@
-import React from 'react';
-import { Space } from 'antd';
-import { S } from './index.styles';
+import {Space} from 'antd';
+import {S} from './index.styles';
 
 import freyr from '../../assets/OurTeam/freyr.png';
 import bceby from '../../assets/OurTeam/bceby.png';

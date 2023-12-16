@@ -1,4 +1,3 @@
-import react from 'react';
 import {S} from './index.styles';
 import { Space } from 'antd';
 

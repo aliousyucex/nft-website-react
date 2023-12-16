@@ -1,6 +1,4 @@
-import React from 'react';
 import {S} from './banner.styles';
-import { Button, Space } from 'antd';
 
 export const Banner = () => {
     console.log('Banner');

@@ -1,5 +1,3 @@
-import {createImage} from '../../../utils/createImage';
-
 export class Platform {
     private context: CanvasRenderingContext2D;
     public position: {x: number, y: number};
