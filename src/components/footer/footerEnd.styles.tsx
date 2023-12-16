@@ -19,8 +19,4 @@ export namespace S {
         font-family: 'Poppins', sans-serif;
         font-size: 14px;
     `;
-
-    export const Img = styled.img`
-        width: 100%;
-    `;
 }
