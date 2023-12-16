@@ -23,6 +23,8 @@ export namespace S {
     export const Collapse = styled(Cll)`
         .ant-collapse-item{
             width: 1150px;
+            border: none;
+            border-radius: 0;
         }
 
         .ant-collapse-header {
@@ -31,6 +33,7 @@ export namespace S {
 
             color: #fff !important;
             padding: 18px !important;
+            border-radius: 0;
 
         }
 
@@ -55,8 +58,10 @@ export namespace S {
             text-align: justify;
 
             background-color: #141B22;
+
+            border-top: 1px solid rgba(204, 204, 204, 0.25);
         }
-    `;
+    `as unknown as typeof Cll;
 
     export const DiscordLink = styled.a`
         color: #fff;
