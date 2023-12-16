@@ -81,6 +81,18 @@ export namespace S {
         }
     `;
 
+    export const ManifestCard = styled(Card)`
+        :hover {
+            background: #0FA37D;
+        }
+    `;
+
+    export const NftCard = styled(Card)`
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    `;
+
     export const TwitterLink = styled.a`
         color: #fff;
         text-decoration: none;

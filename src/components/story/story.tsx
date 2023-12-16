@@ -71,9 +71,9 @@ export const Story = () => {
 
             <Space>
                 <Space direction="vertical">
-                    <S.Card>
+                    <S.NftCard>
                         <img src={freyR} style={{ width: 200, height: 'auto' }} />
-                    </S.Card>
+                    </S.NftCard>
                     <S.Card title="We Are Not Alone">
                         Elephants, which have been illegally hunted for accessories and ornaments
                         in the last century, are facing extinction. We want to say something about this.
@@ -83,10 +83,10 @@ export const Story = () => {
                     <S.Card title="Elephants">
                         Elephants included in the proboscis order have the right to be classified as intelligent animals. There are two classes Asian and African elephants. They are in danger of extinction!
                     </S.Card>
-                    <S.Card id="manifest" title="Manifest" hoverable onClick={() => setModalOpen({open: true, text: manifestText})}>
+                    <S.ManifestCard title="Manifest" hoverable onClick={() => setModalOpen({open: true, text: manifestText})}>
                         First of all, we are here with the joy and excitement of bringing you a
                         new NFT collection. We need to inform you about the foundations of this NFT collection...
-                    </S.Card>
+                    </S.ManifestCard>
                 </Space>
 
                 <S.Modal
