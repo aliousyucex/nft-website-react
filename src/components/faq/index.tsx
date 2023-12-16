@@ -1,5 +1,4 @@
-import React from 'react';
-import {Collapse, CollapseProps, ConfigProvider, CollapsePanelProps, Space } from 'antd';
+import {Collapse, ConfigProvider, CollapsePanelProps, Space} from 'antd';
 import { S } from './index.styles';
 
 
@@ -23,8 +22,8 @@ export const FAQ = () => {
             key: 3,
             header: 'Do you have giveaway?',
             children: <S.P>NFT will be given as a gift in the DEMO version of the game. You can join our <S.DiscordLink
-                href="https://discord.com/invite/HU4tGjJzJb" target="_blank">Discord</S.DiscordLink>
-                channel to
+                href="https://discord.com/invite/HU4tGjJzJb" target="_blank"> Discord </S.DiscordLink>
+                 channel to
                 learn how to win these
                 giveaway
                 NFTs, which will
@@ -40,7 +39,7 @@ export const FAQ = () => {
         {
             key: 5,
             header: 'NFT mint prices?',
-            children: <S.P>Prices for WhiteList 0.65 ETH <br /> Prices for public 1 ETH</S.P>,
+            children: <S.P>Prices for Whitelist 0.65 ETH <br /> Prices for public 1 ETH</S.P>,
         },
         {
             key: 6,
