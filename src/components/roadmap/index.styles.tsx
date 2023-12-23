@@ -6,6 +6,8 @@ import '@fontsource/poppins';
 export namespace S {
     export const CarouselContainer = styled.div`
         margin-top: 100px;
+
+        scroll-margin-top: 100px;
     `;
 
     export const Title = styled.h1`

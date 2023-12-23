@@ -8,13 +8,8 @@ import roadmap21 from '../../assets/Roadmap/roadmap21.png';
 import wwp from '../../assets/Roadmap/wwp.png';
 import coffee from '../../assets/Roadmap/3.jpg';
 
-export const RoadMap = () => (
-        <S.CarouselContainer>
-            <S.Title>ROADMAP</S.Title>
-            <S.Carousel>
-                <div>
-                    <S.Phase>
-                        {/* Images */}
+export const RoadMap = (props: {myRef: React.RefObject<HTMLDivElement>}) => (
+    <S.CarouselContainer ref={props.myRef}>
                         <Space align='center'>
                             <Space align='center'>
                                 <S.PhaseLargeImg src={gameImg} />

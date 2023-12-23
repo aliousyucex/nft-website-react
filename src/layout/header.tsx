@@ -1,23 +1,19 @@
-import {useEffect, useState} from 'react';
+import {RefObject, useEffect, useState} from 'react';
 import {S} from './header.styles';
 import {ConfigProvider, Space, type MenuProps} from 'antd';
 
 import elephantLogo from '../assets/logo.png';
 
-const scrollToOptions: {[key: string]: number} = {
-    home: 0,
-    story: 800,
-    game: 1000,
-    roadmap: 2000
+type HeaderProps = {
+    story: RefObject<HTMLDivElement>,
+    roadmap: RefObject<HTMLDivElement>,
+    team: RefObject<HTMLDivElement>,
+    faq: RefObject<HTMLDivElement>,
 }
 
-export const Header = () => {
-    const [currentKey, setCurrentKey] = useState<string>('home');
+export const Header = (props: HeaderProps) => {
     const [isScrolled, setIsScrolled] = useState<boolean>(false);
 
-    useEffect(() => {
-        window.scrollTo({top: scrollToOptions[currentKey], behavior: 'smooth'});
-    }, [currentKey]);
 
     const items: MenuProps['items'] = [
         {
@@ -29,19 +25,27 @@ export const Header = () => {
             key: 'story',
         },
         {
-            label: 'GAME',
-            key: 'game',
+            label: 'Roadmap',
+            key: 'roadmap',
         },
         {
-            label: 'ROADMAP',
-            key: 'roadmap',
+            label: 'Our Team',
+            key: 'team',
+        },
+        {
+            label: 'FAQ',
+            key: 'faq',
         },
     ]
 
     const handleOnclick: MenuProps['onClick'] = (e) => {
-        console.log(e);
-        setCurrentKey(e.key)
-        return;
+        if (e.key === 'home') {
+            window.scrollTo({top: 0, behavior: 'smooth'})
+        }
+
+        if (e.key === 'story' || e.key === 'roadmap' || e.key === 'team' || e.key === 'faq') {
+            props[e.key].current?.scrollIntoView({behavior: 'smooth'});
+        }
     }
 
     window.addEventListener('scroll', function() {
@@ -81,6 +85,5 @@ export const Header = () => {
                 </Space>
             </S.HeaderContainer>
         </ConfigProvider>
-        // return <Menu onClick={onClick} selectedKeys={[current]} mode="horizontal" items={items} />;
     );
 };

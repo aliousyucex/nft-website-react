@@ -1,3 +1,4 @@
+import {useRef} from 'react';
 import {S} from './App.styled';
 import {Countdown} from './components/countdown';
 import {Header} from './layout/header.tsx';
@@ -10,18 +11,22 @@ import {FAQ} from './components/faq/index.tsx';
 import {Footer} from './components/footer/index.tsx';
 
 function App() {
+  const roadmap = useRef(null);
+  const story = useRef(null);
+  const team = useRef(null);
+  const faq = useRef(null);
 
   return (
     <S.App>
-      <Header />
+      <Header story={story} roadmap={roadmap} team={team} faq={faq} />
       <S.BackgroundContainer />
       <Layout>
         <Countdown />
         <SocialMedia />
-        <Story />
-        <RoadMap />
-        <Team />
-        <FAQ />
+        <Story myRef={story} />
+        <RoadMap myRef={roadmap} />
+        <Team myRef={team} />
+        <FAQ myRef={faq} />
       </Layout>
       <Footer />
     </S.App>

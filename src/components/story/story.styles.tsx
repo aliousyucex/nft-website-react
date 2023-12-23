@@ -19,8 +19,7 @@ export namespace S {
     `;
 
     export const StoryContainer = styled(Space)`
-
-        // This gonna removed after the first section is implementet
+        scroll-margin-top: 125px;
         margin-top: 200px;
     `;
 

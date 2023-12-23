@@ -14,6 +14,7 @@ export namespace S {
         font-family: 'Bakbak One', sans-serif;
         transition:all 1s;
         user-select: none;
+        min-width: 550px;
 
         letter-spacing: 0.1em;
         text-transform: uppercase;
@@ -28,6 +29,8 @@ export namespace S {
         align-items: center;
         width: 100%;
         height: 100px;
+
+        scroll-margin-top: 50px;
     `;
 
 

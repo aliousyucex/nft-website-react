@@ -9,8 +9,8 @@ import kekiks from '../../assets/OurTeam/kekiks.png';
 import instagram from '../../assets/social-media-small/instagram.png';
 import linkedin from '../../assets/social-media-small/linkedin.png';
 
-export const Team = () => (
-    <S.Team>
+export const Team = (props: {myRef: React.RefObject<HTMLDivElement>}) => (
+    <S.Team ref={props.myRef} >
         <S.Title>
             OUR TEAM
         </S.Title>

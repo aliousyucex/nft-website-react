@@ -36,11 +36,12 @@ const storyText = (
         </Space>
     </S.StoryModalContainer>
 )
-export const Story = () => {
+
+export const Story = (props: {myRef: React.RefObject<HTMLDivElement>}) => {
     const [modalOpen, setModalOpen] = useState<{open: boolean, text: JSX.Element | undefined}>({open: false, text: manifestText});
 
     return (
-        <S.StoryContainer align="center">
+        <S.StoryContainer align="center" ref={props.myRef}>
             <Space size={72} direction="vertical">
                 <Space direction="vertical">
                     <S.Title>WHAT IS THE LUCK?</S.Title>

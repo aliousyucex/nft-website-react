@@ -7,6 +7,7 @@ export namespace S {
     export const CollapseContainer = styled.div`
         margin-top: 100px;
 
+        scroll-margin-top: 100px;
         padding-bottom: 200px;
     `;
 

@@ -1,7 +1,7 @@
 import {Collapse, ConfigProvider, CollapsePanelProps, Space} from 'antd';
 import { S } from './index.styles';
 
-export const FAQ = () => {
+export const FAQ = (props: {myRef: React.RefObject<HTMLDivElement>}) => {
     const items: CollapsePanelProps[] = [
         {
             key: 1,
@@ -47,7 +47,7 @@ export const FAQ = () => {
     ];
 
     return (
-        <S.CollapseContainer>
+        <S.CollapseContainer ref={props.myRef} >
             <S.Title>FAQ</S.Title>
             <ConfigProvider
                 theme={{

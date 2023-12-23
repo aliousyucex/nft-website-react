@@ -5,6 +5,8 @@ import '@fontsource/poppins';
 export namespace S {
     export const Team = styled.div`
         margin-top: 100px;
+
+        scroll-margin-top: 100px;
     `;
 
     export const Title = styled.h1`
