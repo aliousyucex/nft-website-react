@@ -1,30 +1,9 @@
 # React + TypeScript + Vite
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This project, which I have written, is a reimplementation of the nftwebsite[link] project using Vite + React + TypeScript from scratch. Some parts have been excluded as they were not being utilized.
 
-Currently, two official plugins are available:
+I am aware that such a complex system is not necessary for such a small project. However, I wanted to write this website as organized and separated as possible. While doing this, I aimed to use libraries and frameworks that I feel comfortable with.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Currently, this site is not actively in use. It is also not in a finished state. It is a hobby repository that I continue to work on whenever I have time.
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
-
-- Configure the top-level `parserOptions` property like this:
-
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
-```
-
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+The nftwebsite repository, on the other hand, was a project I started before I began learning programming. When I started this repository, my knowledge was limited to HTML, CSS, and basic JavaScript.
