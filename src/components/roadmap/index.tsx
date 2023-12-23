@@ -10,68 +10,73 @@ import coffee from '../../assets/Roadmap/3.jpg';
 
 export const RoadMap = (props: {myRef: React.RefObject<HTMLDivElement>}) => (
     <S.CarouselContainer ref={props.myRef}>
-                        <Space align='center'>
-                            <Space align='center'>
-                                <S.PhaseLargeImg src={gameImg} />
-                            </Space>
-                            <Space direction='vertical' align='center'>
-                                <S.PhaseSmallImg src={nft1} />
-                                <S.PhaseSmallImg src={nft2} />
-                            </Space>
-                        </Space>
-                        {/* Texts */}
-                        <S.PhaseDiscription>
-                            <Space direction="vertical" size="large">
-                                <S.PhaseTitle>PHASE 1</S.PhaseTitle>
-                                <S.PhaseText>Story Season 1</S.PhaseText>
-                                <S.PhaseText>Game Alpha Version</S.PhaseText>
-                                <S.PhaseText>Private Mint - Airdrop</S.PhaseText>
-                                <S.PhaseText>Public Mint</S.PhaseText>
-                            </Space>
-                        </S.PhaseDiscription>
-                    </S.Phase>
-                </div>
-                <div>
+        <S.Title>ROADMAP</S.Title>
+        <S.Carousel>
+            <div>
                 <S.Phase>
-                        {/* Images */}
+                    {/* Images */}
+                    <Space align='center'>
                         <Space align='center'>
-                            <Space direction='vertical' align='center'>
-                                <S.PhaseExtraWidthImg src={roadmap21} />
-                                <S.PhaseExtraWidthImg src={wwp} />
-                            </Space>
+                            <S.PhaseLargeImg src={gameImg} />
                         </Space>
-                        {/* Texts */}
-                        <S.PhaseDiscription>
-                            <Space direction="vertical" size="large">
-                                <S.PhaseTitle>PHASE 2</S.PhaseTitle>
-                                <S.PhaseText>Story Season 2</S.PhaseText>
-                                <S.PhaseText>Game Open Beta</S.PhaseText>
-                                <S.PhaseText>New NFT Mechanics</S.PhaseText>
-                                <S.PhaseText>World Wide Party Details</S.PhaseText>
-                            </Space>
-                        </S.PhaseDiscription>
-                    </S.Phase>
-                </div>
-                <div>
-                    <S.Phase>
-                        {/* Images */}
+                        <Space direction='vertical' align='center'>
+                            <S.PhaseSmallImg src={nft1} />
+                            <S.PhaseSmallImg src={nft2} />
+                        </Space>
+                    </Space>
+                    {/* Texts */}
+                    <S.PhaseDiscription>
+                        <Space direction="vertical" size="large">
+                            <S.PhaseTitle>PHASE 1</S.PhaseTitle>
+                            <S.PhaseText>Story Season 1</S.PhaseText>
+                            <S.PhaseText>Game Alpha Version</S.PhaseText>
+                            <S.PhaseText>Private Mint - Airdrop</S.PhaseText>
+                            <S.PhaseText>Public Mint</S.PhaseText>
+                        </Space>
+                    </S.PhaseDiscription>
+                </S.Phase>
+            </div>
+            <div>
+            <S.Phase>
+                    {/* Images */}
+                    <Space align='center'>
+                        <Space direction='vertical' align='center'>
+                            <S.PhaseExtraWidthImg src={roadmap21} />
+                            <S.PhaseExtraWidthImg src={wwp} />
+                        </Space>
+                    </Space>
+                    {/* Texts */}
+                    <S.PhaseDiscription>
+                        <Space direction="vertical" size="large">
+                            <S.PhaseTitle>PHASE 2</S.PhaseTitle>
+                            <S.PhaseText>Story Season 2</S.PhaseText>
+                            <S.PhaseText>Game Open Beta</S.PhaseText>
+                            <S.PhaseText>New NFT Mechanics</S.PhaseText>
+                            <S.PhaseText>World Wide Party Details</S.PhaseText>
+                        </Space>
+                    </S.PhaseDiscription>
+                </S.Phase>
+            </div>
+            <div>
+                <S.Phase>
+                    {/* Images */}
+                    <Space align='center'>
                         <Space align='center'>
-                            <Space align='center'>
-                                <S.PhaseFullImg src={coffee} />
-                            </Space>
+                            <S.PhaseFullImg src={coffee} />
                         </Space>
-                        {/* Texts */}
-                        <S.PhaseDiscription>
-                            <Space direction="vertical" size="large">
-                                <S.PhaseTitle>PHASE 3</S.PhaseTitle>
-                                <S.PhaseText>Story Season 3</S.PhaseText>
-                                <S.PhaseText>Game Full Version</S.PhaseText>
-                                <S.PhaseText>Worl Wide Party</S.PhaseText>
-                                <S.PhaseText>3'th Generating Coffe Shop</S.PhaseText>
-                            </Space>
-                        </S.PhaseDiscription>
-                    </S.Phase>
-                </div>
-            </S.Carousel>
-        </S.CarouselContainer>
-    );
+                    </Space>
+                    {/* Texts */}
+                    <S.PhaseDiscription>
+                        <Space direction="vertical" size="large">
+                            <S.PhaseTitle>PHASE 3</S.PhaseTitle>
+                            <S.PhaseText>Story Season 3</S.PhaseText>
+                            <S.PhaseText>Game Full Version</S.PhaseText>
+                            <S.PhaseText>Worl Wide Party</S.PhaseText>
+                            <S.PhaseText>3'th Generating Coffe Shop</S.PhaseText>
+                        </Space>
+                    </S.PhaseDiscription>
+                </S.Phase>
+            </div>
+        </S.Carousel>
+    </S.CarouselContainer>
+);

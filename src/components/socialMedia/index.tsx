@@ -12,19 +12,19 @@ export const SocialMedia = () => {
         <>
             <S.H1>Follow us!</S.H1>
             <Space size="large">
-                <S.CoverCard href="https://twitter.com/">
+                <S.CoverCard target="_blank" href="https://twitter.com/">
                     <S.Img src={twitter} alt="Twitter" />
                 </S.CoverCard>
-                <S.CoverCard href="https://discord.com/">
+                <S.CoverCard target="_blank" href="https://discord.com/">
                     <S.Img src={discord} alt="Discord" />
                 </S.CoverCard>
-                <S.CoverCard href="https://www.reddit.com/">
+                <S.CoverCard target="_blank" href="https://www.reddit.com/">
                     <S.Img src={reddit} alt="Reddit" />
                 </S.CoverCard>
-                <S.CoverCard href="https://www.linkedin.com/">
+                <S.CoverCard target="_blank" href="https://www.linkedin.com/">
                     <S.Img src={linkedin} alt="LinkedIn" />
                 </S.CoverCard>
-                <S.CoverCard href="https://medium.com/">
+                <S.CoverCard target="_blank" href="https://medium.com/">
                     <S.Img src={medium} alt="Medium" />
                 </S.CoverCard>
             </Space>
