@@ -4,6 +4,10 @@ import '@fontsource/bakbak-one';
 import { Space } from "antd";
 
 export namespace S {
+  export const Main = styled.div`
+    user-select: none;
+  `;
+
   export const Container = styled(Space)`
     display: flex;
     flex-direction: row;

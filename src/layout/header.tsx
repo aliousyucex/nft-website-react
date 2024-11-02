@@ -1,12 +1,13 @@
-import {RefObject, useEffect, useState} from 'react';
+import {RefObject, useState} from 'react';
 import {S} from './header.styles';
 import {ConfigProvider, Space, type MenuProps} from 'antd';
 
-import elephantLogo from '../assets/logo.png';
+import logo from '../../public/logo.png';
 
 type HeaderProps = {
     story: RefObject<HTMLDivElement>,
     roadmap: RefObject<HTMLDivElement>,
+    game: RefObject<HTMLDivElement>,
     team: RefObject<HTMLDivElement>,
     faq: RefObject<HTMLDivElement>,
 }
@@ -21,12 +22,12 @@ export const Header = (props: HeaderProps) => {
             key: 'home',
         },
         {
-            label: 'The Story',
+            label: 'ABOUT',
             key: 'story',
         },
         {
-            label: 'Roadmap',
-            key: 'roadmap',
+            label: 'Game',
+            key: 'game',
         },
         {
             label: 'Our Team',
@@ -43,7 +44,7 @@ export const Header = (props: HeaderProps) => {
             window.scrollTo({top: 0, behavior: 'smooth'})
         }
 
-        if (e.key === 'story' || e.key === 'roadmap' || e.key === 'team' || e.key === 'faq') {
+        if (e.key === 'story' || e.key === 'team' || e.key === 'faq' || e.key === 'game') {
             props[e.key].current?.scrollIntoView({behavior: 'smooth'});
         }
     }
@@ -70,7 +71,7 @@ export const Header = (props: HeaderProps) => {
         >
             <S.HeaderContainer style={isScrolled ? {borderBottom: '1px solid #21E786'} : {}}>
                 <S.Logo
-                    src={elephantLogo}
+                    src={logo}
                     onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}
                 />
                 <S.StyledMenu
@@ -80,8 +81,7 @@ export const Header = (props: HeaderProps) => {
                     items={items}
                 />
                 <Space size="large">
-                    <S.DiscordButton>discord</S.DiscordButton>
-                    <S.BaskaButton>Baska</S.BaskaButton>
+                    <S.DiscordButton onClick={() => window.open('https://discord.gg/ivorynfts')}>discord</S.DiscordButton>
                 </Space>
             </S.HeaderContainer>
         </ConfigProvider>

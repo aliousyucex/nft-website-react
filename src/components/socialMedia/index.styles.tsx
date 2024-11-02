@@ -8,6 +8,7 @@ export namespace S {
     align-items: flex;
     width: 60px;
     height: 60px;
+    user-select: none;
 
     background: rgba(194, 195, 197, 0.1);
 
@@ -25,5 +26,6 @@ export namespace S {
     font-family: 'Bakbak One', sans-serif;
     font-size: 44px;
     letter-spacing: 0.5em;
+    user-select: none;
   `;
 }

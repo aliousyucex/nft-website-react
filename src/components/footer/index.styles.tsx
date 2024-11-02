@@ -30,8 +30,7 @@ export namespace S {
         width: 1150px;
         justify-content: space-between;
 
-        margin-top: 50px;
-        height: 200px;
+        height: 32px;
     `;
 
     export const LogoContainer = styled(Space)`

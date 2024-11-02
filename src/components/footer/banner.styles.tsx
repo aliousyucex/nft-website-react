@@ -13,7 +13,7 @@ export namespace S {
 
         width: 1150px;
         height: 250px;
-        background: linear-gradient(268.28deg, #2333DE -1.34%, #0ABE66 100%);
+        background: linear-gradient(268.28deg, #2333DE -45.34%, #0ABE66 100%);
         border-radius: 8px;
     `;
 

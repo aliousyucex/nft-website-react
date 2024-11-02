@@ -1,7 +1,7 @@
-import {Collapse, ConfigProvider, CollapsePanelProps, Space} from 'antd';
+import { Collapse, ConfigProvider, CollapsePanelProps, Space } from 'antd';
 import { S } from './index.styles';
 
-export const FAQ = (props: {myRef: React.RefObject<HTMLDivElement>}) => {
+export const FAQ = (props: { myRef: React.RefObject<HTMLDivElement> }) => {
     const items: CollapsePanelProps[] = [
         {
             key: 1,
@@ -14,14 +14,16 @@ export const FAQ = (props: {myRef: React.RefObject<HTMLDivElement>}) => {
         {
             key: 2,
             header: 'What are the maximum mint per wallet?',
-            children: <S.P>20 mints per wallet is allowed.</S.P>,
+            children: <S.P>
+                        1 mint per OG wallet, and 2 mints per other phases wallet.
+            </S.P>,
         },
         {
             key: 3,
             header: 'Do you have giveaway?',
-            children: <S.P>NFT will be given as a gift in the DEMO version of the game. You can join our <S.DiscordLink
-                href="https://discord.com/invite/HU4tGjJzJb" target="_blank"> Discord </S.DiscordLink>
-                 channel to
+            children: <S.P>You can join our <S.DiscordLink
+                href="https://discord.gg/ivorynfts" target="_blank"> Discord </S.DiscordLink>
+                channel to
                 learn how to win these
                 giveaway
                 NFTs, which will
@@ -31,18 +33,8 @@ export const FAQ = (props: {myRef: React.RefObject<HTMLDivElement>}) => {
             key: 4,
             header: 'How can I get Whitelist?',
             children: <S.P>You can access the details on our
-                <S.DiscordLink href="https://discord.gg/HU4tGjJzJb" target="_blank"> Discord </S.DiscordLink>
+                <S.DiscordLink href="https://discord.gg/ivorynfts" target="_blank"> Discord </S.DiscordLink>
                 channel.</S.P>,
-        },
-        {
-            key: 5,
-            header: 'NFT mint prices?',
-            children: <S.P>Prices for Whitelist 0.65 ETH <br /> Prices for public 1 ETH</S.P>,
-        },
-        {
-            key: 6,
-            header: 'Why should I buy your NFTs?',
-            children: <S.P>With the leasing mechanics, you will be able to earn a side income from your NFTs.</S.P>,
         },
     ];
 
@@ -60,10 +52,10 @@ export const FAQ = (props: {myRef: React.RefObject<HTMLDivElement>}) => {
             >
                 <Space direction="vertical" style={{ width: "100%" }}>
                     {items.map((item, index) => (
-                    <S.Collapse key={index} accordion bordered={false}>
-                        <Collapse.Panel key={item.key} header={item.header}>{item.children}</Collapse.Panel>
-                    </S.Collapse>
-                ))}
+                        <S.Collapse key={index} accordion bordered={false}>
+                            <Collapse.Panel key={item.key} header={item.header}>{item.children}</Collapse.Panel>
+                        </S.Collapse>
+                    ))}
                 </Space>
 
             </ConfigProvider>

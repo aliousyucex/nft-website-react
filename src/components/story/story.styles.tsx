@@ -4,11 +4,15 @@ import '@fontsource/poppins';
 import {Card as AntCard, Space, Modal as Md} from 'antd';
 
 export namespace S {
-    export const Title = styled.span    `
-        font-family: 'Bakbak One', sans-serif;
-        color: #fff;
-        font-size: 44px;
-    `;
+    export const Title = styled.h1`
+    display: flex;
+    justify-content: center;
+
+    font-family: 'Bakbak One', sans-serif;
+    font-size: 36px;
+
+    color: #fff;
+`;
 
     export const Text = styled.p`
         font-family: 'Poppins', sans-serif;
@@ -21,6 +25,11 @@ export namespace S {
     export const StoryContainer = styled(Space)`
         scroll-margin-top: 125px;
         margin-top: 200px;
+
+        @media (max-width: 768px) {
+        margin-top: 100px; // Mobil cihazlar için üst boşluğu azaltın.
+        padding: 0 20px; // Yatay padding ekleyin.
+        }
     `;
 
     export const footerHeaders = styled.span`
@@ -43,8 +52,8 @@ export namespace S {
         font-family: 'Bakbak One', sans-serif;
         font-size: 16px;
         font-weight: bold;
-        width: 138px;
-        height: 48px;
+        width: 250px;
+        height: 60px;
         border: 2px solid #21E786;
         border-radius: 0;
 
@@ -62,9 +71,10 @@ export namespace S {
 
         border-radius: 0;
         border: none;
-        width: 330px;
-        height: 250px;
         font-family: 'poppins', sans-serif;
+        max-width: 550px;
+        height: 250px;
+        transition: all 1s;
 
         .ant-card-head {
             display: flex;
@@ -78,26 +88,17 @@ export namespace S {
             color: #fff;
             border: none;
         }
-    `;
 
-    export const ManifestCard = styled(Card)`
         :hover {
-            background: #0FA37D;
+            background: linear-gradient(268.28deg, #2333DE -45.34%, #0ABE66 100%);
         }
-    `;
 
-    export const NftCard = styled(Card)`
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    `;
+        @media (max-width: 768px) {
+            max-width: 100%; // Mobil cihazlarda kartların genişliğini %100 yapın.
 
-    export const TwitterLink = styled.a`
-        color: #fff;
-        text-decoration: none;
-
-        :hover {
-            color: #1A8CD8;
+            :hover {
+                background: inherit; // Mobilde hover efektini kaldırın.
+            }
         }
     `;
 
@@ -129,5 +130,15 @@ export namespace S {
     export const StoryModalContainer = styled(Space)`
         color: #999;
         font-family: 'Poppins', sans-serif;
+    `;
+
+    export const StoryModalTitle = styled.label`
+        display: flex;
+        justify-content: center;
+
+        font-family: 'Bakbak One', sans-serif;
+        font-size: 36px;
+
+        margin: 12px;
     `;
 }

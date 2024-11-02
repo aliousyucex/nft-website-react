@@ -1,63 +1,58 @@
-import {Space} from 'antd';
-import {S} from './index.styles';
+import { Space } from 'antd';
+import { S } from './index.styles';
 
 import freyr from '../../assets/OurTeam/freyr.png';
-import bceby from '../../assets/OurTeam/bceby.png';
-import ahmet from '../../assets/OurTeam/ahmet.png';
-import kekiks from '../../assets/OurTeam/kekiks.png';
+import seby from '../../assets/OurTeam/seby.png';
+import berizu from '../../assets/OurTeam/berizu.png';
+import ceycey from '../../assets/OurTeam/ceycey.png';
 
-import instagram from '../../assets/social-media-small/instagram.png';
-import linkedin from '../../assets/social-media-small/linkedin.png';
+import twitter from '../../assets/social-media-small/twitter.png';
 
-export const Team = (props: {myRef: React.RefObject<HTMLDivElement>}) => (
+export const Team = (props: { myRef: React.RefObject<HTMLDivElement> }) => (
     <S.Team ref={props.myRef} >
         <S.Title>
             OUR TEAM
         </S.Title>
         <Space size={24}>
             <S.TeamCard>
+                <S.Img src={berizu} />
+                <S.CardTitle>Berizu</S.CardTitle>
+                <S.CardRole>Founder</S.CardRole>
+                <Space size="middle">
+                    <a href="https://www.x.com" target='_blank'>
+                        <img src={twitter} />
+                    </a>
+                </Space>
+            </S.TeamCard>
+            <S.TeamCard>
                 <S.Img src={freyr} />
                 <S.CardTitle>FreyR</S.CardTitle>
-                <S.CardRole>Creator - Developer</S.CardRole>
+                <S.CardRole>Developer</S.CardRole>
                 <Space size="middle">
-                    <a href="https://www.instagram.com" target='_blank'>
-                        <img src={instagram} />
-                    </a>
-                    <a href="https://www.linkedin.com" target='_blank'>
-                        <img src={linkedin} />
+                    <a href="https://www.twitter.com" target='_blank'>
+                        <img src={twitter} />
                     </a>
                 </Space>
             </S.TeamCard>
             <S.TeamCard>
-                <S.Img src={bceby} />
-                <S.CardTitle>Bceby</S.CardTitle>
-                <S.CardRole>Creator - Busines Manager</S.CardRole>
-                <Space size="middle">
-                    <a href="https://www.instagram.com" target='_blank'>
-                        <img src={instagram} />
-                    </a>
-                    <a href="https://www.linkedin.com" target='_blank'>
-                        <img src={linkedin} />
-                    </a>
-                </Space>
-            </S.TeamCard>
-            <S.TeamCard>
-                <S.Img src={ahmet} />
-                <S.CardTitle>Ahmet</S.CardTitle>
+                <S.Img src={seby} />
+                <S.CardTitle>Seby</S.CardTitle>
                 <S.CardRole>Designer</S.CardRole>
                 <Space size="middle">
-                    <a href="https://www.instagram.com" target='_blank'>
-                        <img src={instagram} />
-                    </a>
-                    <a href="https://www.linkedin.com" target='_blank'>
-                        <img src={linkedin} />
+                    <a href="https://www.twitter.com" target='_blank'>
+                        <img src={twitter} />
                     </a>
                 </Space>
             </S.TeamCard>
             <S.TeamCard>
-                <S.Img src={kekiks} />
-                <S.CardTitle>Kekiks</S.CardTitle>
-                <S.CardRole>Designer</S.CardRole>
+                <S.Img src={ceycey} />
+                <S.CardTitle>Cey Cey</S.CardTitle>
+                <S.CardRole>Community Manager</S.CardRole>
+                <Space size="middle">
+                    <a href="https://www.twitter.com" target='_blank'>
+                        <img src={twitter} />
+                    </a>
+                </Space>
             </S.TeamCard>
         </Space>
     </S.Team>

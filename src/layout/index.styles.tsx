@@ -11,5 +11,9 @@ export namespace S {
         align-items: center;
         justify-content: center;
         margin-top: 200px;
+
+        @media (max-width: 1400px) {
+            width: 100%;
+        }
     `;
 }

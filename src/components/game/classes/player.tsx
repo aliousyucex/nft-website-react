@@ -9,8 +9,8 @@ import PlayerThreeRight from '../../../assets/gameAssets/playerthreeright.png'
 
 export class Player {
     private gravity: number;
-    private sprites : {left: CanvasImageSource, right: CanvasImageSource}[];
-    private currentsprite: CanvasImageSource;
+    public sprites : {left: CanvasImageSource, right: CanvasImageSource}[];
+    public currentsprite: CanvasImageSource;
     private context: CanvasRenderingContext2D;
     private canvas: HTMLCanvasElement;
     public position: {x: number, y: number};
@@ -52,7 +52,7 @@ export class Player {
         this.currentsprite = this.sprites[playerImg].left;
     }
     draw() {
-        this.context.drawImage(this.currentsprite, this.position.x, this.position.y);
+        this.context.drawImage(this.currentsprite, this.position.x, this.position.y, this.width, this.height);
     }
     update() {
         this.draw();

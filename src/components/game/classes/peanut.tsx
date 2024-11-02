@@ -14,8 +14,8 @@ export class Peanut {
         }
         this.image = createImage(image);
 
-        this.width = this.image.width;
-        this.height = this.image.height;
+        this.width = 40;
+        this.height = 30;
         this.context = context;
     }
 

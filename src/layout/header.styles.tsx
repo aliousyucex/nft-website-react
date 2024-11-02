@@ -35,7 +35,7 @@ export namespace S {
 
 
     export const Logo = styled.img`
-        width: 150px;
+        height: 75px;
         cursor: pointer;
     `;
 

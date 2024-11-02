@@ -1,7 +1,6 @@
-import {useState} from 'react';
-import {S} from './story.styles';
-import {Space} from 'antd';
-import freyR from '../../assets/OurTeam/freyr.png'
+import { useState } from 'react';
+import { S } from './story.styles';
+import { Col, Row, Space } from 'antd';
 import storyOne from '../../assets/story/storyOne.png'
 import storyTwo from '../../assets/story/storyTwo.png'
 import storyThree from '../../assets/story/storyThree.png'
@@ -37,71 +36,38 @@ const storyText = (
     </S.StoryModalContainer>
 )
 
-export const Story = (props: {myRef: React.RefObject<HTMLDivElement>}) => {
-    const [modalOpen, setModalOpen] = useState<{open: boolean, text: JSX.Element | undefined}>({open: false, text: manifestText});
+export const Story = (props: { myRef: React.RefObject<HTMLDivElement> }) => {
+    const [modalOpen, setModalOpen] = useState<{ open: boolean, text: JSX.Element | undefined }>({ open: false, text: manifestText });
 
     return (
-        <S.StoryContainer align="center" ref={props.myRef}>
-            <Space size={72} direction="vertical">
-                <Space direction="vertical">
-                    <S.Title>WHAT IS THE LUCK?</S.Title>
-                    <S.Text>
-                        An elephant without a single tusk in the elephant tribe faces a great dilemma. Are these teeth a blessing or punishment?
-                    </S.Text>
-                    <S.Text>
-                        Click read more and find out!
-                    </S.Text>
-                </Space>
-
-                <Space size={48} direction="vertical">
-                    <Space direction="horizontal" size={72}>
-                        <Space size="small" direction="vertical">
-                            <S.footerHeaders>Total</S.footerHeaders>
-                            <S.footerTexts>13.000</S.footerTexts>
-                        </Space>
-                        <Space size="small" direction="vertical">
-                            <S.footerHeaders>Price</S.footerHeaders>
-                            <S.footerTexts>1 ETH</S.footerTexts>
-                        </Space>
-                    </Space>
-                    <Space>
-                        <S.Button onClick={() => setModalOpen({open: true, text: storyText})}>Read More</S.Button>
-                    </Space>
-                </Space>
-            </Space>
-
-            <Space>
-                <Space direction="vertical">
-                    <S.NftCard>
-                        <img src={freyR} style={{ width: 200, height: 'auto' }} />
-                    </S.NftCard>
-                    <S.Card title="We Are Not Alone">
-                        Elephants, which have been illegally hunted for accessories and ornaments
-                        in the last century, are facing extinction. We want to say something about this.
-                    </S.Card>
-                </Space>
-                <Space direction="vertical">
-                    <S.Card title="Elephants">
-                        Elephants included in the proboscis order have the right to be classified as intelligent animals. There are two classes Asian and African elephants. They are in danger of extinction!
-                    </S.Card>
-                    <S.ManifestCard title="Manifest" hoverable onClick={() => setModalOpen({open: true, text: manifestText})}>
-                        First of all, we are here with the joy and excitement of bringing you a
-                        new NFT collection. We need to inform you about the foundations of this NFT collection...
-                    </S.ManifestCard>
-                </Space>
+            <S.StoryContainer align="center" direction="vertical" ref={props.myRef}>
+            <S.Title>ABOUT</S.Title>
+                <Row gutter={[48, 48]}>
+                    <Col sm={18} md={12}>
+                        <S.Card title="What Is The Luck" hoverable onClick={() => setModalOpen({ open: true, text: storyText })}>
+                            Toothless, who woke up with the first light of the day hitting his eyes, greeted the sunrise with a smile. Unaware that today would be much different than any other day, she went for a walk to do her daily routine. Finding and tasting different herbs during the trek was his favorite activity. Her happiness multiplied as she ate the greens that had just begun to grow. Suddenly...
+                        </S.Card>
+                    </Col>
+                    <Col sm={18} md={12}>
+                        <S.Card title="Manifest" hoverable onClick={() => setModalOpen({ open: true, text: manifestText })}>
+                            First of all, we are here with the joy and excitement of bringing you a
+                            new NFT collection. We need to inform you about the foundations of this NFT collection...
+                        </S.Card>
+                    </Col>
+                </Row>
 
                 <S.Modal
-                    width={900}
+                    width={1150}
                     centered
                     open={modalOpen.open}
-                    onCancel={() => setModalOpen({open: false, text: undefined})}
+                    onCancel={() => setModalOpen({ open: false, text: undefined })}
                     closeIcon={false}
                     okButtonProps={{ style: { display: 'none' } }}
                     cancelButtonProps={{ style: { display: 'none' } }}
                 >
+                    <S.StoryModalTitle>What Is The Luck</S.StoryModalTitle>
                     {modalOpen.text}
                 </S.Modal>
-            </Space>
-        </S.StoryContainer>
+            </S.StoryContainer>
     )
 };
