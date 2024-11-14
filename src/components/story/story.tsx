@@ -1,73 +1,401 @@
-import { useState } from 'react';
-import { S } from './story.styles';
-import { Col, Row, Space } from 'antd';
-import storyOne from '../../assets/story/storyOne.png'
-import storyTwo from '../../assets/story/storyTwo.png'
-import storyThree from '../../assets/story/storyThree.png'
-import storyFour from '../../assets/story/storyFour.png'
+import { useState } from "react";
+import { S } from "./story.styles";
+import { Flex } from "antd";
+import storyOne from "../../assets/story/storyOne.png";
+import storyTwo from "../../assets/story/storyTwo.png";
+import storyThree from "../../assets/story/storyThree.png";
+import storyFour from "../../assets/story/storyFour.png";
 
 const manifestText = (
-    <div>
-        <p>Hi there!</p>
+    <S.ManifestContainer vertical justify="left" gap={24}>
+        <S.ModalTitle style={{textAlign: 'center'}}>The Ivory Chronicles Manifesto</S.ModalTitle>
 
-        <p>First of all, we are here with the joy and excitement of bringing you a new NFT collection. We need to inform you about the foundations of this NFT collection.</p>
-        <p>Although we are not an aid campaign, we aim to raise awareness about the "Elephant Tusks" genocide in today's conditions and enable more people to have information about it. To show that there are many ways to spread this awareness and be a source of inspiration for many different projects, we decided to branch this project into different directions.</p>
-        <p>The first of these branches begins with a 3-season story that we have written for you. This story serves as a building block in raising the awareness needed for both our NFTs and elephants. Another of these branches is the game we developed, PeanutRush. Based on platform game PeanutRush, the main character is an elephant, and they chase their favorite food, peanuts. With this game, we aim to bring the mentality of playing with and renting their collection pieces (with certain collection pieces in the Demo version) to our collectors and collector candidates.</p>
-    </div>);
+        {/* Entering Section */}
+        <div>
+            <S.SubTitles>We are the Tribe of Toothless.</S.SubTitles>
+            <S.Text>
+                We believe in a world where life is valued not for its physical
+                attributes but for its spirit, resilience, and will to survive.
+                In a world driven by greed, we stand as a force for change, a
+                collective voice for those who have been silenced.
+            </S.Text>
+            <S.Text>
+                Our journey began with Toothless, an innocent soul who
+                discovered the harsh reality of a world obsessed with taking
+                rather than giving. His story is not just his own—it is the
+                story of all those who have lost, endured and survived. And now,
+                it is our story.
+            </S.Text>
+            <S.Text>
+                We are here to honor those who can no longer speak, reclaim what
+                has been taken, and ensure that no creature, no spirit, is ever
+                exploited for profit.
+            </S.Text>
+        </div>
 
-const storyText = (
-    <S.StoryModalContainer direction="vertical" size="large">
-        <Space size="large">
-            <S.stroyImg src={storyOne} />
-            Toothless, who woke up with the first light of the day hitting his eyes, greeted the sunrise with a smile. Unaware that today would be much different than any other day, she went for a walk to do her daily routine. Finding and tasting different herbs during the trek was his favorite activity. Her happiness multiplied as she ate the greens that had just begun to grow. Suddenly, peanuts, which she had often heard but could not taste, appeared in front of him. 'I'll finally be able to taste it,' she sighed, raising her hose and yelling for joy.
-        </Space>
-        <Space size="large">
-            He continued his walk, thinking about how delicious the peanuts were. As he continued, more and more peanuts appeared in front of him. Toothless ate these perfect peanuts with great pleasure. His interest had now completely shifted from herbs to peanuts. He looked up and saw piles of peanuts just ahead. He walked quickly towards it. As he got closer, he realized that something was wrong. The peanuts here were red, not brown. He began to examine these peanuts that looked red. While she was examining it, the redness smeared his hose. As she grumbled, annoyed by this, she saw an elephant lying at full length next to the heap. She smiled briefly and said, "Who knows how much she ate, she felt like she needed to lie down to rest.". She wanted to share her happiness by going to the elephant and explaining that she had finally eaten peanuts. As the toothless approached, she saw she was facing a great disaster. The elephant was lying on the ground, covered with blood and breathless, with its tusks cut off. It took only a few seconds for him to realize why the peanut looked red and the redness in his trunk. Immediately after, he lifted his trunk and shouted with all his might, summoning his fellow tribesmen to their side. After a while, all his nearby friends gathered around her and tried to understand what was happening. Each was looking at something different.
-            <S.stroyImg src={storyTwo} />
-        </Space>
-        <Space size="large">
-            <S.stroyImg src={storyThree} />
-            At that moment, Toothless heard a crackle. She turned her head and saw a human silhouette in the bushes with his friend's diamond teeth on his back. Quickly, without warning her friends, she heard an explosion, and her friend, who was right behind her, collapsed to the ground. After each blast, the others collapsed to the ground as they tried to escape. The sound stopped, and when she looked around, all his friends were covered in blood. Unable to protect himself, he was in shock the human who killed her friends hadn't harmed Toothless. Toothless couldn't do anything, and she just watched the human. She went to Toothless's friends and removed their precious teeth if she could or cut them off if she didn't and put them on her back. That's when Toothless realized why she wasn't killed. What she had in his friends she didn't have.
-        </Space>
-        <Space size="large">
-            The reason Toothless wasn't killed was that he didn't have teeth. She realized she had never questioned why she had no teeth until that day. Meanwhile, the murderer who killed her friends walked away with his precious teeth on his back. Why did he kill her friends? What would he do with those teeth that belonged to his friends? While she was sitting next to her dead friends, she was sad that he could no longer make good memories with them. On the other hand, these things kept spinning in the corner of her mind. The only question that crosses one's mind as she watches her slowly walk away from her is, 'AM I LUCKY OR VALUABLE? I DON'T HAVE TEETH?'
-            <S.stroyImg src={storyFour} />
-        </Space>
+        {/* Our Beliefs Section */}
+        <div>
+            <S.SubTitles>Our Beliefs</S.SubTitles>
+            <ul>
+                <S.Li>
+                    <u>Every Life Has Value:</u> Whether you possess ivory tusks
+                    or nothing at all, your worth is beyond measure. We stand
+                    against a world that commodifies life and strips it of its
+                    inherent dignity.
+                </S.Li>
+                <S.Li>
+                    <u>Community is Strength:</u> Just as Toothless called upon
+                    his tribe, we call upon ours. Together, we are stronger,
+                    louder, and more resilient. Our community is built on the
+                    principles of trust, respect, and shared purpose.
+                </S.Li>
+                <S.Li>
+                    <u>Stories Shape the Future:</u> Toothless’s journey teaches
+                    us that stories have the power to change minds, hearts, and
+                    actions. We believe in using art and storytelling as tools
+                    to inspire and drive meaningful change.
+                </S.Li>
+                <S.Li>
+                    <u>Action Over Apathy:</u> We refuse to be mere bystanders
+                    in a world where cruelty is normalized. Our NFTs are not
+                    just digital assets—they are symbols of commitment to a
+                    better world. Each purchase is a step towards protecting the
+                    innocent and standing up against exploitation.
+                </S.Li>
+            </ul>
+        </div>
+
+        {/* Our Mission Section */}
+        <div>
+            <S.SubTitles>Our Mission</S.SubTitles>
+            <ul>
+                <S.Li>
+                    To use the power of NFTs and storytelling to raise awareness
+                    about the impact of poaching, cruelty, and exploitation.
+                </S.Li>
+                <S.Li>
+                    To build a community that stands for compassion, justice,
+                    and resilience—where members actively shape the story of
+                    Toothless and his journey.
+                </S.Li>
+                <S.Li>
+                    To contribute to wildlife conservation by dedicating a
+                    portion of our proceeds to organizations working to protect
+                    vulnerable species and their habitats.
+                </S.Li>
+                <S.Li>
+                    To inspire others to see beyond material value and recognize
+                    the beauty of life in all its forms.
+                </S.Li>
+            </ul>
+        </div>
+
+        {/* Our Call To You Section */}
+        <div>
+            <S.SubTitles>Our Call to You</S.SubTitles>
+            <S.Text>
+                This is not just our story; it is yours too. By joining our
+                tribe, you become a guardian of Toothless’s legacy, a protector
+                of those who have been silenced, and a voice for change.
+            </S.Text>
+            <S.Text>
+                Together, we will rewrite the narrative. We will transform pain
+                into purpose and loss into hope.
+            </S.Text>
+            <S.Text>
+                Will you join us on this journey? Will you stand with Toothless
+                and the tribe?
+            </S.Text>
+        </div>
+    </S.ManifestContainer>
+);
+
+const largeStoryText = (
+    <S.StoryModalContainer vertical>
+    <S.ModalTitle style={{textAlign: 'center'}}>Toothless and the Red Peanuts: A Journey of Loss and Hope</S.ModalTitle>
+        <Flex gap={24} wrap="wrap">
+            <Flex gap={24} align="center">
+                <S.stroyImg src={storyOne} />
+                <Flex vertical gap={24}>
+                    <S.Text>
+                        Toothless, a curious and gentle elephant, greeted the
+                        sunrise with a smile as the first rays of light danced
+                        across the savannah. Each morning, he set off on his
+                        usual walks, savoring the fresh air and tasting the
+                        tender herbs that grew along his path. Finding new
+                        plants to nibble on was his favorite pastime; each bite
+                        brought him joy as he explored the world around him.
+                    </S.Text>
+                    <S.Text>
+                        <S.PuncLines>
+                            Today, however, would be unlike any other.
+                        </S.PuncLines>
+                    </S.Text>
+                </Flex>
+            </Flex>
+
+            <Flex vertical wrap="wrap">
+                <S.Text>
+                    As Toothless wandered deeper into the forest, something
+                    unusual caught his eye. There, lying in the grass, were
+                    peanuts—golden treasures he had heard about but never
+                    tasted. With a delighted trumpet, he rushed forward, his
+                    heart leaping at the thought of finally trying the famed
+                    treat.
+                </S.Text>
+                <S.Text>
+                    As he continued along his path, the peanuts appeared more
+                    frequently, leading him onward. He eagerly ate them, their
+                    rich taste, unlike anything he had ever experienced. But
+                    soon, the trail led to something unexpected: a great heap of
+                    peanuts ahead. Excitement turned to confusion as Toothless
+                    noticed the peanuts were not brown, but a deep, unsettling
+                    red.
+                </S.Text>
+            </Flex>
+
+            <Flex gap={24} align="center">
+                <S.Text>
+                    Curiosity overcame him. He approached the pile and reached
+                    down with his trunk, only to realize the redness was
+                    staining him. As he examined the strange color, he heard a
+                    faint groan. His eyes widened when he saw, lying beside the
+                    heap, an elephant from his herd, her tusks cruelly severed,
+                    her body lifeless and covered in crimson.
+                </S.Text>
+                <S.stroyImg src={storyTwo} />
+            </Flex>
+
+            <Flex gap={24} align="center" vertical>
+                <S.Text>
+                    Horror seized Toothless. The red that had stained his trunk
+                    was not from the peanuts but from the blood of his fallen
+                    friend. The joyful morning turned into a nightmare. Lifting
+                    his trunk, Toothless let out a mighty trumpet, calling for
+                    his tribe. One by one, his fellow elephants gathered, their
+                    confusion quickly turning to grief as they discovered the
+                    tragedy.
+                </S.Text>
+                <S.Text>
+                    Suddenly, the sound of rustling leaves drew Toothless’s
+                    attention. He turned to see a human figure hiding in the
+                    bushes, carrying the severed tusks of his friends on his
+                    back. Before he could warn his herd, a deafening explosion
+                    echoed through the forest. One by one, his companions fell,
+                    their cries silenced by gunfire.
+                </S.Text>
+            </Flex>
+
+            <Flex gap={24} align="center">
+                <S.stroyImg src={storyThree} />
+                <S.Text>
+                    Toothless stood frozen, his heart racing. The human hunter
+                    approached, yet did not aim his weapon at him. It was then
+                    Toothless understood: the reason he was spared was because
+                    he had no tusks, nothing of value to be taken. The very
+                    trait he had once questioned about himself—his lack of
+                    teeth—was what saved his life.
+                </S.Text>
+            </Flex>
+
+            <Flex gap={24} align="center">
+                <S.Text>
+                    As he watched the human walk away, burdened with the ivory
+                    of his fallen friends, a profound question echoed in
+                    Toothless’s mind:{" "}
+                    <S.PuncLines>
+                        “Am I lucky or worthless because I have no ivory?”
+                    </S.PuncLines>
+                </S.Text>
+            </Flex>
+
+            <Flex gap={24} align="center">
+                <S.Text>
+                    For days, Toothless grieved, unable to shake the guilt that
+                    he alone had survived. But in his sorrow, a resolve began to
+                    form. He would not let his friends’ sacrifice be in vain. He
+                    would become their voice, their legacy, ensuring that the
+                    world knew their story.
+                </S.Text>
+                <S.stroyImg src={storyFour} />
+            </Flex>
+        </Flex>
     </S.StoryModalContainer>
-)
+);
 
-export const Story = (props: { myRef: React.RefObject<HTMLDivElement> }) => {
-    const [modalOpen, setModalOpen] = useState<{ open: boolean, text: JSX.Element | undefined }>({ open: false, text: manifestText });
+const smallStoryText = (
+    <S.StoryModalContainer vertical>
+        <S.ModalTitle style={{textAlign: 'center'}}>Toothless and the Red Peanuts: A Journey of Loss and Hope</S.ModalTitle>
+        <Flex gap={24} vertical wrap="wrap">
+            <S.stroyImg src={storyOne} />
+            <S.Text>
+                Toothless, a curious and gentle elephant, greeted the sunrise
+                with a smile as the first rays of light danced across the
+                savannah. Each morning, he set off on his usual walks, savoring
+                the fresh air and tasting the tender herbs that grew along his
+                path. Finding new plants to nibble on was his favorite pastime;
+                each bite brought him joy as he explored the world around him.
+            </S.Text>
+            <S.Text>
+                <S.PuncLines>
+                    Today, however, would be unlike any other.
+                </S.PuncLines>
+            </S.Text>
+
+            <S.Text>
+                As Toothless wandered deeper into the forest, something unusual
+                caught his eye. There, lying in the grass, were peanuts—golden
+                treasures he had heard about but never tasted. With a delighted
+                trumpet, he rushed forward, his heart leaping at the thought of
+                finally trying the famed treat.
+            </S.Text>
+            <S.Text>
+                As he continued along his path, the peanuts appeared more
+                frequently, leading him onward. He eagerly ate them, their rich
+                taste, unlike anything he had ever experienced. But soon, the
+                trail led to something unexpected: a great heap of peanuts
+                ahead. Excitement turned to confusion as Toothless noticed the
+                peanuts were not brown, but a deep, unsettling red.
+            </S.Text>
+            <S.Text>
+                Curiosity overcame him. He approached the pile and reached down
+                with his trunk, only to realize the redness was staining him. As
+                he examined the strange color, he heard a faint groan. His eyes
+                widened when he saw, lying beside the heap, an elephant from his
+                herd, her tusks cruelly severed, her body lifeless and covered
+                in crimson.
+            </S.Text>
+            <S.stroyImg src={storyTwo} />
+
+            <S.Text>
+                Horror seized Toothless. The red that had stained his trunk was
+                not from the peanuts but from the blood of his fallen friend.
+                The joyful morning turned into a nightmare. Lifting his trunk,
+                Toothless let out a mighty trumpet, calling for his tribe. One
+                by one, his fellow elephants gathered, their confusion quickly
+                turning to grief as they discovered the tragedy.
+            </S.Text>
+            <S.Text>
+                Suddenly, the sound of rustling leaves drew Toothless’s
+                attention. He turned to see a human figure hiding in the bushes,
+                carrying the severed tusks of his friends on his back. Before he
+                could warn his herd, a deafening explosion echoed through the
+                forest. One by one, his companions fell, their cries silenced by
+                gunfire.
+            </S.Text>
+
+            <S.stroyImg src={storyThree} />
+            <S.Text>
+                Toothless stood frozen, his heart racing. The human hunter
+                approached, yet did not aim his weapon at him. It was then
+                Toothless understood: the reason he was spared was because he
+                had no tusks, nothing of value to be taken. The very trait he
+                had once questioned about himself—his lack of teeth—was what
+                saved his life.
+            </S.Text>
+
+            <S.Text>
+                As he watched the human walk away, burdened with the ivory of
+                his fallen friends, a profound question echoed in Toothless’s
+                mind:{" "}
+                <S.PuncLines>
+                    “Am I lucky or worthless because I have no ivory?”
+                </S.PuncLines>
+            </S.Text>
+
+            <S.Text>
+                For days, Toothless grieved, unable to shake the guilt that he
+                alone had survived. But in his sorrow, a resolve began to form.
+                He would not let his friends’ sacrifice be in vain. He would
+                become their voice, their legacy, ensuring that the world knew
+                their story.
+            </S.Text>
+            <S.stroyImg src={storyFour} />
+        </Flex>
+    </S.StoryModalContainer>
+);
+
+export const Story = (props: {
+    myRef: React.RefObject<HTMLDivElement>;
+    pageWidth: number;
+}) => {
+    const [modalOpen, setModalOpen] = useState<{
+        open: boolean;
+        text: JSX.Element | undefined;
+    }>({ open: false, text: undefined });
 
     return (
-            <S.StoryContainer align="center" direction="vertical" ref={props.myRef}>
+        <S.StoryContainer
+            align="center"
+            vertical
+            justify="center"
+            gap={36}
+            ref={props.myRef}
+        >
             <S.Title>ABOUT</S.Title>
-                <Row gutter={[48, 48]}>
-                    <Col sm={18} md={12}>
-                        <S.Card title="What Is The Luck" hoverable onClick={() => setModalOpen({ open: true, text: storyText })}>
-                            Toothless, who woke up with the first light of the day hitting his eyes, greeted the sunrise with a smile. Unaware that today would be much different than any other day, she went for a walk to do her daily routine. Finding and tasting different herbs during the trek was his favorite activity. Her happiness multiplied as she ate the greens that had just begun to grow. Suddenly...
-                        </S.Card>
-                    </Col>
-                    <Col sm={18} md={12}>
-                        <S.Card title="Manifest" hoverable onClick={() => setModalOpen({ open: true, text: manifestText })}>
-                            First of all, we are here with the joy and excitement of bringing you a
-                            new NFT collection. We need to inform you about the foundations of this NFT collection...
-                        </S.Card>
-                    </Col>
-                </Row>
+            <Flex wrap="wrap" justify="center" gap={54}>
+                <S.Card>
+                    <S.CardContent
+                        vertical
+                        justify="space-around"
+                        align="center"
+                    >
+                        <S.CardTitle>The Tale of Toothless</S.CardTitle>
+                        <S.CardText>
+                            What happens when innocence meets cruelty? The
+                            answer lies within Toothless’s story...
+                        </S.CardText>
+                        <S.CardButton
+                            onClick={() =>
+                                setModalOpen({
+                                    open: true,
+                                    text:
+                                        props.pageWidth >= 1200
+                                            ? largeStoryText
+                                            : smallStoryText,
+                                })
+                            }
+                        >
+                            Read Our Story
+                        </S.CardButton>
+                    </S.CardContent>
+                </S.Card>
+                <S.Card>
+                    <S.CardContent
+                        vertical
+                        justify="space-around"
+                        align="center"
+                    >
+                        <S.CardTitle>Tribe of Toothless</S.CardTitle>
+                        <S.CardText>
+                            Join us in redefining what truly matters—read our
+                            manifesto.
+                        </S.CardText>
+                        <S.CardButton
+                            onClick={() =>
+                                setModalOpen({
+                                    open: true,
+                                    text: manifestText,
+                                })
+                            }
+                        >
+                            Read Manifesto
+                        </S.CardButton>
+                    </S.CardContent>
+                </S.Card>
+            </Flex>
 
-                <S.Modal
-                    width={1150}
-                    centered
-                    open={modalOpen.open}
-                    onCancel={() => setModalOpen({ open: false, text: undefined })}
-                    closeIcon={false}
-                    okButtonProps={{ style: { display: 'none' } }}
-                    cancelButtonProps={{ style: { display: 'none' } }}
-                >
-                    <S.StoryModalTitle>What Is The Luck</S.StoryModalTitle>
-                    {modalOpen.text}
-                </S.Modal>
-            </S.StoryContainer>
-    )
+            {modalOpen && modalOpen.open === true && <S.Modal
+                width={1150}
+                open
+                centered
+                onCancel={() => setModalOpen({ open: false, text: undefined })}
+                closeIcon={false}
+                okButtonProps={{ style: { display: "none" } }}
+                cancelButtonProps={{ style: { display: "none" } }}
+            >
+                {modalOpen.text}
+            </S.Modal>}
+        </S.StoryContainer>
+    );
 };

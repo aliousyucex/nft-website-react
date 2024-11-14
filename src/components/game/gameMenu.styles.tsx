@@ -26,7 +26,7 @@ export namespace S {
     border-radius: 0;
     border: none;
     user-select: none;
-    color: white;
+    color: #faf2e3;
     font-size: 16px;
   `;
 
@@ -38,7 +38,7 @@ export namespace S {
   export const StartButton = styled.button`
     width: 100%;
     background-color: #FF1616;
-    color: white;
+    color: #faf2e3;
     border: none;
     border-radius: 0;
     height: 48px;

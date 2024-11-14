@@ -29,6 +29,7 @@ import { GameMenu } from './gameMenu';
 
 import Icon from '@mdi/react';
 import { mdiVolumeHigh, mdiVolumeMedium, mdiVolumeLow, mdiVolumeOff } from '@mdi/js';
+import { Switch, Tooltip } from 'antd';
 
 const jumpeffect = new Audio(jumpeffectSound);
 const eateffect = new Audio(eateffectSound);
@@ -57,13 +58,13 @@ const keys = { right: { pressed: false }, left: { pressed: false } };
 // GAME SETTINGS
 const playerSpeed = 8;
 const gravity = 0.5;
-const levelUp = 2;
+const levelUp = 10;
 
 // Needed Variables
 const platforms: Platform[] = [];
 let counter = 0;
 
-export const GameCanvas = () => {
+export const GameCanvas = (props: { containerRef: React.RefObject<HTMLDivElement> }) => {
     const [openGameMenu, setOpenGameMenu] = useState(true);
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const sayacLabelRef = useRef<HTMLLabelElement | null>(null);
@@ -73,6 +74,18 @@ export const GameCanvas = () => {
     const [firstPixelDrawned, setFirstPixelDrawned] = useState(false);
     const [playerOption, setPlayerOption] = useState(0);
     const [updateAnimation, setUpdateAnimation] = useState(false);
+    const [focusGame, setFocusGame] = useState(false);
+
+    useEffect(() => {
+        if (focusGame) {
+            window.document.body.style.overflow = 'hidden';
+            if (props.containerRef.current) {
+                props.containerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        } else {
+            window.document.body.style.overflow = 'visible';
+        }
+    }, [focusGame])
 
     useEffect(() => {
         jumpeffect.volume = volume / 100;
@@ -247,6 +260,72 @@ export const GameCanvas = () => {
             }, 10)
         }
 
+        const onKeyUp = (e: KeyboardEvent) => {
+            switch (e.keyCode) {
+                case 65: keys.left.pressed = false; break;
+                case 37: keys.left.pressed = false; break;
+                case 68: keys.right.pressed = false; break;
+                case 39: keys.right.pressed = false; break;
+                case 87: player.velocity.y -= 0.1; break;
+                case 38: player.velocity.y -= 0.1; break;
+                case 32: player.velocity.y -= 0.1; break;
+                default: break;
+            }
+        }
+
+        const onKeyDown = (e: KeyboardEvent) => {
+            switch (e.keyCode) {
+                case 65:
+
+                    player.currentsprite = player.sprites[playerOption].left;
+                    keys.left.pressed = true;
+                    break;
+                case 37:
+
+                    player.currentsprite = player.sprites[playerOption].left;
+                    keys.left.pressed = true;
+                    break;
+                case 68:
+
+                    player.currentsprite = player.sprites[playerOption].right;
+                    keys.right.pressed = true;
+                    break;
+                case 39:
+
+                    player.currentsprite = player.sprites[playerOption].right;
+                    keys.right.pressed = true;
+                    break;
+                case 87: if (player.velocity.y == 0) {
+
+                    player.velocity.y -= 14.5;
+
+                    jumpeffect.pause();
+                    jumpeffect.currentTime = 0;
+                    jumpeffect.play().catch(() => { });
+
+                }; break;
+                case 38: if (player.velocity.y == 0) {
+
+                    player.velocity.y -= 14.5;
+                    jumpeffect.pause();
+                    jumpeffect.currentTime = 0;
+                    jumpeffect.play().catch(() => { });
+                };
+                    break;
+                case 32: if (player.velocity.y == 0) {
+
+                    player.velocity.y -= 14.5;
+                    jumpeffect.pause();
+                    jumpeffect.currentTime = 0;
+                    jumpeffect.play().catch(() => { });
+                };
+                    break;
+                case 83: if ((level != 2 && player.position.y <= 556) || (level == 2 && player.position.y <= 519)) { player.velocity.y += 1; }; break;
+                case 40: if ((level != 2 && player.position.y <= 556) || (level == 2 && player.position.y <= 519)) { player.velocity.y += 1; }; break;
+                default: break;
+
+            }
+        };
 
         const drawFirstPixelForUser = () => {
             levelChangeHandle(context);
@@ -257,65 +336,9 @@ export const GameCanvas = () => {
         };
 
         if (firstPixelDrawned && !updateAnimation) {
-            addEventListener('keydown', ({ keyCode }) => {
-                switch (keyCode) {
-                    case 65:
-                        player.currentsprite = player.sprites[playerOption].left;
-                        keys.left.pressed = true;
-                        break;
-                    case 37:
-                        player.currentsprite = player.sprites[playerOption].left;
-                        keys.left.pressed = true;
-                        break;
-                    case 68:
-                        player.currentsprite = player.sprites[playerOption].right;
-                        keys.right.pressed = true;
-                        break;
-                    case 39:
-                        player.currentsprite = player.sprites[playerOption].right;
-                        keys.right.pressed = true;
-                        break;
-                    case 87: if (player.velocity.y == 0) {
-                        player.velocity.y -= 14.5;
+            window.addEventListener('keydown', onKeyDown);
 
-                        jumpeffect.pause();
-                        jumpeffect.currentTime = 0;
-                        jumpeffect.play().catch(() => { });
-
-                    }; break;
-                    case 38: if (player.velocity.y == 0) {
-                        player.velocity.y -= 14.5;
-                        jumpeffect.pause();
-                        jumpeffect.currentTime = 0;
-                        jumpeffect.play().catch(() => { });
-                    };
-                        break;
-                    case 32: if (player.velocity.y == 0) {
-                        player.velocity.y -= 14.5;
-                        jumpeffect.pause();
-                        jumpeffect.currentTime = 0;
-                        jumpeffect.play().catch(() => { });
-                    };
-                        break;
-                    case 83: if ((level != 2 && player.position.y <= 556) || (level == 2 && player.position.y <= 519)) { player.velocity.y += 1; }; break;
-                    case 40: if ((level != 2 && player.position.y <= 556) || (level == 2 && player.position.y <= 519)) { player.velocity.y += 1; }; break;
-                    default: break;
-
-                }
-            });
-
-            addEventListener('keyup', ({ keyCode }) => {
-                switch (keyCode) {
-                    case 65: keys.left.pressed = false; break;
-                    case 37: keys.left.pressed = false; break;
-                    case 68: keys.right.pressed = false; break;
-                    case 39: keys.right.pressed = false; break;
-                    case 87: player.velocity.y -= 0.1; break;
-                    case 38: player.velocity.y -= 0.1; break;
-                    case 32: player.velocity.y -= 0.1; break;
-                    default: break;
-                }
-            })
+            window.addEventListener('keyup', onKeyUp)
 
             start();
         }
@@ -330,8 +353,8 @@ export const GameCanvas = () => {
         context.drawImage(gameBgImages[0], 0, 0);
 
         return () => {
-            removeEventListener('keydown', () => { })
-            removeEventListener('keyup', () => { })
+            window.removeEventListener('keydown', onKeyDown);
+            window.removeEventListener('keyup', onKeyUp);
         }
     }, [bisi])
 
@@ -350,6 +373,17 @@ export const GameCanvas = () => {
             <canvas ref={canvasRef} width={1410} height={698} />
             {openGameMenu === false && <S.TimeLabel ref={sayacLabelRef}>00:00</S.TimeLabel>}
             <S.VolumeBarContainer>
+                <Tooltip
+                    placement="bottom"
+                    title="Focus here and say goodbye to scrolling distractions"
+                >
+                    <S.FocusSpace>
+                        <S.FocusLabel>
+                            Focus
+                        </S.FocusLabel>
+                        <Switch checked={focusGame} onChange={() => setFocusGame(!focusGame)}></Switch>
+                    </S.FocusSpace>
+                </Tooltip>
                 {volume >= 75 && volume <= 100 && <Icon path={mdiVolumeHigh} size={1} />}
                 {volume >= 25 && volume < 75 && <Icon path={mdiVolumeMedium} size={1} />}
                 {volume >= 1 && volume < 25 && <Icon path={mdiVolumeLow} size={1} />}

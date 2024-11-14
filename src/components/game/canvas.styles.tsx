@@ -1,11 +1,14 @@
 /* eslint-disable @typescript-eslint/no-namespace */
 import styled from "@emotion/styled";
-import { Slider } from "antd";
+import {Slider, Space} from "antd";
+import '@fontsource/poppins';
 
 export namespace S {
   export const Container = styled.div`
     display: flex;
     position: relative;
+
+    border: 1px solid #21E78662;
   `;
 
   export const TimeLabel = styled.label`
@@ -31,7 +34,7 @@ export namespace S {
   export const VolumeBarInput = styled.div`
     display: flex;
     margin-left: 8px;
-    background-color: #fff;
+    background-color: #faf2e3;
     border-radius: 16px;
 
     height: 20px;
@@ -47,8 +50,16 @@ export namespace S {
 
   export const VolumeBar = styled(Slider)`
     width: 100px;
-    background: #fff;
+    background: #faf2e3;
 
     user-select: none;
+  `;
+
+  export const FocusLabel = styled.label`
+    font-family: 'Poppins', sans-serif;
+  `;
+
+  export const FocusSpace = styled(Space)`
+    margin-right: 16px;
   `;
 }

@@ -6,9 +6,13 @@ import '@fontsource/poppins';
 export namespace S {
     export const CollapseContainer = styled.div`
         margin-top: 100px;
+        width: 1150px;
 
         scroll-margin-top: 100px;
-        padding-bottom: 200px;
+
+        @media (max-width: 1200px) {
+            width: 85%;
+        }
     `;
 
     export const Title = styled.h1`
@@ -18,12 +22,12 @@ export namespace S {
         font-family: 'Bakbak One', sans-serif;
         font-size: 36px;
 
-        color: #fff;
+        color: #faf2e3;
     `;
 
     export const Collapse = styled(Cll)`
         .ant-collapse-item{
-            width: 1150px;
+            width: 100%;
             border: none;
             border-radius: 0;
         }
@@ -32,9 +36,16 @@ export namespace S {
             font-family: 'Bakbak One', sans-serif;
             font-size: 24px;
 
-            color: #fff !important;
+            color: #faf2e3 !important;
             padding: 18px !important;
             border-radius: 0;
+
+            @media (max-width: 1200px) {
+                display: flex;
+                font-size: 20px;
+                line-height: inherit;
+                align-items: center !important;
+            }
 
         }
 
@@ -45,6 +56,7 @@ export namespace S {
 
         .ant-collapse-arrow {
             font-size: 24px !important;
+            align-items: center;
         }
 
         .ant-collapse-content-box {
@@ -61,11 +73,16 @@ export namespace S {
             background-color: #141B22;
 
             border-top: 1px solid rgba(204, 204, 204, 0.25);
+
+            @media (max-width: 1200px) {
+                font-size: 14px;
+                line-height: inherit;
+            }
         }
     `as unknown as typeof Cll;
 
     export const DiscordLink = styled.a`
-        color: #fff;
+        color: #faf2e3;
         text-decoration: none;
 
         :hover {
@@ -75,5 +92,10 @@ export namespace S {
 
     export const P = styled.p`
         padding-left: 36px;
+        text-align: left;
+
+        @media (max-width: 1200px) {
+            padding-left: 12px;
+        }
     `;
 }

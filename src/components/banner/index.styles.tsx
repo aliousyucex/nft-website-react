@@ -9,12 +9,18 @@ export namespace S {
         justify-content: center;
         text-align: center;
 
-        margin-top: -125px;
+        margin-top: 125px;
 
-        width: 1150px;
+        width: 1054px;
         height: 250px;
         background: linear-gradient(268.28deg, #2333DE -45.34%, #0ABE66 100%);
         border-radius: 8px;
+
+        @media (max-width: 1400px) {
+            width: 85%;
+            align-items: center;
+            justify-content: center;
+        }
     `;
 
     export const ItemContainer = styled.div`
@@ -36,6 +42,11 @@ export namespace S {
         font-family: 'Bakbak One', sans-serif;
         font-size: 44px;
         line-height: 56px;
+
+        @media (max-width: 1400px) {
+            font-size: 38px;
+            line-height: inherit;
+        }
     `;
 
     export const Text = styled.h1`
@@ -51,16 +62,6 @@ export namespace S {
         background-color: #5865F2;
         font-family: 'Bakbak One', sans-serif;
         text-transform: uppercase;
-    `;
-
-    export const BaskaButton = styled.button`
-        width: 148px;
-        height: 48px;
-        color: #000;
-        border: none;
-        border-radius: 0;
-        background-color: #21E786;
-        font-family: 'Bakbak One', sans-serif;
-        text-transform: uppercase;
+        color: #faf2e3;
     `;
 }

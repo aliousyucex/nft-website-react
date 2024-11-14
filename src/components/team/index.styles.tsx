@@ -16,7 +16,7 @@ export namespace S {
         font-family: 'Bakbak One', sans-serif;
         font-size: 36px;
 
-        color: #fff;
+        color: #faf2e3;
     `;
 
     export const TeamCard = styled.div`
@@ -30,22 +30,42 @@ export namespace S {
         padding: 20px;
 
         background-color: #141B22;
+
+        @media (max-width: 1200px) {
+            width: 120px;
+            height: 160px;
+            text-align: center;
+        }
     `;
 
     export const CardTitle = styled.span`
         font-family: 'Bakbak One', sans-serif;
         font-size: 28px;
+
+        @media (max-width: 1200px) {
+            font-size: 16px;
+        }
     `;
 
     export const CardRole = styled.span`
         font-family: 'Poppins', sans-serif;
         font-size: 16px;
         margin: 8px 0;
+
+        @media (max-width: 1200px) {
+            font-size: 12px;
+            align-text: center;
+        }
     `;
 
     export const Img = styled.img`
         width: 180px;
         padding-left: 30px;
         margin-bottom: 12px;
+
+        @media (max-width: 1200px) {
+            width: 80px;
+            padding-left: 10px;
+        }
     `;
 }

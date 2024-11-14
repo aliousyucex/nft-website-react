@@ -1,6 +1,4 @@
 import React from 'react';
-import {ThirdwebProvider} from "thirdweb/react";
-import {  } from "thirdweb/chains";
 
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
@@ -9,7 +7,6 @@ import './index.css';
 
 const root = document.getElementById('root')!;
 
-root.style.width = '100%';
 // Currency symbol APE
 // Network URL https://rpc.apechain.com/http
 // Chain ID 33139
@@ -18,10 +15,8 @@ root.style.width = '100%';
 
 ReactDOM.createRoot(root).render(
   <React.StrictMode>
-    <ThirdwebProvider>
       <S.Root>
         <App />
       </S.Root>
-    </ThirdwebProvider>
   </React.StrictMode>,
 )

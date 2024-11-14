@@ -1,4 +1,4 @@
-import { Space } from 'antd';
+import { Flex, Space } from 'antd';
 import { S } from './index.styles';
 
 import freyr from '../../assets/OurTeam/freyr.png';
@@ -11,9 +11,9 @@ import twitter from '../../assets/social-media-small/twitter.png';
 export const Team = (props: { myRef: React.RefObject<HTMLDivElement> }) => (
     <S.Team ref={props.myRef} >
         <S.Title>
-            OUR TEAM
+            OUR TRIBE
         </S.Title>
-        <Space size={24}>
+        <Flex wrap="wrap" justify="center" align="center" gap={24}>
             <S.TeamCard>
                 <S.Img src={berizu} />
                 <S.CardTitle>Berizu</S.CardTitle>
@@ -48,12 +48,7 @@ export const Team = (props: { myRef: React.RefObject<HTMLDivElement> }) => (
                 <S.Img src={ceycey} />
                 <S.CardTitle>Cey Cey</S.CardTitle>
                 <S.CardRole>Community Manager</S.CardRole>
-                <Space size="middle">
-                    <a href="https://www.twitter.com" target='_blank'>
-                        <img src={twitter} />
-                    </a>
-                </Space>
             </S.TeamCard>
-        </Space>
+        </Flex>
     </S.Team>
 );
