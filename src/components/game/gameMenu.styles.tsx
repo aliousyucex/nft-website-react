@@ -22,11 +22,11 @@ export namespace S {
     width: 320px;
     height: 350px;
 
-    background-color: #5033C3;
+    background-color: #ccc5b9;
     border-radius: 0;
     border: none;
     user-select: none;
-    color: #faf2e3;
+    color: #292826;
     font-size: 16px;
   `;
 
@@ -37,16 +37,18 @@ export namespace S {
 
   export const StartButton = styled.button`
     width: 100%;
-    background-color: #FF1616;
-    color: #faf2e3;
+    background-color: #D9A459;
+    color: #292826;
     border: none;
-    border-radius: 0;
+    border-radius: 8px;
     height: 48px;
+    cursor: pointer;
 
     font-family: 'Bakbak One', sans-serif;
 
     :hover {
-      color: black;
+      background-color: #292826;
+      color: #D9A459;
     }
   `;
 
@@ -64,6 +66,11 @@ export namespace S {
     cursor: pointer;
   `;
 
+    // #D9A459
+  // #faf2e3
+  // #292826
+  // #ccc5b9
+
   export const RadioButton = styled.input`
     display: flex;
     position: absolute;
@@ -72,7 +79,8 @@ export namespace S {
     height: 0;
 
     :checked+img {
-      border: 2px solid #f00;
+      border: 2px solid #292826;
+      border-radius: 8px;
       padding: 0;
       margin: 0;
     }

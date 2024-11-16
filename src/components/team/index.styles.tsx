@@ -24,12 +24,13 @@ export namespace S {
         flex-direction: column;
         justify-content: center;
         align-items: center;
+        border-radius: 8px;
 
         width: 230px;
         height: 315px;
         padding: 20px;
 
-        background-color: #141B22;
+        background-color: #ccc5b9;
 
         @media (max-width: 1200px) {
             width: 120px;
@@ -41,6 +42,7 @@ export namespace S {
     export const CardTitle = styled.span`
         font-family: 'Bakbak One', sans-serif;
         font-size: 28px;
+        color: #401414;
 
         @media (max-width: 1200px) {
             font-size: 16px;
@@ -51,6 +53,7 @@ export namespace S {
         font-family: 'Poppins', sans-serif;
         font-size: 16px;
         margin: 8px 0;
+        color: #401414;
 
         @media (max-width: 1200px) {
             font-size: 12px;

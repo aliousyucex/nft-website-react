@@ -5,45 +5,63 @@ export const FAQ = (props: { myRef: React.RefObject<HTMLDivElement> }) => {
     const items: CollapsePanelProps[] = [
         {
             key: 1,
-            header: "Why Elephant?",
+            header: "Why did we choose the elephant?",
             children: (
                 <S.P>
-                    We chose an elephant because it embodies the tragic reality
-                    of being hunted for the value of its ivory. Elephants are
-                    often victims of brutal poaching, targeted solely for their
-                    tusks, leading to a silent form of genocide driven by human
-                    greed. Through the story of Toothless, who survives because
-                    he lacks tusks, we aim to raise awareness of this cruel
-                    reality and challenge the perception that a life’s worth is
-                    tied to material gain. Our project highlights the urgent
-                    need for conservation while reminding us that no creature
-                    should be sacrificed for profit.
+                    We chose an elephant to highlight what’s often
+                    overlooked—stories of animals that aren't as visible in
+                    popular culture. We aim to bring attention to the tragic
+                    reality elephants face.
                 </S.P>
             ),
         },
         {
             key: 2,
-            header: "What are the maximum mint per wallet?",
+            header: "What blockchain was the Ivory Collection built on?",
             children: (
                 <S.P>
-                    1 mint per OG wallet, and 2 mints per other phases wallet.
+                    The Ivory NFT Collection is built on Apechain and offers a
+                    secure, scalable infrastructure. Transactions will be
+                    processed in $APE, Apechain's native currency.
+                </S.P>
+            ),
+        },
+        {
+            key: 3,
+            header: "How many NFTs will be produced and what will be the minting price?",
+            children: (
+                <S.P>
+                    The collection will consist of 6,666 NFTs in total. Minting
+                    price and details will be announced in our official
+                    announcements.
                 </S.P>
             ),
         },
         {
             key: 4,
-            header: "How can I get Whitelist?",
+            header: "Where can I find the most up-to-date information about the project?",
             children: (
                 <S.P>
-                    You can access the details on our
-                    <S.DiscordLink
-                        href="https://discord.gg/ivorynfts"
-                        target="_blank"
-                    >
-                        {" "}
-                        Discord{" "}
-                    </S.DiscordLink>
-                    channel.
+                    Follow our Twitter account and join our Discord server for
+                    the latest announcements, previews, and community events.
+                </S.P>
+            ),
+        },
+        {
+            key: 5,
+            header: "How many NFTs can I mint per wallet?",
+            children: <S.P>Each wallet can mint a maximum of 6 NFTs.</S.P>,
+        },
+        {
+            key: 6,
+            header: "How can I earn Whitelist?",
+            children: (
+                <S.P>
+                    A limited number of whitelist opportunities will be
+                    available for early backers and active community members. By
+                    joining our Discord server, you can participate in events,
+                    complete tasks, and get a chance to win a whitelist by
+                    following special announcements on Twitter.
                 </S.P>
             ),
         },

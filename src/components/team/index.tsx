@@ -1,53 +1,28 @@
-import { Flex, Space } from 'antd';
-import { S } from './index.styles';
+import {Flex} from 'antd';
+import {S} from './index.styles';
 
 import freyr from '../../assets/OurTeam/freyr.png';
 import seby from '../../assets/OurTeam/seby.png';
 import berizu from '../../assets/OurTeam/berizu.png';
-import ceycey from '../../assets/OurTeam/ceycey.png';
-
-import twitter from '../../assets/social-media-small/twitter.png';
 
 export const Team = (props: { myRef: React.RefObject<HTMLDivElement> }) => (
     <S.Team ref={props.myRef} >
-        <S.Title>
-            OUR TRIBE
-        </S.Title>
+        <S.Title>TRIBE</S.Title>
         <Flex wrap="wrap" justify="center" align="center" gap={24}>
             <S.TeamCard>
                 <S.Img src={berizu} />
                 <S.CardTitle>Berizu</S.CardTitle>
                 <S.CardRole>Founder</S.CardRole>
-                <Space size="middle">
-                    <a href="https://www.x.com" target='_blank'>
-                        <img src={twitter} />
-                    </a>
-                </Space>
             </S.TeamCard>
             <S.TeamCard>
                 <S.Img src={freyr} />
                 <S.CardTitle>FreyR</S.CardTitle>
                 <S.CardRole>Developer</S.CardRole>
-                <Space size="middle">
-                    <a href="https://www.twitter.com" target='_blank'>
-                        <img src={twitter} />
-                    </a>
-                </Space>
             </S.TeamCard>
             <S.TeamCard>
                 <S.Img src={seby} />
                 <S.CardTitle>Seby</S.CardTitle>
                 <S.CardRole>Designer</S.CardRole>
-                <Space size="middle">
-                    <a href="https://www.twitter.com" target='_blank'>
-                        <img src={twitter} />
-                    </a>
-                </Space>
-            </S.TeamCard>
-            <S.TeamCard>
-                <S.Img src={ceycey} />
-                <S.CardTitle>Cey Cey</S.CardTitle>
-                <S.CardRole>Community Manager</S.CardRole>
             </S.TeamCard>
         </Flex>
     </S.Team>

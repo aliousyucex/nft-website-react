@@ -3,12 +3,14 @@ import {S} from './header.styles';
 import {ConfigProvider, Dropdown, Space, type MenuProps} from 'antd';
 
 import logo from '../../public/logo.png';
+import twitter from '../assets/social-media/twitter.svg'
+import discord from '../assets/social-media/discord.svg'
 import Icon from '@mdi/react';
 import { mdiMenu } from '@mdi/js';
 
 type HeaderProps = {
     story: RefObject<HTMLDivElement>,
-    roadmap: RefObject<HTMLDivElement>,
+    manifest: RefObject<HTMLDivElement>,
     game: RefObject<HTMLDivElement>,
     team: RefObject<HTMLDivElement>,
     faq: RefObject<HTMLDivElement>,
@@ -21,11 +23,11 @@ export const Header = (props: HeaderProps) => {
 
     const items: MenuProps['items'] = [
         {
-            label: 'Home',
-            key: 'home',
+            label: 'Manifest',
+            key: 'manifest',
         },
         {
-            label: 'About',
+            label: 'Story',
             key: 'story',
         },
         {
@@ -47,7 +49,7 @@ export const Header = (props: HeaderProps) => {
             window.scrollTo({top: 0, behavior: 'smooth'})
         }
 
-        if (e.key === 'story' || e.key === 'team' || e.key === 'faq' || e.key === 'game') {
+        if (e.key === 'story' || e.key === 'team' || e.key === 'faq' || e.key === 'game' || e.key === 'manifest') {
             props[e.key].current?.scrollIntoView({behavior: 'smooth'});
         }
     }
@@ -66,19 +68,19 @@ export const Header = (props: HeaderProps) => {
         }
       })
 
-    if (props.pageWidth >= 1200) {
+    if (props.pageWidth > 800) {
         return (
             <ConfigProvider
                 theme={{
                     components: {
                         Menu: {
-                            itemHoverColor: '#07BC65',
-                            horizontalItemSelectedColor: '#07BC65',
+                            itemHoverColor: '#D9A459',
+                            horizontalItemSelectedColor: '#D9A459',
                         },
                     },
                 }}
             >
-                <S.HeaderContainer style={isScrolled ? {borderBottom: '1px solid #21E786'} : {}}>
+                <S.HeaderContainer style={isScrolled ? {borderBottom: '2px solid #D9A459'} : {}}>
                     <S.Logo
                         src={logo}
                         onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}
@@ -90,8 +92,8 @@ export const Header = (props: HeaderProps) => {
                         items={items}
                     />
                     <Space size="large">
-                        <S.DiscordButton onClick={() => window.open('https://discord.gg/ivorynfts')}>discord</S.DiscordButton>
-                        <S.TwitterButton onClick={() => window.open('https://x.com/ivorynfts')}>Twitter</S.TwitterButton>
+                        <a href='https://discord.gg/ivorynfts'><img src={discord} width={35} /></a>
+                        <a href='https://x.com/ivorynfts'><img src={twitter} width={35} /></a>
                     </Space>
                 </S.HeaderContainer>
             </ConfigProvider>
@@ -100,8 +102,8 @@ export const Header = (props: HeaderProps) => {
 
     return (
         <>
-          <S.HeaderContainer style={isScrolled ? {borderBottom: '1px solid #21E786'} : {}}>
-            <S.Logo src={logo} />
+          <S.HeaderContainer style={isScrolled ? {borderBottom: '2px solid #D9A459'} : {}}>
+            <S.Logo src={logo} onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})} />
             {props.pageWidth < 1200 && (
               <Dropdown menu={menuProps} trigger={["click"]} >
                 <S.MenuButton icon={<Icon path={mdiMenu} size={1} />} />

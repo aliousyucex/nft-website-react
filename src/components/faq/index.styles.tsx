@@ -28,17 +28,16 @@ export namespace S {
     export const Collapse = styled(Cll)`
         .ant-collapse-item{
             width: 100%;
-            border: none;
-            border-radius: 0;
+            background: #ccc5b9;
+            border-radius: 8px !important;
         }
 
         .ant-collapse-header {
             font-family: 'Bakbak One', sans-serif;
             font-size: 24px;
 
-            color: #faf2e3 !important;
+            color: #401414 !important;
             padding: 18px !important;
-            border-radius: 0;
 
             @media (max-width: 1200px) {
                 display: flex;
@@ -50,7 +49,7 @@ export namespace S {
         }
 
         .ant-collapse-expand-icon {
-            color: #21E786;
+            color: #292826;
             height: 38px !important;
         }
 
@@ -65,14 +64,15 @@ export namespace S {
             font-weight: 400;
             font-size: 18px;
 
-            color: #BDC3C5;
+            color: #292826;
             line-height: 28px;
             align-self: stretch;
             text-align: justify;
 
-            background-color: #141B22;
+            background-color: #ccc5b9;
 
-            border-top: 1px solid rgba(204, 204, 204, 0.25);
+            border-top: 2px solid #292826;
+            border-radius: 0 0 8px 8px !important;
 
             @media (max-width: 1200px) {
                 font-size: 14px;
@@ -82,7 +82,7 @@ export namespace S {
     `as unknown as typeof Cll;
 
     export const DiscordLink = styled.a`
-        color: #faf2e3;
+        color: #292826;
         text-decoration: none;
 
         :hover {

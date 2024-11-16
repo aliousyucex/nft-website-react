@@ -4,12 +4,11 @@ import {Countdown} from './components/countdown';
 import {Header} from './layout/header.tsx';
 import {Layout} from './layout/index.tsx';
 import {Story} from './components/story/story.tsx';
-import {SocialMedia} from './components/socialMedia/index.tsx';
 import {Team} from './components/team/index.tsx';
 import {FAQ} from './components/faq/index.tsx';
 import {Footer} from './components/footer/index.tsx';
-import { Game } from './components/game/index.tsx';
-import { Banner } from './components/banner/index.tsx';
+import {Game} from './components/game/index.tsx';
+import {Manifest} from './components/manifest/index.tsx';
 
 function App() {
   const [pageWidth, setPageWidth] = useState<number>(window.innerWidth);
@@ -18,7 +17,7 @@ function App() {
     setPageWidth(window.innerWidth);
   });
 
-  const roadmap = useRef(null);
+  const manifest = useRef(null);
   const story = useRef(null);
   const game = useRef(null);
   const team = useRef(null);
@@ -26,13 +25,12 @@ function App() {
 
   return (
     <S.App>
-      <Header pageWidth={pageWidth} story={story} roadmap={roadmap} game={game}  team={team} faq={faq} />
+      <Header pageWidth={pageWidth} story={story} game={game} manifest={manifest} team={team} faq={faq} />
       <S.BackgroundContainer />
       <Layout>
         <Countdown />
-        <SocialMedia />
+        <Manifest myRef={manifest} />
         <Story pageWidth={pageWidth} myRef={story} />
-        <Banner pageWidth={pageWidth} />
         <Game pageWidth={pageWidth} myRef={game} />
         <Team myRef={team} />
         <FAQ myRef={faq} />

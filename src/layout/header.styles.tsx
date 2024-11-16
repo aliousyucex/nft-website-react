@@ -8,18 +8,18 @@ export namespace S {
         justify-content: right;
         align-items: center;
         color: #faf2e3;
-        font-size: 16px;
+        font-size: 18px;
         font-weight: 600;
-        background-color: #040B11;
+        background-color: #292826;
         font-family: 'Bakbak One', sans-serif;
         transition:all 1s;
         user-select: none;
-        width: 650px;
+        width: 500px;
 
         letter-spacing: 0.1em;
         text-transform: uppercase;
 
-        @media (max-width: 1400px) {
+        @media (max-width: 800px) {
             display: none;
         }
     `;
@@ -28,7 +28,7 @@ export namespace S {
         display: flex;
         position: fixed;
         z-index: 2;
-        background-color: #040B11;
+        background-color: #292826;
         justify-content: space-between;
         align-items: center;
         width: 92%;
@@ -37,8 +37,14 @@ export namespace S {
 
         scroll-margin-top: 50px;
 
-        @media (max-width: 1200px) {
+        @media (max-width: 800px) {
             width: 92%;
+            padding: 0 20px 0 20px;
+            justify-content: space-between;
+        }
+
+        @media (max-width: 1200px) {
+            width: 96%;
             padding: 0 20px 0 20px;
             justify-content: space-between;
         }
@@ -46,11 +52,11 @@ export namespace S {
 
 
     export const Logo = styled.img`
-        height: 75px;
+        height: 60px;
         cursor: pointer;
 
         @media (max-width: 1200px) {
-            height: 60px;
+            height: 45px;
         }
     `;
 
@@ -95,7 +101,7 @@ export namespace S {
     `;
 
     export const MenuButton = styled(Button)`
-        background: #07BC65;
+        background: #D9A459;
         border: none;
 
         .ant-dropdown-open {

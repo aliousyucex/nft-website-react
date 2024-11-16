@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { Player } from './classes/player';
-import { Peanut } from './classes/peanut';
-import { Platform } from './classes/platform';
+import {Player} from './classes/player';
+import {Peanut} from './classes/peanut';
+import {Platform} from './classes/platform';
 import playerPositions from './positions/player.json';
 import peanutPositions from './positions/peanutPositions.json';
 import platformPositions from './positions/platforms.json';
-import { createImage } from '../../utils/createImage';
+import {createImage} from '../../utils/createImage';
 
 import jumpeffectSound from '../../assets/soundEffects/jump.mp3';
 import eateffectSound from '../../assets/soundEffects/eat.mp3';
@@ -24,12 +24,12 @@ import groundLevel3 from '../../assets/gameAssets/lvl3ground.png';
 import groundLevel32 from '../../assets/gameAssets/lvl3ground2.png';
 
 import peanutImage from '../../assets/gameAssets/peanut1.png';
-import { S } from './canvas.styles';
-import { GameMenu } from './gameMenu';
+import {S} from './canvas.styles';
+import {GameMenu} from './gameMenu';
 
 import Icon from '@mdi/react';
-import { mdiVolumeHigh, mdiVolumeMedium, mdiVolumeLow, mdiVolumeOff } from '@mdi/js';
-import { Switch, Tooltip } from 'antd';
+import {mdiVolumeHigh, mdiVolumeMedium, mdiVolumeLow, mdiVolumeOff} from '@mdi/js';
+import {Switch, Tooltip} from 'antd';
 
 const jumpeffect = new Audio(jumpeffectSound);
 const eateffect = new Audio(eateffectSound);

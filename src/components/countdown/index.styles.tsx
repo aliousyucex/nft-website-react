@@ -7,16 +7,6 @@ export namespace S {
     user-select: none;
   `;
 
-  export const Header = styled.h1`
-    font-family: 'Bakbak One', sans-serif;
-    font-size: 56px;
-    text-align: center;
-
-    @media (min-width: 1200px) {
-      letter-spacing: 0.625em;
-    }
-  `;
-
   export const CountDownComponentContainer = styled.div`
     display: flex;
     flex-direction: column;
@@ -31,7 +21,7 @@ export namespace S {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    background: rgba(194, 195, 197, 0.1);
+    background: #292826A8;
 
     width: 108px;
     height: 108px;
@@ -60,7 +50,7 @@ export namespace S {
     font-size: 20px;
     line-height: 28px;
     text-transform: uppercase;
-    color: #ccc5b9;
+    color: #faf2e3;
 
     @media (max-width: 1400px) {
       font-size: 14px;

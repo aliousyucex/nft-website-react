@@ -8,15 +8,16 @@ export namespace S {
     justify-content: center;
 
     scroll-margin-top: 100px;
-    margin-top: 200px;
+    margin-top: 120px;
 
     @media (max-width: 1200px) {
-      width: 85%;
+      width: 350px;
+      border-radius: 8px;
       display: flex;
       justify-content: center;
       align-items: center;
-      background: black;
-      color: #faf2e3;
+      background: #ccc5b9;
+      color: #292826;
       text-align: center;
       height: 100px;
       margin-top: 100px;

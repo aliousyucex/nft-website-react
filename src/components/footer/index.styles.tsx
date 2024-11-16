@@ -12,8 +12,8 @@ export namespace S {
 
         width: 100%;
 
-        background: #141B22;
-        border-radius: 8px;
+        background: #ccc5b9;
+        border-radius: 0;
     `;
 
     export const FooterInnerContainer = styled.div`

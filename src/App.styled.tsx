@@ -1,5 +1,6 @@
 import styled from '@emotion/styled';
-import background from './assets/background.png';
+import backgroundNoText from './assets/background-no-text.jpg';
+import background from './assets/background.jpg';
 
 export namespace S {
   export const App = styled.div`
@@ -10,17 +11,21 @@ export namespace S {
   `;
 
   export const BackgroundContainer = styled.div`
-    margin-top: 130px;
-    box-shadow: rgb(4, 11, 17) 0px 140px 200px 130px inset;
+    margin-top: 100px;
+    opacity: 0.75;
     position: absolute;
     background-image: url(${background});
+    background-size: contain;
+    background-repeat: no-repeat;
     width: 100%;
-    height: 750px;
+    height: 100%;
     z-index: -1;
 
     @media (max-width: 1200px) {
-      box-shadow: rgb(4, 11, 17) 0px 16px 104px 86px inset;
-      height: 600px;
+      height: 500px;
+      background-image: url(${backgroundNoText});
+      background-position: center;
+      background-size: cover;
       margin-top: 25px;
     }
   `;
