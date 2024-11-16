@@ -2,7 +2,7 @@ import {Flex} from 'antd';
 import {S} from './index.styles';
 
 import freyr from '../../assets/OurTeam/freyr.png';
-import seby from '../../assets/OurTeam/seby.png';
+import ravena from '../../assets/OurTeam/ravena.png';
 import berizu from '../../assets/OurTeam/berizu.png';
 
 export const Team = (props: { myRef: React.RefObject<HTMLDivElement> }) => (
@@ -20,8 +20,8 @@ export const Team = (props: { myRef: React.RefObject<HTMLDivElement> }) => (
                 <S.CardRole>Developer</S.CardRole>
             </S.TeamCard>
             <S.TeamCard>
-                <S.Img src={seby} />
-                <S.CardTitle>Seby</S.CardTitle>
+                <S.Img src={ravena} />
+                <S.CardTitle>Ravena</S.CardTitle>
                 <S.CardRole>Designer</S.CardRole>
             </S.TeamCard>
         </Flex>

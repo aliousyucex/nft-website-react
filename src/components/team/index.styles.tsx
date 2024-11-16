@@ -62,9 +62,8 @@ export namespace S {
     `;
 
     export const Img = styled.img`
-        width: 180px;
-        padding-left: 30px;
-        margin-bottom: 12px;
+        width: 220px;
+        padding-left: 15px;
 
         @media (max-width: 1200px) {
             width: 80px;
