@@ -6,9 +6,10 @@ export namespace S {
   export const Container = styled.div`
     align-items: center;
     justify-content: center;
+    font-family: 'fuzzy', sans-serif;
+    width: 1410px;
 
-    scroll-margin-top: 100px;
-    margin-top: 120px;
+    scroll-margin-top: 135px;
 
     @media (max-width: 1200px) {
       width: 350px;
@@ -16,7 +17,7 @@ export namespace S {
       display: flex;
       justify-content: center;
       align-items: center;
-      background: #ccc5b9;
+      background: #F6DFB6;
       color: #292826;
       text-align: center;
       height: 100px;
@@ -24,14 +25,4 @@ export namespace S {
       scroll-margin-top: 200px;
     }
   `;
-
-  export const Title = styled.h1`
-        display: flex;
-        justify-content: center;
-
-        font-family: 'Bakbak One', sans-serif;
-        font-size: 36px;
-
-        color: #faf2e3;
-    `;
 }

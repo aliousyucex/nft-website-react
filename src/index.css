@@ -5,7 +5,6 @@
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #292826;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -22,6 +21,27 @@ body {
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
+}
+
+@font-face {
+  font-family: 'my_font';
+  src: url('./assets/font/akaDylan2.otf');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'fuzzy bold';
+  src: url('./assets/font/FuzzyBubbles-Bold.ttf');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'fuzzy';
+  src: url('./assets/font/FuzzyBubbles-Regular.ttf');
+  font-weight: normal;
+  font-style: normal;
 }
 
 @media (prefers-color-scheme: light) {

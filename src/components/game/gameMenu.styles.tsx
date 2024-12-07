@@ -22,7 +22,7 @@ export namespace S {
     width: 320px;
     height: 350px;
 
-    background-color: #ccc5b9;
+    background-color: #F6DFB6;
     border-radius: 0;
     border: none;
     user-select: none;
@@ -32,23 +32,23 @@ export namespace S {
 
   export const ScoreLabel = styled.label`
     font-size: 2.25rem;
-    font-family: 'Bakbak One', sans-serif;
+    font-family: 'fuzy bold', sans-serif;
   `;
 
   export const StartButton = styled.button`
     width: 100%;
-    background-color: #D9A459;
-    color: #292826;
+    background-color: #8049F4;
+    color: #eff85b;
     border: none;
     border-radius: 8px;
     height: 48px;
     cursor: pointer;
 
-    font-family: 'Bakbak One', sans-serif;
-
+    font-family: 'fuzzy bold', sans-serif;
+    font-size: 20px;
     :hover {
-      background-color: #292826;
-      color: #D9A459;
+      background-color: #eff85b;
+      color: #8049F4;
     }
   `;
 
@@ -66,11 +66,6 @@ export namespace S {
     cursor: pointer;
   `;
 
-    // #D9A459
-  // #faf2e3
-  // #292826
-  // #ccc5b9
-
   export const RadioButton = styled.input`
     display: flex;
     position: absolute;
@@ -87,7 +82,7 @@ export namespace S {
   `;
 
   export const CardTitle = styled.h2`
-    font-family: 'Bakbak One', sans-serif;
+    font-family: 'fuzzy bold', sans-serif;
   `;
 
   export const KeyImg = styled.img`
@@ -97,11 +92,11 @@ export namespace S {
   `;
 
   export const KeyLabel = styled.label`
-    font-family: 'Poppins', sans-serif;
+    font-family: 'fuzzy', sans-serif;
   `;
 
   export const Description = styled.p`
-    font-family: 'Poppins', sans-serif;
+    font-family: 'fuzzy', sans-serif;
     font-size: 16px;
   `;
 

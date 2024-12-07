@@ -6,10 +6,18 @@ export namespace S {
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        margin-top: 300px;
+        margin-top: 1600px;
 
-        @media (max-width: 1400px) {
-            margin-top: 165px;
+        @media (max-width: 1100px) {
+            margin-top: 1000px;
+        }
+
+        @media (max-width: 700px) {
+            margin-top: 700px;
+        }
+
+        @media (max-width: 500px) {
+            margin-top: 500px;
         }
     `;
 }

@@ -12,7 +12,7 @@ export namespace S {
 
         width: 100%;
 
-        background: #ccc5b9;
+        background: #F6DFB6;
         border-radius: 0;
     `;
 
@@ -76,7 +76,7 @@ export namespace S {
     export const Link = styled.a`
         font-family: 'Poppins', sans-serif;
         font-size: 14px;
-        color: #ccc5b9;
+        color: #F6DFB6;
         text-decoration: none;
 
         :hover {

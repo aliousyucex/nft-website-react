@@ -1,6 +1,5 @@
 import styled from '@emotion/styled';
-import backgroundNoText from './assets/background-no-text.jpg';
-import background from './assets/background.jpg';
+import backgroundYellow from './assets/background-yellow.jpg';
 
 export namespace S {
   export const App = styled.div`
@@ -8,25 +7,40 @@ export namespace S {
     flex-direction: column;
     align-items: center;
     user-select: none;
+
+    background-color: #F3753F;
   `;
 
   export const BackgroundContainer = styled.div`
     margin-top: 100px;
-    opacity: 0.75;
     position: absolute;
-    background-image: url(${background});
-    background-size: contain;
+    background-image: url(${backgroundYellow});
+    background-size: cover;
     background-repeat: no-repeat;
     width: 100%;
-    height: 100%;
-    z-index: -1;
+    height: 1600px;
+    z-index: 0;
 
-    @media (max-width: 1200px) {
-      height: 500px;
-      background-image: url(${backgroundNoText});
-      background-position: center;
-      background-size: cover;
-      margin-top: 25px;
+    @media (max-width: 1100px) {
+      height: 100%;
     }
+
+    @media (max-width: 700px) {
+      height: 550px;
+    }
+
+    @media (max-width: 500px) {
+      height: 405px;
+    }
+  `;
+
+  export const Text = styled.div`
+    width: 100%;
+    height: 100vh;
+    font-family: 'fuzzy bold', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #8049F4;
   `;
 }

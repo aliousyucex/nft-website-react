@@ -7,7 +7,7 @@ export namespace S {
         display: flex;
         align-items: flex-end;
         justify-content: space-between;
-        background: #ccc5b9;
+        background: #F6DFB6;
         color: #401414;
 
         border-top: 1px solid #401414;

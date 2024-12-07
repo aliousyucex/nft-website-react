@@ -23,20 +23,13 @@ export const Header = (props: HeaderProps) => {
 
     const items: MenuProps['items'] = [
         {
-            label: 'Manifest',
-            key: 'manifest',
-        },
-        {
-            label: 'Story',
+            label: 'About',
             key: 'story',
         },
         {
             label: 'Game',
             key: 'game',
-        },
-        {
-            label: 'Tribe',
-            key: 'team',
+            disabled: window.innerWidth < 1400
         },
         {
             label: 'FAQ',
@@ -49,7 +42,12 @@ export const Header = (props: HeaderProps) => {
             window.scrollTo({top: 0, behavior: 'smooth'})
         }
 
-        if (e.key === 'story' || e.key === 'team' || e.key === 'faq' || e.key === 'game' || e.key === 'manifest') {
+        if (e.key === 'game') {
+            window.location.href = '/game';
+        }
+
+
+        if (e.key === 'story' || e.key === 'team' || e.key === 'faq' || e.key === 'manifest') {
             props[e.key].current?.scrollIntoView({behavior: 'smooth'});
         }
     }
@@ -74,13 +72,13 @@ export const Header = (props: HeaderProps) => {
                 theme={{
                     components: {
                         Menu: {
-                            itemHoverColor: '#D9A459',
-                            horizontalItemSelectedColor: '#D9A459',
+                            itemHoverColor: '#8049F4',
+                            horizontalItemSelectedColor: '#8049F4',
                         },
                     },
                 }}
             >
-                <S.HeaderContainer style={isScrolled ? {borderBottom: '2px solid #D9A459'} : {}}>
+                <S.HeaderContainer style={isScrolled ? {borderBottom: '2px solid #8049F4'} : {}}>
                     <S.Logo
                         src={logo}
                         onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}
@@ -92,7 +90,7 @@ export const Header = (props: HeaderProps) => {
                         items={items}
                     />
                     <Space size="large">
-                        <a href='https://discord.gg/ivorynfts'><img src={discord} width={35} /></a>
+                        <a href='https://discord.gg/RMvaFAbFtA'><img src={discord} width={35} /></a>
                         <a href='https://x.com/ivorynfts'><img src={twitter} width={35} /></a>
                     </Space>
                 </S.HeaderContainer>
@@ -102,7 +100,7 @@ export const Header = (props: HeaderProps) => {
 
     return (
         <>
-          <S.HeaderContainer style={isScrolled ? {borderBottom: '2px solid #D9A459'} : {}}>
+          <S.HeaderContainer style={isScrolled ? {borderBottom: '2px solid #8049F4'} : {}}>
             <S.Logo src={logo} onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})} />
             {props.pageWidth < 1200 && (
               <Dropdown menu={menuProps} trigger={["click"]} >

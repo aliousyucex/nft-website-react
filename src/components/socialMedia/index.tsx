@@ -12,7 +12,7 @@ export const SocialMedia = () => {
                 <S.CoverCard target="_blank" href="https://x.com/ivorynfts">
                     <S.Img src={twitter} alt="Twitter" />
                 </S.CoverCard>
-                <S.CoverCard target="_blank" href="https://discord.gg/ivorynfts">
+                <S.CoverCard target="_blank" href="https://discord.gg/RMvaFAbFtA">
                     <S.Img src={discord} alt="Discord" />
                 </S.CoverCard>
             </Space>

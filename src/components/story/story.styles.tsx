@@ -1,140 +1,43 @@
 import styled from "@emotion/styled";
-import "@fontsource/bakbak-one";
 import "@fontsource/poppins";
-import { Card as AntCard, Modal as Md, Flex } from "antd";
+import cardImage from "../../assets/story/asd.png";
+import { Flex } from "antd";
 
 export namespace S {
+    export const Container = styled(Flex)`
+        scroll-margin-top: 125px;
+    `;
+
     export const CardText = styled.p`
         font-family: 'Poppins', sans-serif;
         color: #292826;
         font-size: 18px;
         line-height: 28px;
         text-align: center;
+
+        margin-top: 100px;
     `;
 
-    export const StoryContainer = styled(Flex)`
-        scroll-margin-top: 125px;
-        margin-top: 75px;
+    export const Card = styled.div`
+        background: url(${cardImage});
+        background-repeat: no-repeat;
+        background-size: contain;
+        width: 1100px;
+        height: 280px;
 
-        @media (max-width: 768px) {
-        margin-top: 100px; // Mobil cihazlar için üst boşluğu azaltın.
+        @media (max-width: 1100px) {
+            width: 900px;
+            height: 270px;
         }
-    `;
 
-    export const Card = styled(AntCard)`
-        color: #faf2e3;
-        background-color: #ccc5b9;
-        width: 1150px;
-        border-radius: 8px;
-        border: none;
-        font-family: 'poppins', sans-serif;
-        height: 350px;
+        @media (max-width: 700px) {
+            width: 500px;
+            height: 140px;
+        }
 
-        @media (max-width: 768px) {
+        @media (max-width: 500px) {
             width: 350px;
+            height: 100px;
         }
-    `;
-
-    export const CardTitle = styled.span`
-        text-align: center;
-        font-size: 42px;
-        font-family: 'Bakbak One', sans-serif;
-        color: #401414;
-
-        @media (max-width: 1200px) {
-            font-size: 36px;
-        }
-    `;
-
-    export const Modal = styled(Md)`
-        .ant-modal-content{
-            background: #ccc5b9;
-            padding: 24px;
-
-            color: #401414;
-            width: 100%;
-            max-height: 750px;
-            overflow: auto;
-
-            @media (max-width: 1200px) {
-                max-height: 500px;
-            }
-        }
-    `;
-
-    export const stroyImg = styled.img`
-        max-width: 300px;
-
-        @media (max-width: 1200px) {
-            width: 100%;
-        }
-    `;
-
-    export const StoryModalContainer = styled(Flex)`
-        color: #401414;
-        font-family: 'Poppins', sans-serif;
-    `;
-
-    export const CardContent = styled(Flex)`
-        color: #292826;
-        height: 300px;
-
-        @media (max-width: 1200px) {
-            height: 280px;
-        }
-    `;
-
-    export const CardButton = styled.button`
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
-        align-items: center;
-        border-radius: 0;
-        width: 200px;
-        height: 48px;
-        font-size: 18px;
-        font-family: 'Bakbak One', sans-serif;
-
-        border: 4px solid #292826;
-        background: none;
-        color: #292826;
-        cursor: pointer;
-
-        :hover {
-            background: #292826;
-            border: 4px solid #292826;
-            color: #ccc5b9;
-        }
-    `;
-
-    export const Text = styled.p`
-        font-family: 'Poppins', sans-serif;
-        font-size: 18px;
-        line-height: 28px;
-        color: #292826;
-    `;
-
-    export const PuncLines = styled.strong`
-       font-family: 'Bakbak One', sans-serif;
-    `;
-
-    export const Li = styled.li`
-        margin: 0 0 12px 0;
-    `;
-
-    export const ModalTitle = styled.h1`
-        @media (max-width: 1200px) {
-            font-size: 32px;
-        }
-    `;
-
-    export const Title = styled.h1`
-        display: flex;
-        justify-content: center;
-
-        font-family: 'Bakbak One', sans-serif;
-        font-size: 36px;
-
-        color: #faf2e3;
     `;
 }

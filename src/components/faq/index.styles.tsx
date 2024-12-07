@@ -15,25 +15,15 @@ export namespace S {
         }
     `;
 
-    export const Title = styled.h1`
-        display: flex;
-        justify-content: center;
-
-        font-family: 'Bakbak One', sans-serif;
-        font-size: 36px;
-
-        color: #faf2e3;
-    `;
-
     export const Collapse = styled(Cll)`
         .ant-collapse-item{
             width: 100%;
-            background: #ccc5b9;
+            background: #F6DFB6;
             border-radius: 8px !important;
         }
 
         .ant-collapse-header {
-            font-family: 'Bakbak One', sans-serif;
+            font-family: 'fuzzy bold', sans-serif;
             font-size: 24px;
 
             color: #401414 !important;
@@ -69,7 +59,7 @@ export namespace S {
             align-self: stretch;
             text-align: justify;
 
-            background-color: #ccc5b9;
+            background-color: #F6DFB6;
 
             border-top: 2px solid #292826;
             border-radius: 0 0 8px 8px !important;
@@ -93,6 +83,7 @@ export namespace S {
     export const P = styled.p`
         padding-left: 36px;
         text-align: left;
+        font-family: 'fuzzy', sans-serif;
 
         @media (max-width: 1200px) {
             padding-left: 12px;

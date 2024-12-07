@@ -1,7 +1,7 @@
 import {useState} from 'react';
 import {S} from './index.styles';
 
-const COUNTDOWN_DATE = '30 Nov 2024';
+const COUNTDOWN_DATE = '30 Nov 2024 22:00';
 
 export const Countdown = () => {
   const [totalSeconds, setTotalSeconds] = useState(

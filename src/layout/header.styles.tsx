@@ -7,14 +7,15 @@ export namespace S {
         height: 100px;
         justify-content: right;
         align-items: center;
-        color: #faf2e3;
+        color: #8049F4;
         font-size: 18px;
         font-weight: 600;
-        background-color: #292826;
-        font-family: 'Bakbak One', sans-serif;
+        background-color: #eff85b;
+        font-family: 'my_font', sans-serif;
         transition:all 1s;
         user-select: none;
-        width: 500px;
+        width: 350px;
+        border-bottom: none;
 
         letter-spacing: 0.1em;
         text-transform: uppercase;
@@ -28,7 +29,7 @@ export namespace S {
         display: flex;
         position: fixed;
         z-index: 2;
-        background-color: #292826;
+        background-color: #eff85b;
         justify-content: space-between;
         align-items: center;
         width: 92%;
@@ -60,40 +61,9 @@ export namespace S {
         }
     `;
 
-    export const DiscordButton = styled.button`
-        width: 148px;
-        height: 48px;
-        border-radius: 0;
-        background-color: #5865F2;
-        font-family: 'Bakbak One', sans-serif;
-        text-transform: uppercase;
-
-        :hover {
-            color: #5865F2;
-            background-color: #faf2e3;
-        }
-    `;
-
-    export const TwitterButton = styled.button`
-        width: 148px;
-        height: 48px;
-        border-radius: 0;
-        font-family: 'Bakbak One', sans-serif;
-        text-transform: uppercase;
-        background: #faf2e3;
-        color: #000;
-        border: 1px solid #000;
-
-        :hover {
-            border: 1px solid #faf2e3;
-            background-color: #000;
-            color: #faf2e3;
-        }
-    `;
-
     export const Container = styled(Flex)`
         padding: 18px;
-        background-color: #040B11;
+        background-color: #eff85b;
 
         @media (min-width: 1200px) {
             width: 100%;
@@ -101,7 +71,7 @@ export namespace S {
     `;
 
     export const MenuButton = styled(Button)`
-        background: #D9A459;
+        background: #eff85b;
         border: none;
 
         .ant-dropdown-open {
