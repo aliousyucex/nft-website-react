@@ -9,10 +9,7 @@ import Icon from '@mdi/react';
 import { mdiMenu } from '@mdi/js';
 
 type HeaderProps = {
-    story: RefObject<HTMLDivElement>,
     manifest: RefObject<HTMLDivElement>,
-    game: RefObject<HTMLDivElement>,
-    team: RefObject<HTMLDivElement>,
     faq: RefObject<HTMLDivElement>,
     pageWidth: number;
 }
@@ -24,6 +21,10 @@ export const Header = (props: HeaderProps) => {
     const items: MenuProps['items'] = [
         {
             label: 'About',
+            key: 'manifest',
+        },
+        {
+            label: 'Story',
             key: 'story',
         },
         {
@@ -46,8 +47,12 @@ export const Header = (props: HeaderProps) => {
             window.location.href = '/game';
         }
 
+        if (e.key === 'story') {
+            window.location.href = '/story';
+        }
 
-        if (e.key === 'story' || e.key === 'team' || e.key === 'faq' || e.key === 'manifest') {
+
+        if (e.key === 'faq' || e.key === 'manifest') {
             props[e.key].current?.scrollIntoView({behavior: 'smooth'});
         }
     }

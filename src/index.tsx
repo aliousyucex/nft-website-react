@@ -5,8 +5,10 @@ import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 import {S} from './index.styled.tsx';
 import './index.css';
-import {Game} from './components/game/index.tsx';
+
 import logo from '../public/logo.png';
+import {Game} from './components/game/index.tsx';
+import {Story} from './components/story/story.tsx';
 
 const root = document.getElementById('root')!;
 
@@ -26,7 +28,13 @@ const router = createBrowserRouter([
       },
       {
         path: 'story',
-        element: <div>story</div>,
+        element: <S.StoryContainer justify="center" align="center">
+        <S.Logo
+          src={logo}
+          onClick={() => window.location.href = '/home'}
+        />
+        <Story />
+    </S.StoryContainer>,
       },
       {
         path: 'game',

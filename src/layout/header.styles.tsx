@@ -14,7 +14,7 @@ export namespace S {
         font-family: 'my_font', sans-serif;
         transition:all 1s;
         user-select: none;
-        width: 350px;
+        width: 500px;
         border-bottom: none;
 
         letter-spacing: 0.1em;
