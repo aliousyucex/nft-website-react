@@ -1,16 +1,18 @@
 import styled from '@emotion/styled';
 import {Button, Flex, Menu} from 'antd';
 import '@fontsource/bakbak-one';
+import '@fontsource/londrina-solid';
+import {Link as ScrollLink} from 'react-scroll';
 
 export namespace S {
     export const StyledMenu = styled(Menu)`
-        height: 100px;
+        height: 70px;
         justify-content: right;
         align-items: center;
-        color: #8049F4;
+        color: #E4F4E9;
         font-size: 18px;
         font-weight: 600;
-        background-color: #eff85b;
+        background-color: #81AA93;
         font-family: 'my_font', sans-serif;
         transition:all 1s;
         user-select: none;
@@ -25,15 +27,27 @@ export namespace S {
         }
     `;
 
+    export const MenuItem = styled(ScrollLink)`
+        color: #E4F4E9;
+        font-size: 32px;
+        font-weight: 600;
+        font-family: 'Londrina Solid', system-ui;
+        scroll-margin-top: 70px;
+
+        :hover {
+            color: #E4F4E9;
+        }
+    `;
+
     export const HeaderContainer = styled.div`
         display: flex;
         position: fixed;
         z-index: 2;
-        background-color: #eff85b;
+        background-color: #81AA93;
         justify-content: space-between;
         align-items: center;
         width: 92%;
-        height: 100px;
+        height: 70px;
         padding: 0 100px 0 100px;
 
         scroll-margin-top: 50px;
@@ -53,17 +67,17 @@ export namespace S {
 
 
     export const Logo = styled.img`
-        height: 60px;
+        width: 65px;
         cursor: pointer;
 
-        @media (max-width: 1200px) {
-            height: 45px;
+        @media (max-width: 650px) {
+            width: 55px;
         }
     `;
 
     export const Container = styled(Flex)`
         padding: 18px;
-        background-color: #eff85b;
+        background-color: #81AA93;
 
         @media (min-width: 1200px) {
             width: 100%;
@@ -71,7 +85,9 @@ export namespace S {
     `;
 
     export const MenuButton = styled(Button)`
-        background: #eff85b;
+        background: #3C322E;
+        color: #8BB39D;
+
         border: none;
 
         .ant-dropdown-open {

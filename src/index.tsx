@@ -6,7 +6,7 @@ import App from './App.tsx';
 import {S} from './index.styled.tsx';
 import './index.css';
 
-import logo from '../public/logo.png';
+import logo from '../public/logo.svg';
 import {Game} from './components/game/index.tsx';
 import {Story} from './components/story/story.tsx';
 
@@ -17,11 +17,13 @@ const gameRef = React.createRef<HTMLDivElement>();
 const router = createBrowserRouter([
   {
     path: '/',
+    element: <App />,
+    errorElement: <Navigate to="./" replace />,
     children: [
-      {
-        index: true,
-        element: <Navigate to="./home" replace />,
-      },
+      // {
+      //   index: true,
+      //   element: <Navigate to="./home" replace />,
+      // },
       {
         path: 'home',
         element: <App />

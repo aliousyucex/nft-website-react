@@ -34,7 +34,7 @@ export const FAQ = (props: { myRef: React.RefObject<HTMLDivElement> }) => {
     ];
 
     return (
-        <S.CollapseContainer ref={props.myRef}>
+        <S.CollapseContainer ref={props.myRef} id="faq">
             <ConfigProvider
                 theme={{
                     components: {
