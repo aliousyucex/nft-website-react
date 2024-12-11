@@ -36,7 +36,7 @@ export namespace S {
     }
 
     @media (max-width: 1300px) {
-      height: 950px;
+      height: 9500px;
     }
 
     @media (max-width: 1200px) {
@@ -175,6 +175,16 @@ export namespace S {
     }
 
     @media (max-width: 1200px) {
+      margin-top: 50px;
+      height: 70vh;
+    }
+
+    @media (max-width: 900px) {
+      margin-top: 50px;
+      height: 60vh;
+    }
+
+    @media (max-width: 650px) {
       margin-top: 50px;
       height: 70vh;
     }
