@@ -28,7 +28,7 @@ export namespace S {
     background-size: contain;
     background-repeat: no-repeat;
     width: 100%;
-    height: 1200px;
+    height: 1320px;
     z-index: 0;
 
     @media (max-width: 1400px) {

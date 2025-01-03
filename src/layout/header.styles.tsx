@@ -39,6 +39,22 @@ export namespace S {
         }
     `;
 
+    export const MenuLinkItem = styled.button`
+        color: #E4F4E9;
+        font-size: 32px;
+        font-weight: 600;
+        font-family: 'Londrina Solid', system-ui;
+        scroll-margin-top: 70px;
+        background: none;
+        border: none;
+
+
+        :hover {
+            color: #E4F4E9;
+            cursor: pointer;
+        }
+    `;
+
     export const HeaderContainer = styled.div`
         display: flex;
         position: fixed;

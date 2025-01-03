@@ -32,7 +32,7 @@ export namespace S {
 
   export const ScoreLabel = styled.label`
     font-size: 2.25rem;
-    font-family: 'fuzy bold', sans-serif;
+    font-family: 'DynaPuff Variable', system-ui;
   `;
 
   export const StartButton = styled.button`
@@ -44,7 +44,7 @@ export namespace S {
     height: 48px;
     cursor: pointer;
 
-    font-family: 'fuzzy bold', sans-serif;
+    font-family: 'DynaPuff Variable', system-ui;
     font-size: 20px;
     :hover {
       background-color: #eff85b;
@@ -82,7 +82,7 @@ export namespace S {
   `;
 
   export const CardTitle = styled.h2`
-    font-family: 'fuzzy bold', sans-serif;
+    font-family: 'DynaPuff Variable', system-ui;
   `;
 
   export const KeyImg = styled.img`
@@ -92,11 +92,11 @@ export namespace S {
   `;
 
   export const KeyLabel = styled.label`
-    font-family: 'fuzzy', sans-serif;
+    font-family: 'DynaPuff Variable', system-ui;
   `;
 
   export const Description = styled.p`
-    font-family: 'fuzzy', sans-serif;
+    font-family: 'DynaPuff Variable', system-ui;
     font-size: 16px;
   `;
 

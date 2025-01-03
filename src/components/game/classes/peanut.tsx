@@ -20,6 +20,6 @@ export class Peanut {
     }
 
     draw() {
-        this.context.drawImage(this.image, this.position.x, this.position.y)
+        this.context.drawImage(this.image, this.position.x, this.position.y, this.width, this.height)
     }
 }

@@ -1,7 +1,7 @@
 import { S } from './gameMenu.styles';
-import playerOption1 from '../../assets/gameAssets/playeroneleft.png'
-import playerOption2 from '../../assets/gameAssets/playertwoleft.png'
-import playerOption3 from '../../assets/gameAssets/playerthreeleft.png'
+import playerOption1 from '../../assets/gameAssets/playeroneleft.svg'
+import playerOption2 from '../../assets/gameAssets/playertwoleft.svg'
+import playerOption3 from '../../assets/gameAssets/playerthreeleft.svg'
 import { Flex } from 'antd';
 
 export const PlayerSelection = (props: {onPlayerOptionChanged: (value: number) => void, defaultChecked: number }) => {

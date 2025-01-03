@@ -6,51 +6,43 @@ import App from './App.tsx';
 import {S} from './index.styled.tsx';
 import './index.css';
 
-import logo from '../public/logo.svg';
 import {Game} from './components/game/index.tsx';
-import {Story} from './components/story/story.tsx';
+// import {Story} from './components/story/story.tsx';
+import { Header } from './layout/header.tsx';
 
 const root = document.getElementById('root')!;
-
-const gameRef = React.createRef<HTMLDivElement>();
 
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <App />,
-    errorElement: <Navigate to="./" replace />,
+    errorElement: <Navigate to="/" replace />,
     children: [
-      // {
-      //   index: true,
-      //   element: <Navigate to="./home" replace />,
-      // },
       {
-        path: 'home',
+        index: true,
         element: <App />
       },
       {
-        path: 'story',
-        element: <S.StoryContainer justify="center" align="center">
-        <S.Logo
-          src={logo}
-          onClick={() => window.location.href = '/home'}
-        />
-        <Story />
-    </S.StoryContainer>,
-      },
-      {
         path: 'game',
-        element: <S.GameContainer justify="center" align="center">
-              <S.Logo
-                src={logo}
-                onClick={() => window.location.href = '/home'}
-              />
-              <Game myRef={gameRef} />
-          </S.GameContainer>,
+        element: (
+            <S.GameContainer vertical align="center">
+              <Header pageWidth={window.innerWidth} noMenu />
+              <Game />
+            </S.GameContainer>
+        ),
       }
     ]
   }
 ])
+
+// {
+      //   path: 'story',
+      //   element: (
+      //     <S.StoryContainer justify="center" align="center">
+      //       <Header pageWidth={window.innerWidth} noMenu />
+      //       <Story />
+      //     </S.StoryContainer>
+      //   ),
+      // },
 
 ReactDOM.createRoot(root).render(
   <React.StrictMode>

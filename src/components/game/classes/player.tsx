@@ -1,11 +1,11 @@
 import {createImage} from '../../../utils/createImage';
 
-import PlayerOneLeft from '../../../assets/gameAssets/playeroneleft.png'
-import PlayerOneRight from '../../../assets/gameAssets/playeroneright.png'
-import PlayerTwoLeft from '../../../assets/gameAssets/playertwoleft.png'
-import PlayerTwoRight from '../../../assets/gameAssets/playertworight.png'
-import PlayerThreeLeft from '../../../assets/gameAssets/playerthreeleft.png'
-import PlayerThreeRight from '../../../assets/gameAssets/playerthreeright.png'
+import PlayerOneLeft from '../../../assets/gameAssets/playeroneleft.svg'
+import PlayerOneRight from '../../../assets/gameAssets/playeroneright.svg'
+import PlayerTwoLeft from '../../../assets/gameAssets/playertwoleft.svg'
+import PlayerTwoRight from '../../../assets/gameAssets/playertworight.svg'
+import PlayerThreeLeft from '../../../assets/gameAssets/playerthreeleft.svg'
+import PlayerThreeRight from '../../../assets/gameAssets/playerthreeright.svg'
 
 export class Player {
     private gravity: number;

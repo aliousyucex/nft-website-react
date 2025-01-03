@@ -8,9 +8,7 @@ export namespace S {
 
   export const GameContainer = styled(Flex)`
     height: 100vh;
-    background-color: #8049F4;
-    // background-color: #EFF85B;
-    // background-color: #F3753F;
+    background-color: #D5E2D8;
   `;
 
   export const StoryContainer = styled(Flex)`
