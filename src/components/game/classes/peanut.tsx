@@ -1,13 +1,13 @@
 import {createImage} from '../../../utils/createImage';
 
 export class Peanut {
-    private context: CanvasRenderingContext2D;
+    private context: CanvasRenderingContext2D | null;
     public position: {x: number, y: number};
     public width: number;
     public height: number;
     public image: CanvasImageSource;
 
-    constructor(context: CanvasRenderingContext2D, x: number, y: number, image: string) {
+    constructor(x: number, y: number, image: string) {
         this.position = {
             x,
             y
@@ -16,10 +16,18 @@ export class Peanut {
 
         this.width = 40;
         this.height = 30;
+        this.context = null;
+    }
+
+    setContext(context: CanvasRenderingContext2D) {
+        if (this.context) return;
+
         this.context = context;
     }
 
     draw() {
+        if (!this.context) return;
+
         this.context.drawImage(this.image, this.position.x, this.position.y, this.width, this.height)
     }
 }

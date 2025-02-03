@@ -4,17 +4,14 @@ import "@fontsource/bakbak-one";
 import { Flex } from "antd";
 
 export namespace S {
-  export const Container = styled.div`
-    margin-top: 150px;
-    align-items: center;
-    justify-content: center;
+  export const Container = styled(Flex)`
+    margin: auto 0;
     font-family: 'fuzzy', sans-serif;
-    width: 1410px;
 
     scroll-margin-top: 135px;
 
-    @media (max-width: 1350px) {
-      width: 350px;
+    @media (max-width: 710px) {
+      padding: 24px;
       border-radius: 8px;
       display: flex;
       justify-content: center;
@@ -68,5 +65,10 @@ export namespace S {
       transform: rotate(360deg);
     }
   }
+`;
+
+export const H2 = styled.h2`
+  font-family: 'Londrina Solid', system-ui;
+  color: black;
 `;
 }

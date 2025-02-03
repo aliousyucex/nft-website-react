@@ -1,4 +1,4 @@
-import { RefObject } from "react";
+import { RefObject, useState } from "react";
 import { S } from "./header.styles";
 import { Flex, Space } from "antd";
 
@@ -9,41 +9,45 @@ import twitterBrown from "../assets/social-media/twitter-brown.svg";
 import discordBrown from "../assets/social-media/discord-brown.svg";
 import { useLocation, useNavigate } from "react-router-dom";
 
-type HeaderProps = {
+export const Header = (props: {
     manifest?: RefObject<HTMLDivElement>;
     faq?: RefObject<HTMLDivElement>;
-    pageWidth: number;
     noMenu?: true;
-};
-
-export const Header = (props: HeaderProps) => {
+}) => {
     const navigate = useNavigate();
     const { pathname } = useLocation();
+    const [width, setWidth] = useState(window.innerWidth);
 
-    if (props.pageWidth <= 800) {
+        window.addEventListener("resize", () => setWidth(window.innerWidth));
+
+    if (width <= 750) {
         return (
-            <>
-                <S.HeaderContainer>
-                    <S.Logo
-                        src={logo}
-                        onClick={() => {
-                            if (props.noMenu) {
-                                navigate("/");
-                            }
+            <S.HeaderContainer>
+                <S.Logo
+                    src={logo}
+                    onClick={() => {
+                        if (props.noMenu) {
+                            navigate("/");
+                        }
 
-                            window.scrollTo({ top: 0, behavior: "smooth" });
-                        }}
-                    />
-                    <Space size="large">
-                        <a href="https://discord.gg/ivorynfts">
-                            <img src={discordBrown} width={30} />
-                        </a>
-                        <a href="https://x.com/ivorynfts">
-                            <img src={twitterBrown} width={30} />
-                        </a>
-                    </Space>
-                </S.HeaderContainer>
-            </>
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                />
+                <S.MenuLinkItem onClick={() => navigate("/game")}>
+                    GAME
+                </S.MenuLinkItem>
+                <S.MenuLinkItem onClick={() => navigate("/story")}>
+                    STORY
+                </S.MenuLinkItem>
+                <Space size="large">
+                    <a href="https://discord.gg/ivorynfts">
+                        <img src={discordBrown} width={30} />
+                    </a>
+                    <a href="https://x.com/ivorynfts">
+                        <img src={twitterBrown} width={30} />
+                    </a>
+                </Space>
+            </S.HeaderContainer>
         );
     }
 
@@ -52,11 +56,11 @@ export const Header = (props: HeaderProps) => {
             <S.Logo
                 src={logo}
                 onClick={() => {
-                    if (pathname !== '/') {
-                        navigate('/');
+                    if (pathname !== "/") {
+                        navigate("/");
                     }
 
-                    window.scrollTo({ top: 0, behavior: "smooth" })
+                    window.scrollTo({ top: 0, behavior: "smooth" });
                 }}
             />
             <Flex align="center" justify="center" gap={36}>
@@ -86,14 +90,8 @@ export const Header = (props: HeaderProps) => {
                     smooth={true}
                     duration={200}
                 >
-                    ROAD MAP
+                    ROADMAP
                 </S.MenuItem>
-                <S.MenuLinkItem onClick={() => navigate("/game")}>
-                    GAME
-                </S.MenuLinkItem>
-                {/* <S.MenuLinkItem onClick={() => navigate("/story")}>
-                    STORY
-                </S.MenuLinkItem> */}
                 <S.MenuItem
                     onClick={() => {
                         if (pathname === "/game" || pathname === "/story") {
@@ -107,6 +105,18 @@ export const Header = (props: HeaderProps) => {
                 >
                     FAQ
                 </S.MenuItem>
+                <S.MenuLinkItem onClick={() => navigate("/game")}>
+                    GAME
+                </S.MenuLinkItem>
+                <S.MenuLinkItem onClick={() => navigate("/story")}>
+                    STORY
+                </S.MenuLinkItem>
+                <S.MenuOutLinkItem
+                    href="https://ivorynfts.gitbook.io"
+                    target="_blank"
+                >
+                    WHITEPAPER
+                </S.MenuOutLinkItem>
             </Flex>
             <Space size="large">
                 <a href="https://discord.gg/ivorynfts">

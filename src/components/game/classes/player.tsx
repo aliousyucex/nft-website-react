@@ -11,8 +11,7 @@ export class Player {
     private gravity: number;
     public sprites : {left: CanvasImageSource, right: CanvasImageSource}[];
     public currentsprite: CanvasImageSource;
-    private context: CanvasRenderingContext2D;
-    private canvas: HTMLCanvasElement;
+    private context: CanvasRenderingContext2D | null;
     public position: {x: number, y: number};
     public velocity: {x: number, y: number} = {x: 0, y: 0};
     public speed: number;
@@ -21,8 +20,6 @@ export class Player {
 
     constructor(
         gravity: number,
-        canvas: HTMLCanvasElement,
-        c: CanvasRenderingContext2D,
         x: number,
         y: number,
         speed: number,
@@ -32,7 +29,6 @@ export class Player {
         this.speed = speed;
         this.width = 80;
         this.height = 80;
-        this.canvas = canvas;
         this.gravity = gravity;
         this.sprites = [
                 {
@@ -48,10 +44,22 @@ export class Player {
                     right: createImage(PlayerThreeRight)
                 }
             ]
-        this.context = c;
+        this.context = null;
         this.currentsprite = this.sprites[playerImg].left;
     }
+    setContext(context: CanvasRenderingContext2D) {
+        if (this.context) {
+            return;
+        }
+
+        this.context = context
+    }
+
     draw() {
+        if (this.context === null) {
+            return;
+        }
+
         this.context.drawImage(this.currentsprite, this.position.x, this.position.y, this.width, this.height);
     }
     update() {
@@ -59,7 +67,7 @@ export class Player {
         this.position.y += this.velocity.y;
         this.position.x += this.velocity.x;
 
-        if (this.position.y + this.height + this.velocity.y <= this.canvas.height - 3) {
+        if (this.position.y + this.height + this.velocity.y <= 695) {
             this.velocity.y += this.gravity
         } else {
             this.velocity.y = 0;

@@ -29,7 +29,7 @@ function App() {
 
   return (
     <S.App>
-      <Header pageWidth={pageWidth}  manifest={manifest} faq={faq} />
+      <Header manifest={manifest} faq={faq} />
       <S.BackgroundContainer />
 
         {pageWidth <= 600 &&

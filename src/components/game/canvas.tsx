@@ -35,6 +35,12 @@ import {
     mdiVolumeOff,
 } from "@mdi/js";
 
+declare global {
+    interface ScreenOrientation {
+        lock(orientation: "portrait" | "landscape"): Promise<void>;
+    }
+}
+
 const jumpeffect = new Audio(jumpeffectSound);
 const eateffect = new Audio(eateffectSound);
 
@@ -68,16 +74,184 @@ const levelUp = 10;
 const platforms: Platform[] = [];
 let counter = 0;
 
-export const GameCanvas = () => {
+export const GameCanvas = (props: {walletAddress: string}) => {
     const [openGameMenu, setOpenGameMenu] = useState(true);
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const sayacLabelRef = useRef<HTMLLabelElement | null>(null);
+    const ContainerRef = useRef<HTMLDivElement | null>(null);
     const [volume, setVolume] = useState<number>(0);
     const [bisi, setBisi] = useState<number>(0);
     const [gameScore, setGameScore] = useState<string | undefined>();
     const [firstPixelDrawned, setFirstPixelDrawned] = useState(false);
     const [playerOption, setPlayerOption] = useState(0);
     const [updateAnimation, setUpdateAnimation] = useState(false);
+    const [scaleRatio, setScaleRatio] = useState(1);
+
+    const calculateScaleRatio = () => {
+        const width = Math.min(window.outerWidth, window.innerWidth);
+
+        if (width >= 1410) {
+            setScaleRatio(1);
+        } else if (width >= 1000 && width < 1410) {
+            setScaleRatio(0.75);
+        } else if (width >= 850 && width < 1000) {
+            setScaleRatio(0.6);
+        } else if (width >= 710 && width < 850) {
+            setScaleRatio(0.5);
+        }
+        // else if (width >= 580 && width < 710) {
+        //     setScaleRatio(0.4);
+        // } else if (width >= 450 && width < 580) {
+        //     setScaleRatio(0.3);
+        // } else if (width < 450) {
+        //     setScaleRatio(0.24);
+        // }
+    };
+
+    useEffect(() => {
+        calculateScaleRatio();
+    }, []);
+
+    const createMoveButtons = () => {
+        let left = document.getElementById("left");
+        let right = document.getElementById("right");
+        let up = document.getElementById("up");
+        let down = document.getElementById("down");
+
+        if (!left && !right && !up && !down) {
+            left = document.createElement("div");
+            right = document.createElement("div");
+            up = document.createElement("div");
+            down = document.createElement("div");
+
+            left.id = "LEFT";
+            left.style.display = "flex";
+            left.style.alignItems = "center";
+            left.style.justifyContent = "center";
+            left.style.position = "absolute";
+            left.style.width = "75px";
+            left.style.height = "75px";
+            left.style.bottom = "-85px";
+            left.style.left = `20px`;
+            left.style.background = "#3C322E";
+            left.innerText = "Left";
+            left.style.borderRadius = "32px";
+            left.style.userSelect = "none";
+
+            right.id = "RIGHT";
+            right.style.display = "flex";
+            right.style.alignItems = "center";
+            right.style.justifyContent = "center";
+            right.style.position = "absolute";
+            right.style.width = "75px";
+            right.style.height = "75px";
+            right.style.bottom = "-85px";
+            right.style.left = `${20 + 75}px`;
+            right.style.background = "#3C322E";
+            right.innerText = "Right";
+            right.style.borderRadius = "32px";
+            right.style.userSelect = "none";
+
+            up.id = "UP";
+            up.style.display = "flex";
+            up.style.alignItems = "center";
+            up.style.justifyContent = "center";
+            up.style.position = "absolute";
+            up.style.width = "75px";
+            up.style.height = "75px";
+            up.style.bottom = "-85px";
+            up.style.right = `20px`;
+            up.style.background = "#3C322E";
+            up.innerText = "UP";
+            up.style.borderRadius = "32px";
+            up.style.userSelect = "none";
+
+            down.id = "DOWN";
+            down.style.display = "flex";
+            down.style.alignItems = "center";
+            down.style.justifyContent = "center";
+            down.style.position = "absolute";
+            down.style.width = "75px";
+            down.style.height = "75px";
+            down.style.bottom = "-85px";
+            down.style.right = `${20 + 75}px`;
+            down.style.background = "#3C322E";
+            down.innerText = "DOWN";
+            down.style.borderRadius = "32px";
+            down.style.userSelect = "none";
+        }
+
+        return { left, right, up, down };
+    };
+
+    const player = new Player(
+        gravity,
+        playerPositions[0].playerx,
+        playerPositions[0].playery,
+        playerSpeed,
+        playerOption,
+    );
+
+    let random = Math.floor(Math.random() * peanutPositions[0].length);
+    const peanut = new Peanut(
+        peanutPositions[0][random].x,
+        peanutPositions[0][random].y,
+        peanutImage,
+    );
+
+    const levelChangeHandle = (
+        context: CanvasRenderingContext2D,
+        level: number,
+    ) => {
+        if (!context) {
+            return;
+        }
+
+        let platformy = 657;
+
+        if (level == 2) {
+            platformy = 620;
+            platforms[7] = new Platform(
+                context,
+                750,
+                platformy,
+                groundImages[level + 1],
+            );
+        }
+        platforms[0] = new Platform(context, 0, platformy, groundImages[level]);
+
+        for (var i = 0; i < platformPositions[level].length; i++) {
+            platforms[i + 1] = new Platform(
+                context,
+                platformPositions[level][i]["platform-x"],
+                platformPositions[level][i]["platform-y"],
+                platformImages[level],
+            );
+        }
+
+        context.drawImage(gameBgImages[level], 0, 0);
+    };
+
+    const move = (props: {
+        keys: { right: { pressed: boolean }; left: { pressed: boolean } };
+        Canvas: { width: number };
+    }) => {
+        const { keys, Canvas } = props;
+        if (
+            // sag gitme siniri
+            keys.right.pressed &&
+            (player.position.x + player.width) * scaleRatio < Canvas.width
+        ) {
+            player.velocity.x = player.speed;
+            player.currentsprite = player.sprites[playerOption].right;
+        } else if (keys.left.pressed && player.position.x > 0) {
+            // sola gitme siniri
+            player.velocity.x = -player.speed;
+            player.currentsprite = player.sprites[playerOption].left;
+        } else {
+            player.velocity.x *= 0;
+        }
+    };
 
     useEffect(() => {
         jumpeffect.volume = volume / 100;
@@ -94,10 +268,91 @@ export const GameCanvas = () => {
 
         const context = Canvas.getContext("2d");
 
-        context!.fillStyle = "#ccc";
+        const { left, right, up, down } = createMoveButtons();
+
+        if (ContainerRef && scaleRatio < 0.75) {
+            if (left && right && up && down) {
+                const childs = ContainerRef.current?.children;
+
+                if (childs !== undefined) {
+                    Array.from(childs).forEach((child) => {
+                        if (
+                            child.id === "UP" ||
+                            child.id === "DOWN" ||
+                            child.id === "LEFT" ||
+                            child.id === "RIGHT"
+                        ) {
+                            ContainerRef.current?.removeChild(child);
+                        }
+                    });
+
+                    ContainerRef.current?.appendChild(left);
+                    ContainerRef.current?.appendChild(right);
+                    ContainerRef.current?.appendChild(up);
+                    ContainerRef.current?.appendChild(down);
+                }
+
+                left.addEventListener("touchstart", () => {
+                    keys.left.pressed = true;
+                });
+                right.addEventListener("touchstart", () => {
+                    keys.right.pressed = true;
+                });
+                left.addEventListener("mousedown", () => {
+                    keys.left.pressed = true;
+                });
+                right.addEventListener("mousedown", () => {
+                    keys.right.pressed = true;
+                });
+                down.addEventListener("mousedown", () => {
+                    if (
+                        (level != 2 && player.position.y <= 556) ||
+                        (level == 2 && player.position.y <= 519)
+                    ) {
+                        player.velocity.y += 1;
+                    }
+                });
+                up.addEventListener("touchstart", () => {
+                    if (player.velocity.y == 0) {
+                        player.velocity.y -= 14.5;
+
+                        jumpeffect.pause();
+                        jumpeffect.currentTime = 0;
+                        jumpeffect.play().catch(() => {});
+                    }
+                });
+                up.addEventListener("mousedown", () => {
+                    if (player.velocity.y == 0) {
+                        player.velocity.y -= 14.5;
+
+                        jumpeffect.pause();
+                        jumpeffect.currentTime = 0;
+                        jumpeffect.play().catch(() => {});
+                    }
+                });
+
+                left.addEventListener("touchend", () => {
+                    keys.left.pressed = false;
+                });
+                right.addEventListener("touchend", () => {
+                    keys.right.pressed = false;
+                });
+                left.addEventListener("mouseup", () => {
+                    keys.left.pressed = false;
+                });
+                right.addEventListener("mouseup", () => {
+                    keys.right.pressed = false;
+                });
+            }
+        }
+
+        calculateScaleRatio();
+
+        Canvas.width = 1410 * scaleRatio;
+        Canvas.height = 698 * scaleRatio;
+
+        context!.fillStyle = "#3C322E";
         context?.fillRect(0, 0, Canvas.width, Canvas.height);
-        Canvas.width = 1410;
-        Canvas.height = 698;
 
         if (sayacLabelRef.current) {
             sayacLabelRef.current.style.display = "none";
@@ -118,58 +373,46 @@ export const GameCanvas = () => {
             return;
         }
 
-        let random = Math.floor(Math.random() * peanutPositions[level].length);
-        let ramdomEx = random;
-        const peanut = new Peanut(
-            context,
-            peanutPositions[level][random].x,
-            peanutPositions[level][random].y,
-            peanutImage,
-        );
-        const player = new Player(
-            gravity,
-            Canvas,
-            context,
-            playerPositions[level].playerx,
-            playerPositions[level].playery,
-            playerSpeed,
-            playerOption,
-        );
+        const resizeCanvas = () => {
+            const width = Math.min(window.outerWidth, window.innerWidth);
+            let scaleRatio = 1;
 
-        const levelChangeHandle = (context: CanvasRenderingContext2D) => {
-            if (!context) {
-                return;
+            if (width >= 1450) {
+                scaleRatio = 1;
+            } else if (width >= 1000 && width < 1450) {
+                scaleRatio = 0.75;
+            } else if (width >= 850 && width < 1000) {
+                scaleRatio = 0.6;
+            } else if (width >= 710 && width < 850) {
+                scaleRatio = 0.5;
             }
+            // else if (width >= 580 && width < 710) {
+            //     scaleRatio = 0.4;
+            // } else if (width >= 450 && width < 580) {
+            //     scaleRatio = 0.3;
+            // } else if (width < 450) {
+            //     scaleRatio = 0.28;
+            // }
 
-            let platformy = 657;
+            Canvas.width = Math.min(1410 * scaleRatio, 1410);
+            Canvas.height = Math.min(698 * scaleRatio, 698);
 
-            if (level == 2) {
-                platformy = 620;
-                platforms[7] = new Platform(
-                    context,
-                    750,
-                    platformy,
-                    groundImages[level + 1],
-                );
-            }
-            platforms[0] = new Platform(
-                context,
+            // Ölçek faktörüne göre tekrar çizim yap
+            context.setTransform(
+                scaleRatio <= 1 ? scaleRatio : 1,
                 0,
-                platformy,
-                groundImages[level],
+                0,
+                scaleRatio <= 1 ? scaleRatio : 1,
+                0,
+                0,
             );
-
-            for (var i = 0; i < platformPositions[level].length; i++) {
-                platforms[i + 1] = new Platform(
-                    context,
-                    platformPositions[level][i]["platform-x"],
-                    platformPositions[level][i]["platform-y"],
-                    platformImages[level],
-                );
-            }
-
-            context.drawImage(gameBgImages[level], 0, 0);
+            // Her türlü çizim işlevini buraya ekleyin...
         };
+
+        window.addEventListener("resize", resizeCanvas);
+        resizeCanvas();
+
+        let ramdomEx = random;
 
         const animate = () => {
             animationId = requestAnimationFrame(animate);
@@ -178,21 +421,13 @@ export const GameCanvas = () => {
                 platform.draw();
             });
 
+            peanut.setContext(context);
+            player.setContext(context);
+
             peanut.draw();
             player.update();
 
-            if (
-                // sag gitme siniri
-                keys.right.pressed &&
-                player.position.x + player.width < Canvas.width
-            ) {
-                player.velocity.x = player.speed;
-            } else if (keys.left.pressed && player.position.x > 0) {
-                // sola gitme siniri
-                player.velocity.x = -player.speed;
-            } else {
-                player.velocity.x *= 0;
-            }
+            move({ keys, Canvas });
 
             platforms.forEach((platform) => {
                 // platformun üstünde durma checkleri
@@ -229,12 +464,30 @@ export const GameCanvas = () => {
                         setGameScore(score);
                         cancelAnimationFrame(animationId);
                         setOpenGameMenu(true);
+                        const postData = {
+                            field1: props.walletAddress,
+                            field2: score,
+                            field3: new Date(),
+                        };
+
+                        fetch("putScore.php", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify(postData),
+                        })
+                            .then((response) => response.json())
+                            .catch((error) => {
+                                console.error("Error:", error);
+                            });
+
                     }
                     // Level UP POINT
                     if (counter % levelUp == 0 && counter != 0) {
                         level++;
                         if (level != 3) {
-                            levelChangeHandle(context!);
+                            levelChangeHandle(context, level);
                             player.velocity.y = 0;
                             player.velocity.x = 0;
                             player.position.x = playerPositions[level].playerx;
@@ -259,7 +512,7 @@ export const GameCanvas = () => {
             });
         };
 
-        const start = () => {
+        const start = async () => {
             setOpenGameMenu(false);
             level = 0;
             counter = 0;
@@ -270,7 +523,7 @@ export const GameCanvas = () => {
                 sayacLabelRef.current.style.display = "flex";
             }
             random = Math.floor(Math.random() * peanutPositions[level].length);
-            levelChangeHandle(context);
+            levelChangeHandle(context, level);
             animate();
             var myfunc = setInterval(function Gametime() {
                 gameTime.timeMs++;
@@ -389,7 +642,7 @@ export const GameCanvas = () => {
         };
 
         const drawFirstPixelForUser = () => {
-            levelChangeHandle(context);
+            levelChangeHandle(context, level);
             animationId = requestAnimationFrame(animate);
             setTimeout(() => {
                 cancelAnimationFrame(animationId);
@@ -421,10 +674,17 @@ export const GameCanvas = () => {
 
     function startGame() {
         // Google Analytics'e event gönderin
-        (window as any).gtag('event', 'button_click', {
-            event_category: 'interaction',
-            event_label: 'start_game', // Buton adını belirtin
-            value: navigator.userAgent,
+        (window as any).gtag("event", "button_click", {
+            event_category: "interaction",
+            event_label: "start_game", // Buton adını belirtin
+            value: 2,
+        });
+
+        (window as any).gtag("event", "button_click", {
+            event_category: "interaction",
+            event_label: "game_start",
+            value: 1,
+            start_game: Date.now(),
         });
 
         setBisi(Date.now());
@@ -437,7 +697,7 @@ export const GameCanvas = () => {
     }
 
     return (
-        <S.Container>
+        <S.Container ref={ContainerRef}>
             <canvas ref={canvasRef} width={1410} height={698} />
             {openGameMenu === false && (
                 <S.TimeLabel ref={sayacLabelRef}>00:00</S.TimeLabel>
@@ -460,13 +720,13 @@ export const GameCanvas = () => {
                     />
                 </S.VolumeBarInput>
             </S.VolumeBarContainer>
-            <GameMenu
-                open={openGameMenu}
+            {openGameMenu && <GameMenu
                 score={gameScore}
                 onStartClicked={() => startGame()}
                 defaultChecked={playerOption}
                 onPlayerOptionChanged={(value) => changePlayer(value)}
-            />
+                wallet={props.walletAddress}
+            />}
         </S.Container>
     );
 };

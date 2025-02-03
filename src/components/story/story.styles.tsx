@@ -1,15 +1,16 @@
 import styled from "@emotion/styled";
 import "@fontsource/bakbak-one";
 import "@fontsource/poppins";
+import { Flex } from "antd";
 
 export namespace S {
     export const Container = styled.div`
+        font-family: 'DynaPuff Variable', system-ui;
         max-width: 1400px;
     `;
 
-
     export const stroyImg = styled.img`
-        max-width: 300px;
+        max-width: 400px;
 
         @media (max-width: 1200px) {
             width: 100%;
@@ -17,14 +18,14 @@ export namespace S {
     `;
 
     export const Text = styled.p`
-        font-family: 'Poppins', sans-serif;
+        font-family: 'DynaPuff Variable', system-ui;
         font-size: 18px;
         line-height: 28px;
         color: #292826;
     `;
 
     export const PuncLines = styled.strong`
-       font-family: 'Bakbak One', sans-serif;
+
     `;
 
     export const Li = styled.li`
@@ -32,6 +33,9 @@ export namespace S {
     `;
 
     export const ModalTitle = styled.h1`
+        color: black;
+        font-family: 'Londrina Solid', system-ui;
+
         @media (max-width: 1200px) {
             font-size: 32px;
         }
@@ -41,9 +45,12 @@ export namespace S {
         display: flex;
         justify-content: center;
 
-        font-family: 'Bakbak One', sans-serif;
         font-size: 36px;
 
         color: #faf2e3;
+    `;
+
+    export const InnerContainer = styled(Flex)`
+        padding: 36px;
     `;
 }

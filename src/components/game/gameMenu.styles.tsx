@@ -11,16 +11,17 @@ export namespace S {
     justify-content: center;
     align-items: center;
     user-select: none;
+    z-index: 2;
 
-    width: 1410px;
-    height: 698px;
+    width: 100%;
+    height: 100%;
 
     margin: 0 auto;
   `;
 
   export const Cards = styled(Card)`
     width: 320px;
-    height: 350px;
+    height: 370px;
 
     background-color: #F6DFB6;
     border-radius: 0;
@@ -85,6 +86,17 @@ export namespace S {
     font-family: 'DynaPuff Variable', system-ui;
   `;
 
+  export const LeaderBoard = styled.span`
+    width: 100%;
+    font-size: 24px;
+    font-weight: 600;
+    font-family: 'DynaPuff Variable', system-ui;
+    border-bottom: 1px solid black;
+    text-align: center;
+    margin-top: -6px;
+    padding: 6px;
+  `;
+
   export const KeyImg = styled.img`
     width: 50px;
     margin: 0;
@@ -105,5 +117,21 @@ export namespace S {
     justify-content: center;
     align-items: center;
     text-align: center;
+  `;
+
+  export const Table = styled.table`
+    font-family: 'DynaPuff Variable', system-ui;
+    width: 100%;
+    border-collapse: collapse;
+  `;
+
+  export const Th = styled.th`
+  padding: 8px;
+  text-align: left;
+  `;
+
+  export const Td = styled.td`
+  padding: 8px;
+  text-align: left;
   `;
 }

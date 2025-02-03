@@ -4,14 +4,15 @@ import storyOne from "../../assets/story/storyOne.png";
 import storyTwo from "../../assets/story/storyTwo.png";
 import storyThree from "../../assets/story/storyThree.png";
 import storyFour from "../../assets/story/storyFour.png";
+import { useEffect, useState } from "react";
 
 const LargeStoryText = (
-    <Flex vertical>
+    <S.InnerContainer vertical wrap="wrap">
         <S.ModalTitle style={{ textAlign: "center" }}>
             Toothless and the Red Peanuts: A Journey of Loss and Hope
         </S.ModalTitle>
         <Flex gap={24} wrap="wrap">
-            <Flex gap={24} align="center">
+            <Flex gap={24} align="center" justify="center">
                 <S.stroyImg src={storyOne} />
                 <Flex vertical gap={24}>
                     <S.Text>
@@ -111,15 +112,15 @@ const LargeStoryText = (
                 <S.stroyImg src={storyFour} />
             </Flex>
         </Flex>
-    </Flex>
+    </S.InnerContainer>
 );
 
 const smallStoryText = (
-    <Flex vertical>
+    <S.InnerContainer vertical align="center" justify="center">
         <S.ModalTitle style={{ textAlign: "center" }}>
             Toothless and the Red Peanuts: A Journey of Loss and Hope
         </S.ModalTitle>
-        <Flex gap={24} vertical wrap="wrap">
+        <Flex gap={24} vertical wrap="wrap" align="center" justify="center">
             <S.stroyImg src={storyOne} />
             <S.Text>
                 Toothless, a curious and gentle elephant, woke up every morning
@@ -200,14 +201,26 @@ const smallStoryText = (
             </S.Text>
             <S.stroyImg src={storyFour} />
         </Flex>
-    </Flex>
+    </S.InnerContainer>
 );
 
 export const Story = () => {
+    const [width, setWidth] = useState(window.innerWidth);
+
+    useEffect(() => {
+        const changeWidth = () => {
+            setWidth(window.innerWidth);
+        };
+
+        window.addEventListener('resize', changeWidth)
+
+        return window.removeEventListener('resize', changeWidth);
+    }, [])
+
     return (
         <Flex wrap="wrap" justify="center">
             <S.Container>
-                {window.innerWidth > 1200 ? LargeStoryText : smallStoryText}
+                {width > 750 ? LargeStoryText : smallStoryText}
             </S.Container>
         </Flex>
     );

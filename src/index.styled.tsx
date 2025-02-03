@@ -13,10 +13,7 @@ export namespace S {
 
   export const StoryContainer = styled(Flex)`
     padding: 100px 0 100px 0;
-    // background-color: #8049F4;
-    // background-color: #EFF85B;
-    // background-color: #F3753F;
-    background-color: #F6DFB6;
+    background-color: #D5E2D8;
   `;
 
   export const Logo = styled.img`
