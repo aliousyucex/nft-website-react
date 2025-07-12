@@ -8,8 +8,10 @@ export namespace S {
     align-items: flex;
     width: 60px;
     height: 60px;
+    user-select: none;
 
     background: rgba(194, 195, 197, 0.1);
+    border: 1px solid rgba(194, 195, 197, 0.75);
 
     :hover {
       background: rgba(194, 195, 197, 0.25);
@@ -21,9 +23,9 @@ export namespace S {
   `;
 
   export const H1 = styled.h1`
-    color: #21E786;;
+    color: #21E786;
     font-family: 'Bakbak One', sans-serif;
     font-size: 44px;
-    letter-spacing: 0.5em;
+    user-select: none;
   `;
 }

@@ -12,8 +12,8 @@ export namespace S {
 
         width: 100%;
 
-        background: #141B22;
-        border-radius: 8px;
+        background: #F6DFB6;
+        border-radius: 0;
     `;
 
     export const FooterInnerContainer = styled.div`
@@ -23,6 +23,11 @@ export namespace S {
         justify-content: center;
 
         width: 1150px;
+
+        @media (max-width: 1400px) {
+            width: 92%px;
+            align-items: center;
+        }
     `;
 
     export const ContextContainer = styled.div`
@@ -30,8 +35,11 @@ export namespace S {
         width: 1150px;
         justify-content: space-between;
 
-        margin-top: 50px;
-        height: 200px;
+        height: 32px;
+
+        @media (max-width: 1400px) {
+            width: 85%;
+        }
     `;
 
     export const LogoContainer = styled(Space)`
@@ -40,7 +48,7 @@ export namespace S {
         align-items: flex-start;
         justify-content: left;
         gap: 12px;
-        color: #fff;
+        color: #faf2e3;
     `;
 
     export const CompanyContainer = styled(Space)`
@@ -49,7 +57,7 @@ export namespace S {
         justify-content: left;
 
         gap: 12px;
-        color: #fff;
+        color: #faf2e3;
 
         padding-right: 25px;
     `;
@@ -62,13 +70,13 @@ export namespace S {
     export const Header = styled.span`
         font-family: 'Bakbak One', sans-serif;
         font-weight: bold;
-        color: #fff;
+        color: #faf2e3;
     `;
 
     export const Link = styled.a`
         font-family: 'Poppins', sans-serif;
         font-size: 14px;
-        color: #C2C3C5;
+        color: #F6DFB6;
         text-decoration: none;
 
         :hover {

@@ -1,18 +1,17 @@
 import {createImage} from '../../../utils/createImage';
 
-import PlayerOneLeft from '../../../assets/gameAssets/playeroneleft.png'
-import PlayerOneRight from '../../../assets/gameAssets/playeroneright.png'
-import PlayerTwoLeft from '../../../assets/gameAssets/playertwoleft.png'
-import PlayerTwoRight from '../../../assets/gameAssets/playertworight.png'
-import PlayerThreeLeft from '../../../assets/gameAssets/playerthreeleft.png'
-import PlayerThreeRight from '../../../assets/gameAssets/playerthreeright.png'
+import PlayerOneLeft from '../../../assets/gameAssets/playeroneleft.svg'
+import PlayerOneRight from '../../../assets/gameAssets/playeroneright.svg'
+import PlayerTwoLeft from '../../../assets/gameAssets/playertwoleft.svg'
+import PlayerTwoRight from '../../../assets/gameAssets/playertworight.svg'
+import PlayerThreeLeft from '../../../assets/gameAssets/playerthreeleft.svg'
+import PlayerThreeRight from '../../../assets/gameAssets/playerthreeright.svg'
 
 export class Player {
     private gravity: number;
-    private sprites : {left: CanvasImageSource, right: CanvasImageSource}[];
-    private currentsprite: CanvasImageSource;
-    private context: CanvasRenderingContext2D;
-    private canvas: HTMLCanvasElement;
+    public sprites : {left: CanvasImageSource, right: CanvasImageSource}[];
+    public currentsprite: CanvasImageSource;
+    private context: CanvasRenderingContext2D | null;
     public position: {x: number, y: number};
     public velocity: {x: number, y: number} = {x: 0, y: 0};
     public speed: number;
@@ -21,8 +20,6 @@ export class Player {
 
     constructor(
         gravity: number,
-        canvas: HTMLCanvasElement,
-        c: CanvasRenderingContext2D,
         x: number,
         y: number,
         speed: number,
@@ -32,7 +29,6 @@ export class Player {
         this.speed = speed;
         this.width = 80;
         this.height = 80;
-        this.canvas = canvas;
         this.gravity = gravity;
         this.sprites = [
                 {
@@ -48,18 +44,30 @@ export class Player {
                     right: createImage(PlayerThreeRight)
                 }
             ]
-        this.context = c;
+        this.context = null;
         this.currentsprite = this.sprites[playerImg].left;
     }
+    setContext(context: CanvasRenderingContext2D) {
+        if (this.context) {
+            return;
+        }
+
+        this.context = context
+    }
+
     draw() {
-        this.context.drawImage(this.currentsprite, this.position.x, this.position.y);
+        if (this.context === null) {
+            return;
+        }
+
+        this.context.drawImage(this.currentsprite, this.position.x, this.position.y, this.width, this.height);
     }
     update() {
         this.draw();
         this.position.y += this.velocity.y;
         this.position.x += this.velocity.x;
 
-        if (this.position.y + this.height + this.velocity.y <= this.canvas.height - 3) {
+        if (this.position.y + this.height + this.velocity.y <= 695) {
             this.velocity.y += this.gravity
         } else {
             this.velocity.y = 0;

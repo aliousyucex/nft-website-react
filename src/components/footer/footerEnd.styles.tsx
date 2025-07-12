@@ -7,11 +7,17 @@ export namespace S {
         display: flex;
         align-items: flex-end;
         justify-content: space-between;
+        background: #F6DFB6;
+        color: #401414;
 
-        width: 100%;
-
-        border-top: 1px solid #999;
+        border-top: 1px solid #401414;
         padding: 12px 0;
+
+        width: 1151px;
+
+        @media (max-width: 1400px) {
+            display: none;
+        }
     `;
 
     export const Text = styled.span`

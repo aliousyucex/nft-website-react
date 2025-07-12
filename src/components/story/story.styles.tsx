@@ -1,133 +1,56 @@
-import styled from '@emotion/styled';
-import '@fontsource/bakbak-one';
-import '@fontsource/poppins';
-import {Card as AntCard, Space, Modal as Md} from 'antd';
+import styled from "@emotion/styled";
+import "@fontsource/bakbak-one";
+import "@fontsource/poppins";
+import { Flex } from "antd";
 
 export namespace S {
-    export const Title = styled.span    `
-        font-family: 'Bakbak One', sans-serif;
-        color: #fff;
-        font-size: 44px;
-    `;
-
-    export const Text = styled.p`
-        font-family: 'Poppins', sans-serif;
-        color: #C2C3C5;
-        max-width: 500px;
-        font-size: 18px;
-        line-height: 28px;
-    `;
-
-    export const StoryContainer = styled(Space)`
-        scroll-margin-top: 125px;
-        margin-top: 200px;
-    `;
-
-    export const footerHeaders = styled.span`
-        font-family: 'Bakbak One', sans-serif;
-        font-weight: bold;
-        font-size: 20px;
-        color: #C2C3C5;
-    `;
-
-    export const footerTexts = styled.span`
-        font-size: 56px;
-        font-family: 'Bakbak One', sans-serif;
-        color: #fff;
-        text-shadow: 0px 4px 16px rgba(255, 255, 255, 0.4);
-    `;
-
-    export const Button = styled.button`
-        background: none;
-
-        font-family: 'Bakbak One', sans-serif;
-        font-size: 16px;
-        font-weight: bold;
-        width: 138px;
-        height: 48px;
-        border: 2px solid #21E786;
-        border-radius: 0;
-
-        :hover {
-            background: #21E786;
-            border: 2px solid #21E786;
-            font-size: 16px;
-            color: #000;
-        }
-    `;
-
-    export const Card = styled(AntCard)`
-        color: #fff;
-        background-color: #141B22;
-
-        border-radius: 0;
-        border: none;
-        width: 330px;
-        height: 250px;
-        font-family: 'poppins', sans-serif;
-
-        .ant-card-head {
-            display: flex;
-            justify-content: center;
-            text-align: center;
-
-            padding-top: 24px;
-            font-size: 24px;
-            font-family: 'Bakbak One', sans-serif;
-
-            color: #fff;
-            border: none;
-        }
-    `;
-
-    export const ManifestCard = styled(Card)`
-        :hover {
-            background: #0FA37D;
-        }
-    `;
-
-    export const NftCard = styled(Card)`
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    `;
-
-    export const TwitterLink = styled.a`
-        color: #fff;
-        text-decoration: none;
-
-        :hover {
-            color: #1A8CD8;
-        }
-    `;
-
-    export const DiscordLink = styled.a`
-        color: #fff;
-        text-decoration: none;
-
-        :hover {
-            color: #3841AA;
-        }
-    `;
-
-    export const Modal = styled(Md)`
-        .ant-modal-content{
-            background: #11121E;
-            padding: 24px;
-
-            color: #fff;
-            width: 100%;
-            max-height: 750px;
-            overflow: auto;
-        }
+    export const Container = styled.div`
+        font-family: 'DynaPuff Variable', system-ui;
+        max-width: 1400px;
     `;
 
     export const stroyImg = styled.img`
-        max-width: 300px;
+        max-width: 400px;
+
+        @media (max-width: 1200px) {
+            width: 100%;
+        }
     `;
 
-    export const StoryModalContainer = styled(Space)`
-        color: #999;
-        font-family: 'Poppins', sans-serif;
+    export const Text = styled.p`
+        font-family: 'DynaPuff Variable', system-ui;
+        font-size: 18px;
+        line-height: 28px;
+        color: #292826;
+    `;
+
+    export const PuncLines = styled.strong`
+
+    `;
+
+    export const Li = styled.li`
+        margin: 0 0 12px 0;
+    `;
+
+    export const ModalTitle = styled.h1`
+        color: black;
+        font-family: 'Londrina Solid', system-ui;
+
+        @media (max-width: 1200px) {
+            font-size: 32px;
+        }
+    `;
+
+    export const Title = styled.h1`
+        display: flex;
+        justify-content: center;
+
+        font-size: 36px;
+
+        color: #faf2e3;
+    `;
+
+    export const InnerContainer = styled(Flex)`
+        padding: 36px;
     `;
 }
