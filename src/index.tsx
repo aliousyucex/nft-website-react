@@ -18,7 +18,8 @@ import App from "./App.tsx";
 import { S } from "./index.styled.tsx";
 import "./index.css";
 
-import { Game } from "./components/game/index.tsx";
+import { Game } from "./components/game/peanutRush/index.tsx";
+import { Game2 } from "./components/game2/index.tsx";
 import {Story} from './components/story/story.tsx';
 import { Header } from "./layout/header.tsx";
 
@@ -39,6 +40,15 @@ const router = createBrowserRouter([
           <S.GameContainer vertical align="center" justify="center">
             <Header noMenu />
             <Game />
+          </S.GameContainer>
+        ),
+      },
+      {
+        path: "game2",
+        element: (
+          <S.GameContainer vertical align="center" justify="center">
+            <Header noMenu />
+            <Game2 />
           </S.GameContainer>
         ),
       },

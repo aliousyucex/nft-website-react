@@ -5,7 +5,7 @@ import { Platform } from "./classes/platform";
 import playerPositions from "./positions/player.json";
 import peanutPositions from "./positions/peanutPositions.json";
 import platformPositions from "./positions/platforms.json";
-import { createImage } from "../../utils/createImage";
+import { createImage } from "../../../utils/createImage";
 
 import jumpeffectSound from "../../assets/soundEffects/jump.mp3";
 import eateffectSound from "../../assets/soundEffects/eat.mp3";
