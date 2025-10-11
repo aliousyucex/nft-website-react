@@ -1,0 +1,67 @@
+import { Player } from './player';
+import { Card, Deck } from './card';
+
+export type GameState = 'waiting' | 'ready' | 'playing' | 'paused' | 'finished';
+export type RoundResult = 'player1_win' | 'player2_win' | 'draw';
+
+export interface RoundHistoryEntry {
+  roundNumber: number;
+  player1Card: Card;
+  player2Card: Card;
+  winner: string | null;
+  result: RoundResult;
+  timestamp: Date;
+}
+
+export interface Room {
+  roomId: string;
+  password: string | null;
+  betAmount: number;
+  winningScore: number;
+  createdAt: Date;
+  
+  // Players
+  players: Player[];
+  
+  // Game State
+  gameState: GameState;
+  currentRound: number;
+  
+  // Decks
+  player1Deck: Deck;
+  player2Deck: Deck;
+  
+  // History
+  roundHistory: RoundHistoryEntry[];
+  
+  // Session Tokens
+  sessionTokens: Record<string, string>;
+  
+  // Result
+  winner: string | null;
+  finalScore: Record<string, number> | null;
+  leaderboardPoints: Record<string, number> | null;
+  finishedAt: Date | null;
+  
+  // Metadata
+  isPublic: boolean;
+}
+
+export interface CreateRoomData {
+  betAmount: number;
+  password?: string;
+  winningScore?: number;
+  address: string;
+}
+
+export interface JoinRoomData {
+  roomId: string;
+  password?: string;
+  address: string;
+}
+
+export interface QuickJoinData {
+  betAmount: number;
+  address: string;
+}
+

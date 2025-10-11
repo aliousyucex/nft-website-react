@@ -1,52 +1,40 @@
 {
-  "name": "react-nftwebsite",
+  "name": "ice-water-fire-monorepo",
+  "version": "1.0.0",
+  "description": "Ice Water Fire - Blockchain Card Game Monorepo",
   "private": true,
-  "version": "0.0.0",
-  "type": "module",
+  "workspaces": [
+    "frontend",
+    "backend",
+    "contract"
+  ],
   "scripts": {
-    "start": "vite",
-    "build": "tsc && vite build",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install && cd ../contract && npm install",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && npm run dev",
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "cd backend && npm run build",
+    "compile:contracts": "cd contract && npx hardhat compile",
+    "test:contracts": "cd contract && npx hardhat test",
+    "deploy:testnet": "cd contract && npx hardhat run scripts/deploy.ts --network abstractTestnet",
+    "deploy:mainnet": "cd contract && npx hardhat run scripts/deploy.ts --network abstractMainnet",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f"
   },
-  "dependencies": {
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.1",
-    "@fontsource-variable/dynapuff": "5.1.0",
-    "@fontsource/bakbak-one": "^5.0.17",
-    "@fontsource/londrina-solid": "5.1.0",
-    "@fontsource/poppins": "^5.0.8",
-    "@mdi/js": "^7.4.47",
-    "@mdi/react": "^1.6.1",
-    "@react-three/drei": "^9.122.0",
-    "@react-three/fiber": "^8.18.0",
-    "@solana/wallet-adapter-base": "^0.9.23",
-    "@solana/wallet-adapter-react": "^0.15.35",
-    "@solana/wallet-adapter-react-ui": "^0.9.35",
-    "@solana/wallet-adapter-wallets": "^0.19.32",
-    "@solana/web3.js": "^1.98.0",
-    "@types/three": "^0.178.1",
-    "antd": "^5.11.1",
-    "fs": "^0.0.1-security",
-    "path": "^0.12.7",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^7.0.2",
-    "react-scroll": "1.9.0",
-    "react-use": "^17.6.0",
-    "three": "^0.178.0"
-  },
-  "devDependencies": {
-    "@types/react": "^18.2.37",
-    "@types/react-dom": "^18.2.15",
-    "@types/react-scroll": "1.8.10",
-    "@typescript-eslint/eslint-plugin": "^6.10.0",
-    "@typescript-eslint/parser": "^6.10.0",
-    "@vitejs/plugin-react": "^4.2.0",
-    "eslint": "^8.53.0",
-    "eslint-plugin-react-hooks": "^4.6.0",
-    "eslint-plugin-react-refresh": "^0.4.4",
-    "typescript": "^5.2.2",
-    "vite": "^5.0.0"
+  "keywords": [
+    "blockchain",
+    "gamefi",
+    "card-game",
+    "nft",
+    "web3",
+    "abstract-chain"
+  ],
+  "author": "Ice Water Fire Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=10.0.0"
   }
 }
+
