@@ -69,7 +69,7 @@ const config: Config = {
     pingInterval: parseInt(process.env.SOCKET_PING_INTERVAL || '25000', 10),
   },
   game: {
-    cardSelectionTimeout: parseInt(process.env.CARD_SELECTION_TIMEOUT || '5000', 10),
+    cardSelectionTimeout: parseInt(process.env.CARD_SELECTION_TIMEOUT || '10000', 10), // 10 seconds
     disconnectGracePeriod: parseInt(process.env.DISCONNECT_GRACE_PERIOD || '10000', 10),
     maxRoundLimit: parseInt(process.env.MAX_ROUND_LIMIT || '15', 10),
     commissionRate: parseFloat(process.env.COMMISSION_RATE || '0.03'),

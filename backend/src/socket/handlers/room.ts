@@ -55,15 +55,7 @@ export const setupRoomHandlers = (io: Server, socket: Socket) => {
 
       callback({
         success: true,
-        room: {
-          roomId: room.roomId,
-          betAmount: room.betAmount,
-          hasPassword: !!room.password,
-          playerCount: room.players.length,
-          players: room.players,
-          gameState: room.gameState,
-          createdAt: room.createdAt.toISOString(),
-        },
+        room: formatRoomData(room),
         sessionToken: room.sessionTokens[address.toLowerCase()],
       });
 
@@ -87,6 +79,9 @@ export const setupRoomHandlers = (io: Server, socket: Socket) => {
 
       // Validate
       validateRoomId(roomId);
+      
+      // Update room activity
+      roomManager.updateRoomActivity(roomId);
       validateAddress(address);
 
       // Check rate limit
@@ -134,15 +129,7 @@ export const setupRoomHandlers = (io: Server, socket: Socket) => {
 
       callback({
         success: true,
-        room: {
-          roomId: joinedRoom.roomId,
-          betAmount: joinedRoom.betAmount,
-          hasPassword: !!joinedRoom.password,
-          playerCount: joinedRoom.players.length,
-          players: joinedRoom.players,
-          gameState: joinedRoom.gameState,
-          createdAt: joinedRoom.createdAt.toISOString(),
-        },
+        room: formatRoomData(joinedRoom),
         sessionToken: joinedRoom.sessionTokens[address.toLowerCase()],
       });
 
@@ -150,15 +137,7 @@ export const setupRoomHandlers = (io: Server, socket: Socket) => {
       socket.to(roomId).emit('player_joined', {
         address,
         playerCount: joinedRoom.players.length,
-        room: {
-          roomId: joinedRoom.roomId,
-          betAmount: joinedRoom.betAmount,
-          hasPassword: !!joinedRoom.password,
-          playerCount: joinedRoom.players.length,
-          players: joinedRoom.players,
-          gameState: joinedRoom.gameState,
-          createdAt: joinedRoom.createdAt.toISOString(),
-        },
+        room: formatRoomData(joinedRoom),
       });
 
       // Broadcast updated room list
@@ -205,6 +184,9 @@ export const setupRoomHandlers = (io: Server, socket: Socket) => {
       // Quick join
       const room = roomManager.quickJoin(betAmount, address, socket.id);
 
+      // Update room activity
+      roomManager.updateRoomActivity(room.roomId);
+
       // Join socket room
       socket.join(room.roomId);
 
@@ -212,15 +194,7 @@ export const setupRoomHandlers = (io: Server, socket: Socket) => {
 
       callback({
         success: true,
-        room: {
-          roomId: room.roomId,
-          betAmount: room.betAmount,
-          hasPassword: !!room.password,
-          playerCount: room.players.length,
-          players: room.players,
-          gameState: room.gameState,
-          createdAt: room.createdAt.toISOString(),
-        },
+        room: formatRoomData(room),
         sessionToken: room.sessionTokens[address.toLowerCase()],
       });
 
@@ -229,15 +203,7 @@ export const setupRoomHandlers = (io: Server, socket: Socket) => {
         socket.to(room.roomId).emit('player_joined', {
           address,
           playerCount: room.players.length,
-          room: {
-            roomId: room.roomId,
-            betAmount: room.betAmount,
-            hasPassword: !!room.password,
-            playerCount: room.players.length,
-            players: room.players,
-            gameState: room.gameState,
-            createdAt: room.createdAt.toISOString(),
-          },
+          room: formatRoomData(room),
         });
       }
 
@@ -257,20 +223,60 @@ export const setupRoomHandlers = (io: Server, socket: Socket) => {
    */
   socket.on('leave_room', (callback) => {
     try {
+      // Get room info BEFORE removing player
+      const roomBeforeLeave = roomManager.getRoomBySocket(socket.id);
+      const roomIdBeforeLeave = roomBeforeLeave?.roomId;
+
+      logger.info('Player attempting to leave room', {
+        socketId: socket.id,
+        roomId: roomIdBeforeLeave,
+        playersBefore: roomBeforeLeave?.players.length,
+      });
+
+      // Now remove the player
       const { room, roomId } = roomManager.leaveRoom(socket.id);
 
-      if (roomId) {
-        socket.leave(roomId);
-      }
+      if (room && roomIdBeforeLeave) {
+        // If only 1 player remains, reset their ready state
+        if (room.players.length === 1) {
+          room.players[0].ready = false;
+          logger.info('Reset remaining player ready state', {
+            roomId: roomIdBeforeLeave,
+            playerAddress: room.players[0].address,
+          });
+        }
 
-      if (room && roomId) {
-        // Notify other players
-        socket.to(roomId).emit('player_left', {
+        const roomData = formatRoomData(room);
+        
+        logger.info('Broadcasting player_left to room', {
+          roomId: roomIdBeforeLeave,
+          remainingPlayers: room.players.length,
+          roomData,
+        });
+
+        // Use io.to() to broadcast to ALL sockets in the room
+        io.to(roomIdBeforeLeave).emit('player_left', {
+          remainingPlayers: room.players.length,
+          room: roomData,
+        });
+
+        // Also send room_updated to remaining players
+        io.to(roomIdBeforeLeave).emit('room_updated', {
+          room: roomData,
+        });
+
+        logger.info('Notified remaining players', {
+          roomId: roomIdBeforeLeave,
           remainingPlayers: room.players.length,
         });
       }
 
-      logger.info('Player left room', { roomId });
+      // NOW leave the socket room
+      if (roomId) {
+        socket.leave(roomId);
+      }
+
+      logger.info('Player left room complete', { roomId, remainingPlayers: room?.players.length });
 
       callback({ success: true });
 
@@ -329,20 +335,51 @@ export const setupRoomHandlers = (io: Server, socket: Socket) => {
       // Notify other players
       socket.to(roomId).emit('player_reconnected', { address });
 
+      // Send full room state with properly formatted players
+      const roomData = formatRoomData(room);
+
+      // Send room_updated and reconnect_success to the reconnected player
+      socket.emit('room_updated', { room: roomData });
+      socket.emit('reconnect_success', { room: roomData });
+
+      // If game is playing, send current game state
+      if (room.gameState === 'playing') {
+        const player = room.players.find((p) => p.address.toLowerCase() === address.toLowerCase());
+        
+        if (player) {
+          // Send player's cards
+          socket.emit('cards_dealt', {
+            cards: player.hand,
+            phase: 'reconnect',
+            message: 'Reconnected to game',
+          });
+
+          // Send current game state
+          const opponent = room.players.find((p) => p.address.toLowerCase() !== address.toLowerCase());
+          
+          socket.emit('game_started', {
+            message: 'Reconnected to ongoing game',
+          });
+
+          logger.info('Sent reconnect game state', {
+            roomId,
+            address,
+            currentRound: room.currentRound,
+            playerScore: player.roundsWon,
+            opponentScore: opponent?.roundsWon,
+          });
+        }
+      }
+
       callback({
         success: true,
-        room: {
-          roomId: room.roomId,
-          gameState: room.gameState,
-          currentRound: room.currentRound,
-          players: room.players.map((p) => ({
-            address: p.address,
-            roundsWon: p.roundsWon,
-            handSize: p.hand.length,
-            ready: p.ready,
-            isConnected: p.isConnected,
-          })),
-        },
+        room: roomData,
+      });
+
+      logger.info('Player reconnected successfully', {
+        roomId,
+        address,
+        gameState: room.gameState,
       });
     } catch (error) {
       logger.error('Error reconnecting', error);
@@ -357,13 +394,42 @@ export const setupRoomHandlers = (io: Server, socket: Socket) => {
 /**
  * Format room for public list
  */
-function formatRoomForList(room: any) {
+export function formatRoomForList(room: any) {
   return {
     roomId: room.roomId,
     betAmount: room.betAmount,
     hasPassword: !!room.password,
     playerCount: room.players.length,
     createdAt: room.createdAt,
+  };
+}
+
+/**
+ * Format player for frontend
+ */
+export function formatPlayer(player: any) {
+  return {
+    address: player.address,
+    ready: player.ready,
+    roundsWon: player.roundsWon,
+    handSize: player.hand?.length || 0,
+    isConnected: player.isConnected,
+    selectedCard: !!player.selectedCard,
+  };
+}
+
+/**
+ * Format room with full data for frontend
+ */
+export function formatRoomData(room: any) {
+  return {
+    roomId: room.roomId,
+    betAmount: room.betAmount,
+    hasPassword: !!room.password,
+    playerCount: room.players.length,
+    players: room.players.map(formatPlayer),
+    gameState: room.gameState,
+    createdAt: room.createdAt.toISOString(),
   };
 }
 

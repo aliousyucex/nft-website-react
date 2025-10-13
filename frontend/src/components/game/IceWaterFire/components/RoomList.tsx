@@ -4,7 +4,7 @@ import { Room } from '../types';
 
 interface RoomListProps {
   rooms: Room[];
-  onJoinRoom: (roomId: string) => void;
+  onJoinRoom: (roomId: string, hasPassword: boolean) => void;
   loading?: boolean;
 }
 
@@ -49,7 +49,7 @@ const RoomList: React.FC<RoomListProps> = ({ rooms, onJoinRoom, loading = false 
       </Title>
       <RoomGrid>
         {rooms.map((room) => (
-          <RoomCard key={room.roomId} onClick={() => onJoinRoom(room.roomId)}>
+          <RoomCard key={room.roomId} onClick={() => onJoinRoom(room.roomId, room.hasPassword)}>
             <RoomHeader>
               <RoomId>{room.roomId}</RoomId>
               {room.hasPassword && <LockIcon>🔒</LockIcon>}

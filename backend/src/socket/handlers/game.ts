@@ -7,6 +7,7 @@ import { db } from '../../db/connection';
 import logger from '../../utils/logger';
 import { SocketErrorCode } from '../../utils/errors';
 import config from '../../config';
+import { formatRoomData, formatRoomForList } from './room';
 
 // Track selection timeouts
 const selectionTimeouts = new Map<string, NodeJS.Timeout>();
@@ -27,6 +28,9 @@ export const setupGameHandlers = (io: Server, socket: Socket) => {
         });
       }
 
+      // Update room activity
+      roomManager.updateRoomActivity(room.roomId);
+
       if (room.players.length !== 2) {
         return callback({
           success: false,
@@ -36,15 +40,7 @@ export const setupGameHandlers = (io: Server, socket: Socket) => {
 
       // Notify room with updated room data
       io.to(room.roomId).emit('room_updated', {
-        room: {
-          roomId: room.roomId,
-          betAmount: room.betAmount,
-          hasPassword: !!room.password,
-          playerCount: room.players.length,
-          players: room.players,
-          gameState: room.gameState,
-          createdAt: room.createdAt.toISOString(),
-        },
+        room: formatRoomData(room),
       });
 
       // Check if both ready
@@ -108,15 +104,7 @@ export const setupGameHandlers = (io: Server, socket: Socket) => {
 
       callback({ 
         success: true,
-        room: {
-          roomId: room.roomId,
-          betAmount: room.betAmount,
-          hasPassword: !!room.password,
-          playerCount: room.players.length,
-          players: room.players,
-          gameState: room.gameState,
-          createdAt: room.createdAt.toISOString(),
-        },
+        room: formatRoomData(room),
       });
     } catch (error) {
       logger.error('Error setting player ready', error);
@@ -135,6 +123,11 @@ export const setupGameHandlers = (io: Server, socket: Socket) => {
       const { cardId } = data;
 
       const room = roomManager.getRoomBySocket(socket.id);
+      
+      // Update room activity
+      if (room) {
+        roomManager.updateRoomActivity(room.roomId);
+      }
 
       if (!room) {
         return callback({
@@ -246,9 +239,51 @@ export const setupGameHandlers = (io: Server, socket: Socket) => {
     logger.info('Player disconnected', {
       roomId: room.roomId,
       address: player.address,
+      gameState: room.gameState,
     });
 
-    // Notify opponent
+    // If game hasn't started yet, remove player immediately from room
+    if (room.gameState === 'waiting') {
+      logger.info('Game not started, removing player from room immediately');
+      
+      const roomId = room.roomId; // Save roomId before player leaves
+      const { room: updatedRoom } = roomManager.leaveRoom(socket.id);
+      
+      if (updatedRoom) {
+        // If only 1 player remains, reset their ready state
+        if (updatedRoom.players.length === 1) {
+          updatedRoom.players[0].ready = false;
+          logger.info('Reset remaining player ready state after disconnect', {
+            roomId,
+            playerAddress: updatedRoom.players[0].address,
+          });
+        }
+
+        const roomData = formatRoomData(updatedRoom);
+
+        // Notify remaining player(s)
+        io.to(roomId).emit('player_left', {
+          remainingPlayers: updatedRoom.players.length,
+          room: roomData,
+        });
+
+        io.to(roomId).emit('room_updated', {
+          room: roomData,
+        });
+
+        logger.info('Notified remaining players about disconnect', {
+          roomId,
+          remainingPlayers: updatedRoom.players.length,
+        });
+
+        // Broadcast updated room list
+        io.emit('room_list', roomManager.getAvailableRooms().map(formatRoomForList));
+      }
+      
+      return;
+    }
+
+    // If game is playing, notify opponent and wait for reconnection
     const opponent = room.players.find((p) => p.socketId !== socket.id);
 
     if (opponent) {
@@ -261,15 +296,13 @@ export const setupGameHandlers = (io: Server, socket: Socket) => {
     setTimeout(async () => {
       // Check if player reconnected
       if (player.isConnected) {
+        logger.info('Player reconnected, continuing game');
         return;
       }
 
-      // Handle forfeit
+      // Handle forfeit if game was playing
       if (room.gameState === 'playing') {
         await handleDisconnectForfeit(io, room, player.address);
-      } else {
-        // Just remove from room if game hasn't started
-        roomManager.leaveRoom(socket.id);
       }
     }, config.game.disconnectGracePeriod);
   });
@@ -279,50 +312,118 @@ export const setupGameHandlers = (io: Server, socket: Socket) => {
  * Start selection timeout
  */
 function startSelectionTimeout(io: Server, roomId: string) {
+  const room = roomManager.getRoom(roomId);
+  
+  if (!room) return;
+
+  // Emit new round started event (currentRound will be incremented in processRound)
+  const nextRound = room.currentRound + 1;
+  io.to(roomId).emit('new_round_started', {
+    round: nextRound,
+    timeLimit: config.game.cardSelectionTimeout / 1000,
+  });
+
+  logger.info('Round timer started', {
+    roomId: room.roomId,
+    round: nextRound,
+    currentRound: room.currentRound,
+    timeLimit: config.game.cardSelectionTimeout / 1000,
+  });
+
   const timeout = setTimeout(async () => {
     const room = roomManager.getRoom(roomId);
 
     if (!room) return;
 
-    // Handle AFK players
-    for (const player of room.players) {
-      if (!player.selectedCard) {
-        const { shouldForfeit, afkCount } = gameService.handleAfkTimeout(room, player.address);
+    const player1NoCard = !room.players[0].selectedCard;
+    const player2NoCard = !room.players[1].selectedCard;
 
-        if (shouldForfeit) {
-          // Forfeit game
-          await handleAfkForfeit(io, room, player.address);
-          return;
-        } else {
-          // Send warning
-          io.to(player.socketId).emit('afk_warning', {
-            message: `Warning! ${3 - afkCount} more timeouts will result in forfeit.`,
-            warningCount: afkCount,
-          });
+    // Auto-select random card for AFK players
+    for (let i = 0; i < room.players.length; i++) {
+      const player = room.players[i];
+      if (!player.selectedCard && player.hand.length > 0) {
+        // Select random card from hand
+        const randomIndex = Math.floor(Math.random() * player.hand.length);
+        const randomCard = player.hand[randomIndex];
+        
+        player.selectedCard = randomCard;
+        
+        // Remove from hand
+        player.hand.splice(randomIndex, 1);
+        
+        // Add to used cards
+        const playerDeck = i === 0 ? room.player1Deck : room.player2Deck;
+        playerDeck.used.push(randomCard);
+        playerDeck.inHand = player.hand;
 
-          // Give point to opponent
-          const opponent = room.players.find((p) => p.address !== player.address);
-          
-          // Check if opponent won
-          if (opponent && opponent.roundsWon >= room.winningScore) {
-            gameService.endGame(room, opponent.address, 'afk_forfeit');
-            await handleGameEnd(io, room);
-            return;
-          }
-        }
+        logger.info('Auto-selected random card for AFK player', {
+          roomId: room.roomId,
+          playerAddress: player.address,
+          card: randomCard,
+        });
+
+        // Notify player
+        io.to(player.socketId).emit('afk_warning', {
+          message: 'You took too long! A random card was played for you.',
+          autoSelectedCard: randomCard,
+        });
       }
     }
 
-    // If both AFK'd, start new round
-    if (!room.players[0].selectedCard && !room.players[1].selectedCard) {
-      room.currentRound++;
+    // If both players were AFK (no card selected before timeout)
+    if (player1NoCard && player2NoCard) {
+      room.consecutiveAfkRounds++;
       
-      // Update decks
-      roomManager.updatePlayerDeck(room, 0);
-      roomManager.updatePlayerDeck(room, 1);
+      logger.warn('Both players AFK', {
+        roomId: room.roomId,
+        consecutiveAfkRounds: room.consecutiveAfkRounds,
+      });
 
-      // Start new selection
-      startSelectionTimeout(io, roomId);
+      // If both AFK for 2 consecutive rounds, dismiss room and penalize
+      if (room.consecutiveAfkRounds >= 2) {
+        logger.info('Both players repeatedly AFK, dismissing room and penalizing', {
+          roomId: room.roomId,
+          betAmount: room.betAmount,
+        });
+
+        // Notify both players
+        io.to(room.roomId).emit('room_dismissed_afk', {
+          message: 'Both players were repeatedly AFK. Room dismissed and bets forfeited.',
+        });
+
+        // Keep the betAmount in contract (penalty)
+        // No need to transfer, it's already deducted
+
+        // End game without winner (both forfeit)
+        gameService.endGame(room, null, 'both_afk');
+        
+        // Clean up room
+        room.players.forEach(p => {
+          roomManager.leaveRoom(p.socketId);
+        });
+
+        return;
+      }
+
+      // Notify both players
+      io.to(room.roomId).emit('both_afk_warning', {
+        message: 'Both players were AFK! Random cards were played. One more time and the game will be dismissed.',
+        consecutiveAfkRounds: room.consecutiveAfkRounds,
+      });
+    } else {
+      // Reset consecutive AFK counter if at least one player was active
+      room.consecutiveAfkRounds = 0;
+    }
+
+    // Now process the round (all players should have cards now)
+    if (room.players[0].selectedCard && room.players[1].selectedCard) {
+      await processRound(io, room);
+    } else {
+      logger.error('Round processing failed - missing cards after timeout', {
+        roomId: room.roomId,
+        player1HasCard: !!room.players[0].selectedCard,
+        player2HasCard: !!room.players[1].selectedCard,
+      });
     }
   }, config.game.cardSelectionTimeout);
 
@@ -347,6 +448,16 @@ async function processRound(io: Server, room: any) {
   const card1 = room.players[0].selectedCard!;
   const card2 = room.players[1].selectedCard!;
 
+  // Increment round counter
+  room.currentRound++;
+
+  logger.info('Processing round', {
+    roomId: room.roomId,
+    round: room.currentRound,
+    player1Card: `${card1.type} ${card1.value}`,
+    player2Card: `${card2.type} ${card2.value}`,
+  });
+
   // Reveal cards to both players
   io.to(room.roomId).emit('cards_revealed', {
     player1Card: card1,
@@ -358,6 +469,16 @@ async function processRound(io: Server, room: any) {
 
   // Determine winner
   const result = gameService.processCardSelection(room, card1, card2);
+
+  logger.info('Round processed', {
+    roomId: room.roomId,
+    round: room.currentRound,
+    winner: result.winner || 'DRAW',
+    isDraw: result.isDraw,
+    player1Score: room.players[0].roundsWon,
+    player2Score: room.players[1].roundsWon,
+    gameOver: result.gameOver,
+  });
 
   // Update decks
   roomManager.updatePlayerDeck(room, 0);
@@ -372,18 +493,44 @@ async function processRound(io: Server, room: any) {
     });
   });
 
-  // Send round result
-  io.to(room.roomId).emit('round_result', {
-    roundNumber: result.roundHistory.roundNumber,
-    player1Card: card1,
-    player2Card: card2,
-    winner: result.winner,
-    result: result.result,
-    isDraw: result.isDraw,
-    player1Score: room.players[0].roundsWon,
-    player2Score: room.players[1].roundsWon,
-    player1CardsRemaining: room.players[0].hand.length,
-    player2CardsRemaining: room.players[1].hand.length,
+  // Send round result with full history
+  room.players.forEach((player: any, index: number) => {
+    const opponent = room.players[1 - index];
+    const roundData = {
+      round: room.currentRound,
+      myCard: index === 0 ? card1 : card2,
+      opponentCard: index === 0 ? card2 : card1,
+      winner: result.winner?.toLowerCase() || null, // Ensure lowercase for address comparison
+      result: result.result,
+      isDraw: result.isDraw,
+      myScore: player.roundsWon,
+      opponentScore: opponent.roundsWon,
+      myCardsRemaining: player.hand.length,
+      opponentCardsRemaining: opponent.hand.length,
+      roundHistory: room.roundHistory.map((h: any) => ({
+        round: h.roundNumber,
+        player1Card: h.player1Card,
+        player2Card: h.player2Card,
+        winner: h.winner?.toLowerCase() || null, // Ensure lowercase for address comparison
+        result: h.result,
+      })),
+    };
+    
+    logger.info('Sending round_result to player', {
+      roomId: room.roomId,
+      playerAddress: player.address,
+      round: roundData.round,
+      myScore: roundData.myScore,
+      opponentScore: roundData.opponentScore,
+      winner: roundData.winner || 'DRAW',
+      isWinner: roundData.winner ? roundData.winner === player.address : false,
+      isDraw: roundData.isDraw,
+      myCard: roundData.myCard ? `${roundData.myCard.type}_${roundData.myCard.value}` : 'none',
+      opponentCard: roundData.opponentCard ? `${roundData.opponentCard.type}_${roundData.opponentCard.value}` : 'none',
+      historyCount: roundData.roundHistory.length,
+    });
+    
+    io.to(player.socketId).emit('round_result', roundData);
   });
 
   // Check if game over
@@ -433,12 +580,23 @@ async function handleGameEnd(io: Server, room: any) {
     // Save game history
     await saveGameHistory(room);
 
-    // Notify players
-    io.to(room.roomId).emit('game_finished', {
-      winner: winner.address,
-      finalScore: room.finalScore,
-      leaderboardPoints: room.leaderboardPoints,
-      prizeAmount: contractService.calculatePayout(room.betAmount * 2).winnerAmount,
+    // Notify players with correct format - send personalized data to each player
+    const payout = contractService.calculatePayout(room.betAmount * 2);
+    
+    room.players.forEach((player: any, index: number) => {
+      const opponent = room.players[1 - index];
+      io.to(player.socketId).emit('game_finished', {
+        winner: winner.address.toLowerCase(), // Ensure lowercase for address comparison
+        myScore: player.roundsWon,
+        opponentScore: opponent.roundsWon,
+        scores: {
+          player1: room.players[0].roundsWon,
+          player2: room.players[1].roundsWon,
+        },
+        finalScore: room.finalScore,
+        leaderboardPoints: room.leaderboardPoints,
+        prizeAmount: payout.winnerAmount,
+      });
     });
 
     logger.info('Game ended successfully', {
@@ -487,11 +645,23 @@ async function handleDisconnectForfeit(io: Server, room: any, disconnectedAddres
     // Save game history
     await saveGameHistory(room);
 
-    // Notify
-    io.to(room.roomId).emit('game_finished', {
-      winner: remaining.address,
-      reason: 'disconnect_forfeit',
-      finalScore: room.finalScore,
+    // Notify with personalized data
+    const payout = contractService.calculatePayout(room.betAmount * 2);
+    
+    room.players.forEach((player: any, index: number) => {
+      const opponent = room.players[1 - index];
+      io.to(player.socketId).emit('game_finished', {
+        winner: remaining.address.toLowerCase(), // Ensure lowercase for address comparison
+        reason: 'disconnect_forfeit',
+        myScore: player.roundsWon,
+        opponentScore: opponent.roundsWon,
+        scores: {
+          player1: room.players[0].roundsWon,
+          player2: room.players[1].roundsWon,
+        },
+        finalScore: room.finalScore,
+        prizeAmount: payout.winnerAmount,
+      });
     });
 
     logger.info('Game ended by disconnect forfeit', {
@@ -532,11 +702,23 @@ async function handleAfkForfeit(io: Server, room: any, afkAddress: string) {
     // Save game history
     await saveGameHistory(room);
 
-    // Notify
-    io.to(room.roomId).emit('game_finished', {
-      winner: opponent.address,
-      reason: 'afk_forfeit',
-      finalScore: room.finalScore,
+    // Notify with personalized data
+    const payout = contractService.calculatePayout(room.betAmount * 2);
+    
+    room.players.forEach((player: any, index: number) => {
+      const opp = room.players[1 - index];
+      io.to(player.socketId).emit('game_finished', {
+        winner: opponent.address.toLowerCase(), // Ensure lowercase for address comparison
+        reason: 'afk_forfeit',
+        myScore: player.roundsWon,
+        opponentScore: opp.roundsWon,
+        scores: {
+          player1: room.players[0].roundsWon,
+          player2: room.players[1].roundsWon,
+        },
+        finalScore: room.finalScore,
+        prizeAmount: payout.winnerAmount,
+      });
     });
 
     logger.info('Game ended by AFK forfeit', {

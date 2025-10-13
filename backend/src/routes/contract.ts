@@ -25,6 +25,12 @@ router.get('/balance/:address', async (req: Request, res: Response, next) => {
   try {
     const { address } = req.params;
     
+    if (!address || address === 'undefined') {
+      return res.status(400).json({
+        error: 'Invalid address',
+      });
+    }
+
     validateAddress(address);
 
     const balance = await contractService.getUserBalance(address);

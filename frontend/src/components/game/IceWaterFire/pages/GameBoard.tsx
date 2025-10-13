@@ -1,19 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
+import { motion, AnimatePresence } from 'framer-motion';
 import CardHand from '../components/CardHand';
-import PlayerInfo from '../components/PlayerInfo';
-import { Card, Player, EMOJIS } from '../types';
+import RoundHistory from '../components/RoundHistory';
+import Card from '../components/Card';
+import { Card as CardType, Player, EMOJIS, RoundResult, RoundHistoryItem } from '../types';
+import logger from '../utils/logger';
+import { Col, Flex, Row } from 'antd';
 
 interface GameBoardProps {
-  myCards: Card[];
+  myCards: CardType[];
   myPlayer: Player;
   opponentPlayer: Player;
-  selectedCard: Card | null;
+  selectedCard: CardType | null;
   opponentSelected: boolean;
   currentRound: number;
   timeRemaining: number;
-  onCardSelect: (card: Card) => void;
+  lastRoundResult?: RoundResult | null;
+  roundHistory?: RoundHistoryItem[];
+  receivedEmoji?: string | null;
+  onCardSelect: (card: CardType) => void;
   onSendEmoji: (emojiId: string) => void;
+  onRoundResultComplete?: () => void;
+  onCardReveal?: () => void;
+  onRoundResult?: (result: 'win' | 'lose' | 'draw') => void;
 }
 
 const GameBoard: React.FC<GameBoardProps> = ({
@@ -22,21 +32,64 @@ const GameBoard: React.FC<GameBoardProps> = ({
   opponentPlayer,
   selectedCard,
   opponentSelected,
-  currentRound,
+  currentRound: _currentRound, // Kept for future use
   timeRemaining,
+  lastRoundResult,
+  roundHistory = [],
+  receivedEmoji: receivedEmojiProp,
   onCardSelect,
   onSendEmoji,
+  onRoundResultComplete,
+  onCardReveal,
+  onRoundResult,
 }) => {
   const [showEmojiPanel, setShowEmojiPanel] = useState(false);
-  const [receivedEmoji, setReceivedEmoji] = useState<string | null>(null);
 
-  // Show received emoji temporarily
+  // Track the last processed round to avoid duplicate animations
+  const [lastProcessedRound, setLastProcessedRound] = useState<number>(0);
+
+  console.log('📊 GameBoard - myPlayer:', {
+    address: myPlayer.address,
+    roundsWon: myPlayer.roundsWon,
+    handSize: myPlayer.handSize,
+  });
+  console.log('📊 GameBoard - opponentPlayer:', {
+    address: opponentPlayer.address,
+    roundsWon: opponentPlayer.roundsWon,
+    handSize: opponentPlayer.handSize,
+  });
+
+  // Show round result overlay when round completes - ONLY for NEW rounds
   useEffect(() => {
-    if (receivedEmoji) {
-      const timer = setTimeout(() => setReceivedEmoji(null), 3000);
+    if (lastRoundResult &&
+      lastRoundResult.myCard &&
+      lastRoundResult.opponentCard &&
+      lastRoundResult.round > lastProcessedRound) {
+
+      logger.ui('Round result received - NEW ROUND', {
+        round: lastRoundResult.round,
+        lastProcessedRound,
+      });
+
+      // Mark this round as processed
+      setLastProcessedRound(lastRoundResult.round);
+
+      const result = determineResult();
+
+      // Play sounds
+      if (onCardReveal) onCardReveal();
+      if (onRoundResult) setTimeout(() => onRoundResult(result), 300);
+
+      // Auto-hide after animation completes
+      const timer = setTimeout(() => {
+        if (onRoundResultComplete) onRoundResultComplete();
+      }, 600); // Match with animation duration
+
       return () => clearTimeout(timer);
     }
-  }, [receivedEmoji]);
+  }, [lastRoundResult?.round]); // Only depend on round number
+
+  // Game end will be handled by parent component (index.tsx) via GameResultModal
 
   const handleEmojiSend = (emoji: string) => {
     onSendEmoji(emoji);
@@ -46,25 +99,72 @@ const GameBoard: React.FC<GameBoardProps> = ({
   const isLowTime = timeRemaining <= 2;
   const canSelectCard = !selectedCard && timeRemaining > 0;
 
+  const determineResult = (): 'win' | 'lose' | 'draw' => {
+    if (!lastRoundResult) return 'draw';
+    if (lastRoundResult.isDraw) return 'draw';
+
+    // Case-insensitive address comparison (backend uses lowercase, frontend might be checksum)
+    const winnerAddress = lastRoundResult.winner?.toLowerCase();
+    const myAddress = myPlayer.address.toLowerCase();
+
+    console.log('🎯 Determining round result:', {
+      winnerAddress,
+      myAddress,
+      isWinner: winnerAddress === myAddress,
+      isDraw: lastRoundResult.isDraw,
+    });
+
+    if (winnerAddress === myAddress) return 'win';
+    return 'lose';
+  };
+
   return (
     <Container>
-      <GameContainer>
-        {/* Opponent Side (Top) */}
-        <OpponentSide>
-          <OpponentInfo>
-            <PlayerInfo player={opponentPlayer} isOpponent />
-          </OpponentInfo>
-          
-          <OpponentCards>
-            <CardBackContainer count={opponentPlayer.handSize}>
-              {Array.from({ length: opponentPlayer.handSize }).map((_, i) => (
-                <CardBack key={i} index={i}>
-                  🎴
-                </CardBack>
-              ))}
-            </CardBackContainer>
-          </OpponentCards>
+      {/* Round Result Overlay - Key-based rendering for proper animation */}
+      <AnimatePresence mode="wait">
+        {lastRoundResult && lastRoundResult.round === lastProcessedRound && (
+          <RoundResultOverlay
+            key={`round-result-${lastRoundResult.round}`}
+            as={motion.div}
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.5 }}
+            transition={{ duration: 0.3 }}
+            onAnimationComplete={() => {
+              // Auto-hide after animation completes
+              setTimeout(() => {
+                setLastProcessedRound((prev) => prev); // Keep processed
+              }, 300);
+            }}
+          >
+            <ResultText $result={determineResult().toUpperCase() as 'WIN' | 'LOSE' | 'DRAW'}>
+              {determineResult().toUpperCase()}
+            </ResultText>
+          </RoundResultOverlay>
+        )}
+      </AnimatePresence>
 
+
+      <GameContainer>
+        {/* Score Board */}
+        <Flex vertical justify='center' align='center'>
+          <Row gutter={[16, 0]} justify='center'>
+            <Col><ScoreName>You</ScoreName></Col>
+            <Col><ScoreName>Opponent</ScoreName></Col>
+          </Row>
+          <Row gutter={[16, 0]} justify='center'>
+            <Col><ScoreValue $isLeading={myPlayer.roundsWon > opponentPlayer.roundsWon}>
+              {myPlayer.roundsWon}
+            </ScoreValue></Col>
+            <Col><ScoreDivider>-</ScoreDivider></Col>
+            <Col><ScoreValue $isLeading={opponentPlayer.roundsWon > myPlayer.roundsWon}>
+              {opponentPlayer.roundsWon}
+            </ScoreValue></Col>
+          </Row>
+        </Flex>
+
+        {/* Middle Area - Game Info */}
+        <MiddleArea>
           {opponentSelected && (
             <SelectionIndicator>
               <IndicatorIcon>✓</IndicatorIcon>
@@ -72,31 +172,50 @@ const GameBoard: React.FC<GameBoardProps> = ({
             </SelectionIndicator>
           )}
 
-          {receivedEmoji && (
-            <EmojiFloat>{receivedEmoji}</EmojiFloat>
-          )}
-        </OpponentSide>
+          <OpponentCards>
+            {lastRoundResult && lastRoundResult.opponentCard ? (
+              <>
+                <OpponentRevealedCard>
+                  <CardRevealWrapper>
+                    <Card card={lastRoundResult.myCard} isRevealed />
+                  </CardRevealWrapper>
+                  <RevealLabel>Your Card</RevealLabel>
+                </OpponentRevealedCard>
+                VS
+                <OpponentRevealedCard>
+                  <CardRevealWrapper>
+                    <Card card={lastRoundResult.opponentCard} isRevealed />
+                  </CardRevealWrapper>
+                  <RevealLabel>Opponent's Card</RevealLabel>
+                </OpponentRevealedCard>
+              </>
+            ) : (
+              <CardBackContainer count={opponentPlayer.handSize}>
+                {Array.from({ length: opponentPlayer.handSize }).map((_, i) => (
+                  <CardBack key={i} index={i}>
+                    🎴
+                  </CardBack>
+                ))}
+              </CardBackContainer>
+            )}
+          </OpponentCards>
 
-        {/* Middle Area - Game Info */}
-        <MiddleArea>
-          <RoundInfo>
-            <RoundLabel>Round</RoundLabel>
-            <RoundNumber>{currentRound}</RoundNumber>
-          </RoundInfo>
+          <AnimatePresence mode="wait">
+            {receivedEmojiProp && (
+              <EmojiFloat
+                as={motion.div}
+                key={`emoji-${receivedEmojiProp}`}
+                initial={{ opacity: 0, scale: 0.5, y: 0 }}
+                animate={{ opacity: 1, scale: 1.2, y: -50 }}
+                exit={{ opacity: 0, scale: 0.8, y: -100 }}
+                transition={{ duration: 2, ease: 'easeOut' }}
+              >
+                {receivedEmojiProp}
+              </EmojiFloat>
+            )}
+          </AnimatePresence>
 
-          <ScoreBoard>
-            <ScoreItem>
-              <ScoreName>You</ScoreName>
-              <ScoreValue>{myPlayer.roundsWon}</ScoreValue>
-            </ScoreItem>
-            <ScoreDivider>-</ScoreDivider>
-            <ScoreItem>
-              <ScoreValue>{opponentPlayer.roundsWon}</ScoreValue>
-              <ScoreName>Opponent</ScoreName>
-            </ScoreItem>
-          </ScoreBoard>
-
-          <TimerContainer isLowTime={isLowTime}>
+          <TimerContainer $isLowTime={isLowTime}>
             <TimerIcon>{isLowTime ? '⚠️' : '⏱️'}</TimerIcon>
             <TimerText>{timeRemaining}s</TimerText>
           </TimerContainer>
@@ -104,10 +223,6 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
         {/* Player Side (Bottom) */}
         <PlayerSide>
-          <PlayerInfoa>
-            <PlayerInfo player={myPlayer} />
-          </PlayerInfoa>
-
           <MyCards>
             <CardHand
               cards={myCards}
@@ -128,6 +243,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
             😊
           </EmojiButton>
 
+
           {showEmojiPanel && (
             <EmojiPanel>
               {EMOJIS.map((emoji) => (
@@ -146,55 +262,64 @@ const GameBoard: React.FC<GameBoardProps> = ({
 export default GameBoard;
 
 const Container = styled.div`
-  min-height: 100vh;
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 10px;
+
+  @media (max-height: 900px) {
+    padding: 5px;
+  }
 `;
 
 const GameContainer = styled.div`
   width: 100%;
   max-width: 1920px;
-  height: 980px;
-  max-height: 90vh;
+  height: 100%;
+  max-height: calc(100vh - 20px);
   display: grid;
-  grid-template-rows: 1fr auto 1fr;
-  gap: 20px;
+  gap: 10px;
   position: relative;
+  overflow: hidden;
 
-  @media (max-width: 1280px) {
-    height: 720px;
+  @media (max-height: 900px) {
+    gap: 8px;
   }
+
 
   @media (max-width: 768px) {
-    height: auto;
-    min-height: 600px;
+    grid-template-rows: auto auto 1fr;
+    gap: 5px;
   }
-`;
-
-const OpponentSide = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-  position: relative;
-  padding: 20px;
-  background: linear-gradient(180deg, rgba(231, 76, 60, 0.1) 0%, transparent 100%);
-  border-radius: 20px;
-`;
-
-const OpponentInfo = styled.div`
-  width: 100%;
-  display: flex;
-  justify-content: center;
 `;
 
 const OpponentCards = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
+`;
+
+const OpponentRevealedCard = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+`;
+
+const CardRevealWrapper = styled.div`
+  transform: scale(0.8);
+`;
+
+const RevealLabel = styled.div`
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 `;
 
 const CardBackContainer = styled.div<{ count: number }>`
@@ -256,24 +381,13 @@ const EmojiFloat = styled.div`
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 120px;
-  animation: floatUp 3s ease-out forwards;
+  font-size: 64px;
+  z-index: 10;
   pointer-events: none;
-  z-index: 100;
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 
-  @keyframes floatUp {
-    0% {
-      opacity: 0;
-      transform: translate(-50%, -50%) scale(0.5);
-    }
-    20% {
-      opacity: 1;
-      transform: translate(-50%, -50%) scale(1.2);
-    }
-    100% {
-      opacity: 0;
-      transform: translate(-50%, -200%) scale(0.8);
-    }
+  @media (max-height: 900px) {
+    font-size: 56px;
   }
 `;
 
@@ -281,80 +395,65 @@ const MiddleArea = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 20px;
-  padding: 20px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 24px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
   backdrop-filter: blur(20px);
   border-radius: 20px;
-  border: 2px solid rgba(255, 255, 255, 0.1);
-`;
+  border: 2px solid rgba(255, 255, 255, 0.15);
 
-const RoundInfo = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-`;
+  @media (max-height: 900px) {
+    gap: 12px;
+    padding: 12px 20px;
+  }
 
-const RoundLabel = styled.div`
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.6);
-  text-transform: uppercase;
-  letter-spacing: 2px;
-`;
-
-const RoundNumber = styled.div`
-  font-size: 36px;
-  color: white;
-  font-weight: bold;
-`;
-
-const ScoreBoard = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 40px;
-  padding: 20px 40px;
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.1);
-`;
-
-const ScoreItem = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
+  @media (max-height: 800px) {
+    gap: 8px;
+    padding: 10px 16px;
+  }
 `;
 
 const ScoreName = styled.div`
-  font-size: 14px;
+  font-size: 12px;
   color: rgba(255, 255, 255, 0.7);
   text-transform: uppercase;
+  letter-spacing: 1px;
+
+  @media (max-height: 900px) {
+    font-size: 11px;
+  }
 `;
 
-const ScoreValue = styled.div`
+const ScoreValue = styled.div<{ $isLeading?: boolean }>`
   font-size: 48px;
-  color: white;
+  color: ${props => props.$isLeading ? '#00FF88' : 'white'};
   font-weight: bold;
-  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 4px 12px ${props => props.$isLeading ? 'rgba(0, 255, 136, 0.5)' : 'rgba(0, 0, 0, 0.5)'};
+  transition: all 0.3s ease;
+
+  @media (max-height: 900px) {
+    font-size: 38px;
+  }
 `;
 
 const ScoreDivider = styled.div`
   font-size: 36px;
   color: rgba(255, 255, 255, 0.4);
   font-weight: bold;
+  margin-top: 10px;
 `;
 
-const TimerContainer = styled.div<{ isLowTime: boolean }>`
+const TimerContainer = styled.div<{ $isLowTime: boolean }>`
+  max-width: 100px;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px 32px;
-  background: ${(props) => (props.isLowTime ? 'rgba(231, 76, 60, 0.3)' : 'rgba(255, 255, 255, 0.1)')};
-  border: 2px solid ${(props) => (props.isLowTime ? '#E74C3C' : 'rgba(255, 255, 255, 0.2)')};
+  padding: 12px 24px;
+  background: ${(props) => (props.$isLowTime ? 'rgba(231, 76, 60, 0.3)' : 'rgba(255, 255, 255, 0.1)')};
+  border: 2px solid ${(props) => (props.$isLowTime ? '#E74C3C' : 'rgba(255, 255, 255, 0.2)')};
   border-radius: 12px;
-  animation: ${(props) => (props.isLowTime ? 'urgentPulse 0.5s infinite' : 'none')};
+  animation: ${(props) => (props.$isLowTime ? 'urgentPulse 0.5s infinite' : 'none')};
 
   @keyframes urgentPulse {
     0%,
@@ -365,42 +464,62 @@ const TimerContainer = styled.div<{ isLowTime: boolean }>`
       transform: scale(1.05);
     }
   }
+
+  @media (max-height: 900px) {
+    padding: 10px 20px;
+    gap: 10px;
+  }
 `;
 
 const TimerIcon = styled.span`
-  font-size: 24px;
+  font-size: 22px;
+
+  @media (max-height: 900px) {
+    font-size: 20px;
+  }
 `;
 
 const TimerText = styled.div`
-  font-size: 32px;
+  font-size: 24px;
   color: white;
   font-weight: bold;
   font-family: 'Courier New', monospace;
-  min-width: 60px;
+  min-width: 45px;
   text-align: center;
+
+  @media (max-height: 900px) {
+    font-size: 20px;
+    min-width: 40px;
+  }
 `;
 
 const PlayerSide = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 10px;
   position: relative;
-  padding: 20px;
+  padding: 10px;
   background: linear-gradient(180deg, transparent 0%, rgba(46, 204, 113, 0.1) 100%);
-  border-radius: 20px;
-`;
+  border-radius: 16px;
+  overflow: hidden;
 
-const PlayerInfoa = styled.div`
-  width: 100%;
-  display: flex;
-  justify-content: center;
+  @media (max-height: 900px) {
+    gap: 8px;
+    padding: 8px;
+  }
 `;
 
 const MyCards = styled.div`
   width: 100%;
   display: flex;
   justify-content: center;
+  max-height: 220px;
+  overflow: visible;
+
+  @media (max-height: 900px) {
+    max-height: 180px;
+  }
 `;
 
 const SelectionConfirmation = styled.div`
@@ -502,3 +621,51 @@ const EmojiItem = styled.button`
   }
 `;
 
+const RoundResultOverlay = styled.div`
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10000;
+  pointer-events: none;
+`;
+
+const ResultText = styled.div<{ $result: 'WIN' | 'LOSE' | 'DRAW' }>`
+  font-size: 120px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 8px;
+  text-shadow: 0 0 40px ${props =>
+    props.$result === 'WIN' ? 'rgba(0, 255, 136, 0.8)' :
+      props.$result === 'LOSE' ? 'rgba(231, 76, 60, 0.8)' :
+        'rgba(255, 255, 255, 0.5)'
+  };
+  color: ${props =>
+    props.$result === 'WIN' ? '#00FF88' :
+      props.$result === 'LOSE' ? '#E74C3C' :
+        '#FFFFFF'
+  };
+  animation: resultPulse 0.5s ease-out;
+
+  @keyframes resultPulse {
+    0% {
+      transform: scale(0.5);
+      opacity: 0;
+    }
+    50% {
+      transform: scale(1.2);
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  @media (max-height: 900px) {
+    font-size: 100px;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 80px;
+  }
+`;

@@ -9,6 +9,14 @@ export class RoomManager {
   private rooms: Map<string, Room> = new Map();
   private socketToRoom: Map<string, string> = new Map();
   private addressToRoom: Map<string, string> = new Map();
+  private roomCleanupInterval: NodeJS.Timeout;
+
+  constructor() {
+    // Start room cleanup interval (check every 2 minutes)
+    this.roomCleanupInterval = setInterval(() => {
+      this.cleanupInactiveRooms();
+    }, 2 * 60 * 1000);
+  }
 
   /**
    * Generate unique room ID
@@ -53,9 +61,11 @@ export class RoomManager {
       betAmount: data.betAmount,
       winningScore: data.winningScore || 3,
       createdAt: new Date(),
+      lastActivity: new Date(),
       players: [player],
       gameState: 'waiting',
       currentRound: 0,
+      consecutiveAfkRounds: 0,
       player1Deck: { inHand: [], remaining: [], used: [] },
       player2Deck: { inHand: [], remaining: [], used: [] },
       roundHistory: [],
@@ -275,7 +285,7 @@ export class RoomManager {
     room.players[1].hand = player2Cards.hand;
 
     room.gameState = 'playing';
-    room.currentRound = 1;
+    room.currentRound = 0; // Will be incremented to 1 in processRound
 
     logger.info('Game started', { roomId });
 
@@ -377,23 +387,44 @@ export class RoomManager {
   }
 
   /**
-   * Clean up old rooms (run periodically)
+   * Update room activity timestamp
    */
-  cleanupOldRooms(): void {
+  updateRoomActivity(roomId: string): void {
+    const room = this.rooms.get(roomId);
+    if (room) {
+      room.lastActivity = new Date();
+    }
+  }
+
+  /**
+   * Clean up inactive rooms (run periodically)
+   */
+  cleanupInactiveRooms(): void {
     const now = Date.now();
-    const fiveMinutes = 5 * 60 * 1000;
+    const tenMinutes = 10 * 60 * 1000;
 
     this.rooms.forEach((room, roomId) => {
-      // Delete empty rooms older than 5 minutes
-      if (
-        room.players.length === 0 &&
-        now - room.createdAt.getTime() > fiveMinutes
-      ) {
+      const inactiveDuration = now - room.lastActivity.getTime();
+      
+      // Delete rooms that have been inactive for more than 10 minutes
+      // Only delete if game is not currently playing
+      if (inactiveDuration > tenMinutes && room.gameState !== 'playing') {
+        // Clean up all player mappings
+        room.players.forEach((player) => {
+          this.socketToRoom.delete(player.socketId);
+          this.addressToRoom.delete(player.address.toLowerCase());
+        });
+        
         this.rooms.delete(roomId);
-        logger.info('Cleaned up old empty room', { roomId });
+        logger.info('Cleaned up inactive room', {
+          roomId,
+          inactiveFor: Math.floor(inactiveDuration / 1000 / 60) + ' minutes',
+          gameState: room.gameState,
+        });
       }
     });
   }
+
 }
 
 export default new RoomManager();

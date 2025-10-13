@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
+import { motion, AnimatePresence } from 'framer-motion';
 import { message } from 'antd';
 import PlayerInfo from '../components/PlayerInfo';
 import { Player } from '../types';
@@ -39,15 +40,18 @@ const GameRoom: React.FC<GameRoomProps> = ({
   // Use backend ready state instead of local state
   const isReady = currentPlayer?.ready || false;
   
-  // Debug logs
-  console.log('GameRoom Debug:', {
-    playersList,
-    currentUserAddress,
-    currentPlayer,
-    opponent,
-    isReady,
-    waitingForOpponent,
-  });
+  // Debug logs - Log whenever players prop changes
+  useEffect(() => {
+    console.log('🎮 GameRoom Players Updated:', {
+      rawPlayersCount: players?.length,
+      playersList,
+      currentUserAddress,
+      currentPlayer,
+      opponent,
+      isReady,
+      waitingForOpponent,
+    });
+  }, [players]);
 
   const copyRoomId = () => {
     navigator.clipboard.writeText(roomId);
@@ -68,132 +72,365 @@ const GameRoom: React.FC<GameRoomProps> = ({
   };
 
   useEffect(() => {
-    if (bothReady) {
+    // Only show "Game starting" if both ready AND we have 2 players
+    if (bothReady && !waitingForOpponent) {
       message.info('Game starting in 3 seconds...');
     }
-  }, [bothReady]);
+  }, [bothReady, waitingForOpponent]);
+
+  const pageVariants = {
+    initial: { opacity: 0, scale: 0.9 },
+    animate: { 
+      opacity: 1, 
+      scale: 1,
+      transition: {
+        duration: 0.4,
+        ease: "easeOut"
+      }
+    },
+    exit: { 
+      opacity: 0, 
+      scale: 0.9,
+      transition: { duration: 0.3 }
+    }
+  };
 
   return (
-    <Container>
+    <Container
+      as={motion.div}
+      variants={pageVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+    >
       <Background />
 
-      <Content>
-        <Header>
-          <BackButton onClick={onLeave}>
+      <Content
+        as={motion.div}
+        initial={{ y: 50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
+      >
+        <Header
+          as={motion.div}
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.3 }}
+        >
+          <BackButton
+            as={motion.button}
+            whileHover={{ scale: 1.05, x: -5 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={onLeave}
+          >
             <BackIcon>←</BackIcon>
             Leave Room
           </BackButton>
 
-          <RoomInfo>
+          <RoomInfo
+            as={motion.div}
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
+          >
             <RoomIdContainer>
               <RoomIdLabel>Room ID:</RoomIdLabel>
-              <RoomId onClick={copyRoomId}>
+              <RoomId
+                as={motion.button}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={copyRoomId}
+              >
                 {roomId}
                 {copied ? ' ✓' : ' 📋'}
               </RoomId>
             </RoomIdContainer>
             <BetInfo>
               <BetLabel>Bet:</BetLabel>
-              <BetAmount>{betAmount} ETH</BetAmount>
+              <BetAmount
+                as={motion.span}
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.5, type: "spring" }}
+              >
+                {betAmount} ETH
+              </BetAmount>
             </BetInfo>
           </RoomInfo>
 
-          <ShareButton onClick={shareLink}>
+          <ShareButton
+            as={motion.button}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={shareLink}
+          >
             <ShareIcon>🔗</ShareIcon>
             Share Link
           </ShareButton>
         </Header>
 
-        <GameArea>
-          {waitingForOpponent ? (
-            <WaitingState>
-              <WaitingIcon>⏳</WaitingIcon>
-              <WaitingTitle>Waiting for opponent...</WaitingTitle>
-              <WaitingText>Share the room ID or link with your friend</WaitingText>
-              
-              <ShareOptions>
-                <ShareOptionButton onClick={copyRoomId}>
-                  📋 Copy Room ID
-                </ShareOptionButton>
-                <ShareOptionButton onClick={shareLink}>
-                  🔗 Copy Share Link
-                </ShareOptionButton>
-              </ShareOptions>
+        <GameArea
+          as={motion.div}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6, duration: 0.5 }}
+        >
+          <AnimatePresence mode="wait">
+            {waitingForOpponent ? (
+              <WaitingState
+                as={motion.div}
+                key="waiting"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.4 }}
+              >
+                <WaitingIcon
+                  as={motion.div}
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                >
+                  ⏳
+                </WaitingIcon>
+                <WaitingTitle
+                  as={motion.h2}
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  Waiting for opponent...
+                </WaitingTitle>
+                <WaitingText
+                  as={motion.p}
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  Share the room ID or link with your friend
+                </WaitingText>
+                
+                <ShareOptions
+                  as={motion.div}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  <ShareOptionButton
+                    as={motion.button}
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={copyRoomId}
+                  >
+                    📋 Copy Room ID
+                  </ShareOptionButton>
+                  <ShareOptionButton
+                    as={motion.button}
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={shareLink}
+                  >
+                    🔗 Copy Share Link
+                  </ShareOptionButton>
+                </ShareOptions>
 
-              <LoadingDots>
-                <Dot delay={0} />
-                <Dot delay={0.2} />
-                <Dot delay={0.4} />
-              </LoadingDots>
-            </WaitingState>
-          ) : (
-            <PlayersContainer>
-              {/* Current Player */}
-              <PlayerSection>
-                <PlayerLabel>You</PlayerLabel>
-                {currentPlayer && (
-                  <>
-                    <PlayerInfo player={currentPlayer} />
-                    {!isReady && (
-                      <ReadyButton onClick={handleReady}>
-                        <ReadyIcon>✓</ReadyIcon>
-                        I'm Ready!
-                      </ReadyButton>
-                    )}
-                    {isReady && (
-                      <ReadyIndicator>
-                        <CheckIcon>✓</CheckIcon>
-                        Ready!
-                      </ReadyIndicator>
-                    )}
-                  </>
-                )}
-              </PlayerSection>
+                <LoadingDots>
+                  <Dot 
+                    as={motion.div}
+                    $delay={0}
+                    animate={{ 
+                      scale: [0, 1, 0],
+                      opacity: [0, 1, 0] 
+                    }}
+                    transition={{ 
+                      duration: 1.4,
+                      repeat: Infinity,
+                      delay: 0
+                    }}
+                  />
+                  <Dot 
+                    as={motion.div}
+                    $delay={0.2}
+                    animate={{ 
+                      scale: [0, 1, 0],
+                      opacity: [0, 1, 0] 
+                    }}
+                    transition={{ 
+                      duration: 1.4,
+                      repeat: Infinity,
+                      delay: 0.2
+                    }}
+                  />
+                  <Dot 
+                    as={motion.div}
+                    $delay={0.4}
+                    animate={{ 
+                      scale: [0, 1, 0],
+                      opacity: [0, 1, 0] 
+                    }}
+                    transition={{ 
+                      duration: 1.4,
+                      repeat: Infinity,
+                      delay: 0.4
+                    }}
+                  />
+                </LoadingDots>
+              </WaitingState>
+            ) : (
+              <PlayersContainer
+                as={motion.div}
+                key="players"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.4 }}
+              >
+                {/* Current Player */}
+                <PlayerSection
+                  as={motion.div}
+                  initial={{ x: -100, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 0.2, type: "spring" }}
+                >
+                  <PlayerLabel>You</PlayerLabel>
+                  {currentPlayer && (
+                    <>
+                      <PlayerInfo player={currentPlayer} />
+                      <AnimatePresence mode="wait">
+                        {!isReady ? (
+                          <ReadyButton
+                            as={motion.button}
+                            key="ready-button"
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0, opacity: 0 }}
+                            whileHover={{ 
+                              scale: 1.1,
+                              boxShadow: "0 8px 24px rgba(46, 204, 113, 0.6)"
+                            }}
+                            whileTap={{ scale: 0.95 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                            onClick={handleReady}
+                          >
+                            <ReadyIcon>✓</ReadyIcon>
+                            I'm Ready!
+                          </ReadyButton>
+                        ) : (
+                          <ReadyIndicator
+                            as={motion.div}
+                            key="ready-indicator"
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0, opacity: 0 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                          >
+                            <CheckIcon
+                              as={motion.span}
+                              animate={{ 
+                                rotate: [0, 10, -10, 0],
+                                scale: [1, 1.2, 1]
+                              }}
+                              transition={{ 
+                                duration: 0.5,
+                                repeat: Infinity,
+                                repeatDelay: 1
+                              }}
+                            >
+                              ✓
+                            </CheckIcon>
+                            Ready!
+                          </ReadyIndicator>
+                        )}
+                      </AnimatePresence>
+                    </>
+                  )}
+                </PlayerSection>
 
-              {/* VS Indicator */}
-              <VSContainer>
-                <VSText>VS</VSText>
-                <VSIcon>⚔️</VSIcon>
-              </VSContainer>
+                {/* VS Indicator */}
+                <VSContainer
+                  as={motion.div}
+                  initial={{ scale: 0, rotate: -180 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
+                >
+                  <VSText
+                    as={motion.div}
+                    animate={{ 
+                      scale: [1, 1.1, 1],
+                      rotate: [0, 5, -5, 0]
+                    }}
+                    transition={{ 
+                      duration: 2,
+                      repeat: Infinity,
+                      repeatType: "reverse"
+                    }}
+                  >
+                    VS
+                  </VSText>
+                  <VSIcon
+                    as={motion.div}
+                    animate={{ 
+                      rotate: [0, 20, -20, 0]
+                    }}
+                    transition={{ 
+                      duration: 1.5,
+                      repeat: Infinity,
+                      repeatType: "reverse"
+                    }}
+                  >
+                    ⚔️
+                  </VSIcon>
+                </VSContainer>
 
-              {/* Opponent */}
-              <PlayerSection>
-                <PlayerLabel>Opponent</PlayerLabel>
-                {opponent && <PlayerInfo player={opponent} />}
-              </PlayerSection>
-            </PlayersContainer>
-          )}
+                {/* Opponent */}
+                <PlayerSection
+                  as={motion.div}
+                  initial={{ x: 100, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 0.2, type: "spring" }}
+                >
+                  <PlayerLabel>Opponent</PlayerLabel>
+                  {opponent && <PlayerInfo player={opponent} />}
+                </PlayerSection>
+              </PlayersContainer>
+            )}
+          </AnimatePresence>
 
-          {bothReady && (
-            <GameStartingOverlay>
-              <StartingText>Game Starting...</StartingText>
-              <StartingIcon>🎴</StartingIcon>
-              <Countdown>Get Ready!</Countdown>
-            </GameStartingOverlay>
-          )}
+          <AnimatePresence>
+            {bothReady && (
+              <GameStartingOverlay
+                as={motion.div}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <StartingText
+                  as={motion.div}
+                  initial={{ scale: 0, y: -50 }}
+                  animate={{ scale: 1, y: 0 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                >
+                  Game Starting...
+                </StartingText>
+                <StartingIcon
+                  as={motion.div}
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                >
+                  🎴
+                </StartingIcon>
+                <Countdown
+                  as={motion.div}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  Get Ready!
+                </Countdown>
+              </GameStartingOverlay>
+            )}
+          </AnimatePresence>
         </GameArea>
-
-        <Instructions>
-          <InstructionTitle>How to Play</InstructionTitle>
-          <InstructionList>
-            <InstructionItem>
-              <ItemIcon>🔥</ItemIcon>
-              Fire beats Ice
-            </InstructionItem>
-            <InstructionItem>
-              <ItemIcon>💧</ItemIcon>
-              Water beats Fire
-            </InstructionItem>
-            <InstructionItem>
-              <ItemIcon>❄️</ItemIcon>
-              Ice beats Water
-            </InstructionItem>
-            <InstructionItem>
-              <ItemIcon>🏆</ItemIcon>
-              First to 3 wins!
-            </InstructionItem>
-          </InstructionList>
-        </Instructions>
       </Content>
     </Container>
   );
@@ -267,7 +504,7 @@ const BackIcon = styled.span`
 
 const RoomInfo = styled.div`
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   gap: 12px;
 `;
@@ -418,24 +655,11 @@ const LoadingDots = styled.div`
   margin-top: 20px;
 `;
 
-const Dot = styled.div<{ delay: number }>`
+const Dot = styled.div<{ $delay: number }>`
   width: 12px;
   height: 12px;
   border-radius: 50%;
   background: white;
-  animation: bounce 1.4s infinite ease-in-out both;
-  animation-delay: ${(props) => props.delay}s;
-
-  @keyframes bounce {
-    0%,
-    80%,
-    100% {
-      transform: scale(0);
-    }
-    40% {
-      transform: scale(1);
-    }
-  }
 `;
 
 const PlayersContainer = styled.div`

@@ -37,16 +37,33 @@ export interface GameState {
   selectedCard: Card | null;
   opponentSelected: boolean;
   isMyTurn: boolean;
+  // Added for game completion
+  winner?: string;
+  finalScores?: {
+    player1: number;
+    player2: number;
+  };
+  prizeAmount?: number;
+  // Added for round result display
+  lastRoundResult?: RoundResult;
+  roundHistory?: RoundHistoryItem[];
 }
 
 export interface RoundResult {
-  roundNumber: number;
+  round: number;
   myCard: Card;
   opponentCard: Card;
   winner: string | null;
   isDraw: boolean;
   myScore: number;
   opponentScore: number;
+}
+
+export interface RoundHistoryItem {
+  round: number;
+  myCard: Card;
+  opponentCard: Card;
+  result: 'win' | 'lose' | 'draw';
 }
 
 export const EMOJIS = ['👍', '😂', '😮', '😢', '🔥'];

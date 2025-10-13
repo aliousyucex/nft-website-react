@@ -29,7 +29,7 @@ export const RoundResultModal: React.FC<RoundResultProps> = ({
       onCancel={onClose}
       footer={null}
       centered
-      width={600}
+      width={450}
       closable={false}
     >
       <ResultContainer>
@@ -69,7 +69,7 @@ export const RoundResultModal: React.FC<RoundResultProps> = ({
 
 interface GameResultProps {
   visible: boolean;
-  result: 'win' | 'lose';
+  result: 'win' | 'lose' | 'draw';
   finalScore: { my: number; opponent: number };
   prizeAmount?: number;
   onClose: () => void;
@@ -90,18 +90,24 @@ export const GameResultModal: React.FC<GameResultProps> = ({
       onCancel={onClose}
       footer={null}
       centered
-      width={700}
+      width={500}
       closable={false}
     >
       <GameResultContainer>
-        <GameResultIcon>{result === 'win' ? '🏆' : '😔'}</GameResultIcon>
+        <GameResultIcon>
+          {result === 'win' ? '🏆' : result === 'draw' ? '🤝' : '😔'}
+        </GameResultIcon>
         
         <GameResultTitle result={result}>
-          {result === 'win' ? 'Victory!' : 'Defeat'}
+          {result === 'win' ? 'Victory!' : result === 'draw' ? 'Draw!' : 'Defeat'}
         </GameResultTitle>
 
         <GameResultSubtitle>
-          {result === 'win' ? 'Congratulations! You won the game!' : 'Better luck next time!'}
+          {result === 'win' 
+            ? 'Congratulations! You won the game!' 
+            : result === 'draw'
+            ? 'The game ended in a draw!'
+            : 'Better luck next time!'}
         </GameResultSubtitle>
 
         <FinalScoreDisplay>
@@ -130,15 +136,15 @@ export const GameResultModal: React.FC<GameResultProps> = ({
 };
 
 const ResultContainer = styled.div`
-  padding: 40px 20px;
+  padding: 24px 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 32px;
+  gap: 20px;
 `;
 
 const ResultTitle = styled.h2<{ result: 'win' | 'lose' | 'draw' }>`
-  font-size: 36px;
+  font-size: 24px;
   margin: 0;
   color: ${(props) =>
     props.result === 'win' ? '#2ECC71' : props.result === 'lose' ? '#E74C3C' : '#3498DB'};
@@ -149,7 +155,7 @@ const ResultTitle = styled.h2<{ result: 'win' | 'lose' | 'draw' }>`
 const CardsDisplay = styled.div`
   display: flex;
   align-items: center;
-  gap: 40px;
+  gap: 20px;
   width: 100%;
   justify-content: center;
 `;
@@ -158,54 +164,55 @@ const CardColumn = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 8px;
+  transform: scale(0.7);
 `;
 
 const CardLabel = styled.div`
-  font-size: 16px;
+  font-size: 12px;
   font-weight: 600;
   color: rgba(0, 0, 0, 0.65);
 `;
 
 const VSText = styled.div`
-  font-size: 32px;
+  font-size: 20px;
   font-weight: bold;
   color: rgba(0, 0, 0, 0.45);
 `;
 
 const ScoreDisplay = styled.div`
-  padding: 16px 32px;
+  padding: 12px 20px;
   background: rgba(0, 0, 0, 0.05);
-  border-radius: 12px;
+  border-radius: 8px;
 `;
 
 const ScoreText = styled.div`
-  font-size: 20px;
+  font-size: 14px;
   color: rgba(0, 0, 0, 0.85);
 `;
 
 const ScoreValue = styled.span`
   font-weight: bold;
-  font-size: 24px;
+  font-size: 18px;
 `;
 
 const ContinueButton = styled(Button)`
-  min-width: 200px;
-  height: 48px;
-  font-size: 18px;
+  min-width: 140px;
+  height: 40px;
+  font-size: 14px;
   font-weight: 600;
 `;
 
 const GameResultContainer = styled.div`
-  padding: 60px 40px;
+  padding: 30px 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 24px;
+  gap: 16px;
 `;
 
 const GameResultIcon = styled.div`
-  font-size: 120px;
+  font-size: 64px;
   animation: bounceIn 0.6s ease-out;
 
   @keyframes bounceIn {
@@ -223,16 +230,19 @@ const GameResultIcon = styled.div`
   }
 `;
 
-const GameResultTitle = styled.h1<{ result: 'win' | 'lose' }>`
-  font-size: 48px;
+const GameResultTitle = styled.h1<{ result: 'win' | 'lose' | 'draw' }>`
+  font-size: 32px;
   margin: 0;
-  color: ${(props) => (props.result === 'win' ? '#2ECC71' : '#E74C3C')};
+  color: ${(props) => 
+    props.result === 'win' ? '#2ECC71' 
+    : props.result === 'draw' ? '#3498DB'
+    : '#E74C3C'};
   text-align: center;
   text-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 `;
 
 const GameResultSubtitle = styled.p`
-  font-size: 20px;
+  font-size: 16px;
   color: rgba(0, 0, 0, 0.65);
   margin: 0;
   text-align: center;
@@ -242,22 +252,22 @@ const FinalScoreDisplay = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 24px 48px;
+  gap: 4px;
+  padding: 12px 24px;
   background: linear-gradient(135deg, rgba(52, 152, 219, 0.1) 0%, rgba(155, 89, 182, 0.1) 100%);
-  border-radius: 16px;
+  border-radius: 12px;
   border: 2px solid rgba(52, 152, 219, 0.2);
 `;
 
 const FinalScoreLabel = styled.div`
-  font-size: 16px;
+  font-size: 12px;
   color: rgba(0, 0, 0, 0.45);
   text-transform: uppercase;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
 `;
 
 const FinalScoreValue = styled.div`
-  font-size: 56px;
+  font-size: 28px;
   font-weight: bold;
   color: rgba(0, 0, 0, 0.85);
 `;
@@ -266,39 +276,39 @@ const PrizeDisplay = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 24px 48px;
+  gap: 4px;
+  padding: 12px 20px;
   background: linear-gradient(135deg, rgba(46, 204, 113, 0.1) 0%, rgba(39, 174, 96, 0.1) 100%);
-  border-radius: 16px;
+  border-radius: 12px;
   border: 2px solid rgba(46, 204, 113, 0.3);
   margin-top: 8px;
 `;
 
 const PrizeIcon = styled.div`
-  font-size: 48px;
+  font-size: 28px;
 `;
 
 const PrizeText = styled.div`
-  font-size: 16px;
+  font-size: 11px;
   color: rgba(0, 0, 0, 0.65);
 `;
 
 const PrizeAmount = styled.div`
-  font-size: 36px;
+  font-size: 20px;
   font-weight: bold;
   color: #2ECC71;
 `;
 
 const ButtonGroup = styled.div`
   display: flex;
-  gap: 16px;
-  margin-top: 16px;
+  gap: 12px;
+  margin-top: 8px;
 `;
 
 const ActionButton = styled(Button)`
-  min-width: 180px;
-  height: 48px;
-  font-size: 16px;
+  min-width: 140px;
+  height: 40px;
+  font-size: 14px;
   font-weight: 600;
 `;
 

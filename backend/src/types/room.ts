@@ -19,6 +19,7 @@ export interface Room {
   betAmount: number;
   winningScore: number;
   createdAt: Date;
+  lastActivity: Date; // Track last activity for cleanup
   
   // Players
   players: Player[];
@@ -26,6 +27,7 @@ export interface Room {
   // Game State
   gameState: GameState;
   currentRound: number;
+  consecutiveAfkRounds: number; // Track consecutive rounds where both players AFK
   
   // Decks
   player1Deck: Deck;

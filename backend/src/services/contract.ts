@@ -68,11 +68,16 @@ export class ContractService {
    */
   async getUserBalance(address: string): Promise<string> {
     try {
+      if (!config.blockchain.contractAddress || config.blockchain.contractAddress === '0x...') {
+        logger.warn('Contract address not configured, returning 0 balance');
+        return '0';
+      }
       const balance = await this.contract.getWithdrawableUserBalance(address);
       return ethers.formatEther(balance);
     } catch (error) {
       logger.error('Error getting user balance:', error);
-      throw error;
+      // Return 0 instead of throwing to prevent UI break
+      return '0';
     }
   }
 
@@ -195,31 +200,6 @@ export class ContractService {
       });
     } catch (error) {
       logger.error('Error processing disconnect payout:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Process both players disconnected
-   */
-  async processBothDisconnected(
-    player1Address: string,
-    player2Address: string,
-    betAmount: number
-  ): Promise<void> {
-    try {
-      // Both lose their bets
-      await this.updateBalances([
-        { address: player1Address, amount: -betAmount },
-        { address: player2Address, amount: -betAmount },
-      ]);
-
-      logger.info('Both players disconnected - bets forfeited', {
-        player1: player1Address,
-        player2: player2Address,
-      });
-    } catch (error) {
-      logger.error('Error processing both disconnected:', error);
       throw error;
     }
   }

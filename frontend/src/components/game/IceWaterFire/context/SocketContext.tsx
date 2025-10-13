@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { io, Socket } from 'socket.io-client';
 
+// Connect directly to backend (Vite proxy doesn't work well with Socket.IO)
 const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 interface SocketContextType {
@@ -49,6 +50,28 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children, addres
       console.log('Socket connected:', newSocket.id);
       setIsConnected(true);
       setError(null);
+
+      // Try to reconnect to room if sessionToken exists
+      const sessionToken = localStorage.getItem('gameSessionToken');
+      const roomId = localStorage.getItem('currentRoomId');
+      
+      if (sessionToken && roomId && address) {
+        console.log('Found session token, attempting reconnect to room:', roomId);
+        newSocket.emit('reconnect_to_room', {
+          roomId,
+          address,
+          sessionToken,
+        }, (response: any) => {
+          if (response.success) {
+            console.log('Successfully reconnected to room');
+          } else {
+            console.log('Failed to reconnect:', response.error);
+            // Clear invalid tokens
+            localStorage.removeItem('gameSessionToken');
+            localStorage.removeItem('currentRoomId');
+          }
+        });
+      }
     });
 
     newSocket.on('disconnect', (reason) => {

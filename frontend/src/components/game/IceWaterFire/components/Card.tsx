@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
+import { motion } from 'framer-motion';
 import { Card as CardType } from '../types';
 
 interface CardProps {
@@ -20,6 +21,8 @@ const Card: React.FC<CardProps> = ({
   disabled = false,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  const [backImageError, setBackImageError] = useState(false);
 
   const getCardIcon = (type: CardType['type']) => {
     switch (type) {
@@ -53,30 +56,174 @@ const Card: React.FC<CardProps> = ({
     }
   };
 
+  const cardVariants = {
+    initial: { 
+      scale: 0,
+      opacity: 0,
+      rotateY: 180
+    },
+    animate: { 
+      scale: 1,
+      opacity: 1,
+      rotateY: 0,
+      transition: {
+        type: "spring",
+        stiffness: 260,
+        damping: 20
+      }
+    },
+    hover: {
+      y: -20,
+      scale: 1.05,
+      boxShadow: `0 15px 35px ${getCardColor(card.type)}60`,
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 10
+      }
+    },
+    selected: {
+      y: -30,
+      scale: 1.1,
+      boxShadow: `0 20px 40px ${getCardColor(card.type)}90`,
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 15
+      }
+    },
+    tap: {
+      scale: 0.95,
+      transition: { duration: 0.1 }
+    }
+  };
+
+  const flipVariants = {
+    front: {
+      rotateY: 0,
+      transition: {
+        duration: 0.6,
+        ease: "easeInOut"
+      }
+    },
+    back: {
+      rotateY: 180,
+      transition: {
+        duration: 0.6,
+        ease: "easeInOut"
+      }
+    }
+  };
+
   return (
     <CardWrapper
+      as={motion.div}
+      variants={cardVariants}
+      initial="initial"
+      animate={isSelected ? "selected" : "animate"}
+      whileHover={!disabled && !isOpponent ? "hover" : undefined}
+      whileTap={!disabled && !isOpponent ? "tap" : undefined}
       onClick={handleClick}
       onMouseEnter={() => !disabled && !isOpponent && setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      isHovered={isHovered}
-      isSelected={isSelected}
-      isOpponent={isOpponent}
-      isRevealed={isRevealed}
-      disabled={disabled}
-      cardColor={getCardColor(card.type)}
+      $isHovered={isHovered}
+      $isSelected={isSelected}
+      $isOpponent={isOpponent}
+      $isRevealed={isRevealed}
+      $disabled={disabled}
+      $cardColor={getCardColor(card.type)}
     >
       {isOpponent && !isRevealed ? (
-        <CardBack>
-          <BackPattern>🎴</BackPattern>
+        <CardBack
+          as={motion.div}
+          variants={flipVariants}
+          animate="back"
+          $hasImage={!backImageError}
+        >
+          {!backImageError ? (
+            <CardBackImage
+              src="/cards/card_back.jpg"
+              alt="Card back"
+              onError={() => setBackImageError(true)}
+            />
+          ) : (
+            <BackPattern
+              as={motion.div}
+              animate={{ 
+                rotate: [0, 10, -10, 0],
+                scale: [1, 1.1, 1.1, 1]
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                repeatType: "reverse"
+              }}
+            >
+              🎴
+            </BackPattern>
+          )}
         </CardBack>
       ) : (
-        <CardFront>
-          <CardIcon>{getCardIcon(card.type)}</CardIcon>
-          <CardValue>{card.value}</CardValue>
-          <CardTypea>{card.type.toUpperCase()}</CardTypea>
+        <CardFront
+          as={motion.div}
+          variants={flipVariants}
+          animate="front"
+          $hasImage={!imageError}
+          $cardType={card.type}
+          $cardValue={card.value}
+        >
+          {!imageError && (
+            <CardFrontImage
+              src={`/cards/${card.type}_${card.value}.jpg`}
+              alt={`${card.type} ${card.value}`}
+              onError={() => setImageError(true)}
+            />
+          )}
+          <CardOverlay />
+          <CardContent>
+            {imageError && (
+              <CardIcon
+                as={motion.div}
+                animate={{ 
+                  scale: [1, 1.1, 1],
+                  rotate: [0, 5, -5, 0]
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  repeatType: "reverse"
+                }}
+              >
+                {getCardIcon(card.type)}
+              </CardIcon>
+            )}
+            <CardValue
+              as={motion.div}
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: "spring" }}
+            >
+              {card.value}
+            </CardValue>
+            <CardTypea
+              as={motion.div}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              {card.type.toUpperCase()}
+            </CardTypea>
+          </CardContent>
         </CardFront>
       )}
-      {isSelected && <SelectedIndicator />}
+      {isSelected && (
+        <SelectedIndicator
+          as={motion.div}
+          initial={{ scale: 0, rotate: -180 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ type: "spring", stiffness: 500, damping: 15 }}
+        />
+      )}
     </CardWrapper>
   );
 };
@@ -84,50 +231,42 @@ const Card: React.FC<CardProps> = ({
 export default Card;
 
 const CardWrapper = styled.div<{
-  isHovered: boolean;
-  isSelected: boolean;
-  isOpponent: boolean;
-  isRevealed: boolean;
-  disabled: boolean;
-  cardColor: string;
+  $isHovered: boolean;
+  $isSelected: boolean;
+  $isOpponent: boolean;
+  $isRevealed: boolean;
+  $disabled: boolean;
+  $cardColor: string;
 }>`
-  width: 120px;
-  height: 180px;
+  width: 100px;
+  height: 150px;
   border-radius: 12px;
-  background: ${(props) => (props.isOpponent && !props.isRevealed ? '#2C3E50' : props.cardColor)};
-  box-shadow: ${(props) =>
-    props.isSelected
-      ? `0 10px 30px ${props.cardColor}80`
-      : props.isHovered
-      ? '0 8px 20px rgba(0, 0, 0, 0.3)'
-      : '0 4px 10px rgba(0, 0, 0, 0.2)'};
-  cursor: ${(props) => (props.disabled || props.isOpponent ? 'default' : 'pointer')};
-  transition: all 0.3s ease;
-  transform: ${(props) =>
-    props.isSelected
-      ? 'translateY(-20px) scale(1.05)'
-      : props.isHovered
-      ? 'translateY(-10px)'
-      : 'translateY(0)'};
+  background: ${(props) => (props.$isOpponent && !props.$isRevealed ? '#2C3E50' : props.$cardColor)};
+  cursor: ${(props) => (props.$disabled || props.$isOpponent ? 'default' : 'pointer')};
   position: relative;
   user-select: none;
+  perspective: 1000px;
+  transform-style: preserve-3d;
+
+  @media (max-height: 900px) {
+    width: 85px;
+    height: 128px;
+  }
 
   ${(props) =>
-    props.disabled &&
-    !props.isSelected &&
+    props.$disabled &&
+    !props.$isSelected &&
     `
     opacity: 0.6;
     cursor: not-allowed;
   `}
-
-  ${(props) =>
-    props.isOpponent &&
-    `
-    transform: ${props.isRevealed ? 'rotateY(0deg)' : 'rotateY(0deg)'};
-  `}
 `;
 
-const CardFront = styled.div`
+const CardFront = styled.div<{
+  $hasImage?: boolean;
+  $cardType?: string;
+  $cardValue?: number;
+}>`
   width: 100%;
   height: 100%;
   display: flex;
@@ -137,16 +276,22 @@ const CardFront = styled.div`
   padding: 16px;
   color: white;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
 `;
 
-const CardBack = styled.div`
+const CardBack = styled.div<{ $hasImage?: boolean }>`
   width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #2C3E50 0%, #34495E 100%);
+  background: ${props => props.$hasImage ? 'transparent' : 'linear-gradient(135deg, #2C3E50 0%, #34495E 100%)'};
   border: 3px solid #3498DB;
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
 `;
 
 const BackPattern = styled.div`
@@ -155,22 +300,85 @@ const BackPattern = styled.div`
 `;
 
 const CardIcon = styled.div`
-  font-size: 56px;
-  margin-bottom: 8px;
+  font-size: 48px;
+  margin-bottom: 6px;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+
+  @media (max-height: 900px) {
+    font-size: 40px;
+    margin-bottom: 4px;
+  }
 `;
 
 const CardValue = styled.div`
-  font-size: 32px;
+  font-size: 28px;
   font-weight: bold;
   margin-bottom: 4px;
+
+  @media (max-height: 900px) {
+    font-size: 24px;
+    margin-bottom: 2px;
+  }
 `;
 
 const CardTypea = styled.div`
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 1px;
   opacity: 0.9;
+
+  @media (max-height: 900px) {
+    font-size: 10px;
+  }
+`;
+
+const CardFrontImage = styled.img`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 12px;
+`;
+
+const CardBackImage = styled.img`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 12px;
+`;
+
+const CardOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    transparent 40%,
+    rgba(0, 0, 0, 0.3) 70%,
+    rgba(0, 0, 0, 0.6) 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+`;
+
+const CardContent = styled.div`
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
 `;
 
 const SelectedIndicator = styled.div`
@@ -186,6 +394,7 @@ const SelectedIndicator = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 10;
 
   &::after {
     content: '✓';

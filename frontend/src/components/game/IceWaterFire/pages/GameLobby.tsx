@@ -1,34 +1,58 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import RoomList from '../components/RoomList';
 import DepositModal from '../components/DepositModal';
 import WithdrawModal from '../components/WithdrawModal';
+import TutorialModal from '../components/TutorialModal';
+import SoundSettings from '../components/SoundSettings';
 import { Modal, Input, Button, InputNumber, message } from 'antd';
 
 interface GameLobbyProps {
   availableRooms: any[];
   loading: boolean;
+  balance: string;
   createRoom: (betAmount: number, password?: string) => void;
   joinRoom: (roomId: string, password?: string) => void;
   quickJoin: (betAmount: number) => void;
+  soundsEnabled: boolean;
+  volume: number;
+  onToggleSounds: () => void;
+  onVolumeChange: (volume: number) => void;
 }
 
 const GameLobby: React.FC<GameLobbyProps> = ({ 
   availableRooms,
   loading,
+  balance,
   createRoom,
   joinRoom,
-  quickJoin
+  quickJoin,
+  soundsEnabled,
+  volume,
+  onToggleSounds,
+  onVolumeChange
 }) => {
 
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [joinModalVisible, setJoinModalVisible] = useState(false);
+  const [passwordModalVisible, setPasswordModalVisible] = useState(false);
   const [depositModalVisible, setDepositModalVisible] = useState(false);
   const [withdrawModalVisible, setWithdrawModalVisible] = useState(false);
+  const [tutorialVisible, setTutorialVisible] = useState(false);
   const [betAmount, setBetAmount] = useState(0.01);
   const [password, setPassword] = useState('');
   const [roomIdToJoin, setRoomIdToJoin] = useState('');
+  const [roomPasswordToJoin, setRoomPasswordToJoin] = useState('');
+  const [selectedRoomId, setSelectedRoomId] = useState('');
   const [quickBetAmount, setQuickBetAmount] = useState(0.01);
+
+  // Check if tutorial should be shown on first visit
+  useEffect(() => {
+    const tutorialCompleted = localStorage.getItem('tutorialCompleted');
+    if (!tutorialCompleted) {
+      setTutorialVisible(true);
+    }
+  }, []);
 
   const handleCreateRoom = () => {
     if (betAmount < 0.001) {
@@ -40,8 +64,25 @@ const GameLobby: React.FC<GameLobbyProps> = ({
     setCreateModalVisible(false);
   };
 
-  const handleJoinRoom = (roomId: string, pwd?: string) => {
-    joinRoom(roomId, pwd);
+  const handleJoinRoom = (roomId: string, hasPassword: boolean) => {
+    if (hasPassword) {
+      // Open password modal
+      setSelectedRoomId(roomId);
+      setPasswordModalVisible(true);
+    } else {
+      // Join directly
+      joinRoom(roomId);
+    }
+  };
+
+  const handlePasswordSubmit = () => {
+    if (!roomPasswordToJoin) {
+      message.error('Please enter the room password');
+      return;
+    }
+    joinRoom(selectedRoomId, roomPasswordToJoin);
+    setPasswordModalVisible(false);
+    setRoomPasswordToJoin('');
   };
 
   const handleJoinByCode = () => {
@@ -49,7 +90,8 @@ const GameLobby: React.FC<GameLobbyProps> = ({
       message.error('Please enter a room ID');
       return;
     }
-    handleJoinRoom(roomIdToJoin, password || undefined);
+    // Join with password if provided
+    joinRoom(roomIdToJoin, password || undefined);
     setJoinModalVisible(false);
   };
 
@@ -69,9 +111,12 @@ const GameLobby: React.FC<GameLobbyProps> = ({
         <HeaderContent>
           <HeaderText>
             <Title>🎴 Ice Water Fire</Title>
-            <Subtitle>Choose your game mode</Subtitle>
           </HeaderText>
           <WalletActions>
+            <BalanceDisplay>
+              <BalanceLabel>Balance:</BalanceLabel>
+              <BalanceValue>{parseFloat(balance).toFixed(4)} ETH</BalanceValue>
+            </BalanceDisplay>
             <DepositButton onClick={() => setDepositModalVisible(true)}>
               💰 Deposit
             </DepositButton>
@@ -132,14 +177,24 @@ const GameLobby: React.FC<GameLobbyProps> = ({
           </ActionCard>
         </ActionsPanel>
 
-        {/* Right Side - Room List */}
-        <RoomListPanel>
-          <RoomList
-            rooms={availableRooms}
-            onJoinRoom={(roomId) => handleJoinRoom(roomId)}
-            loading={loading}
+        {/* Right Side - Room List & Settings */}
+        <RightPanel>
+          <RoomListPanel>
+            <RoomList
+              rooms={availableRooms}
+              onJoinRoom={handleJoinRoom}
+              loading={loading}
+            />
+          </RoomListPanel>
+          
+          {/* Sound Settings */}
+          <SoundSettings
+            soundsEnabled={soundsEnabled}
+            volume={volume}
+            onToggleSounds={onToggleSounds}
+            onVolumeChange={onVolumeChange}
           />
-        </RoomListPanel>
+        </RightPanel>
       </Content>
 
       {/* Create Room Modal */}
@@ -241,6 +296,35 @@ const GameLobby: React.FC<GameLobbyProps> = ({
         onClose={() => setWithdrawModalVisible(false)}
         contractAddress={contractAddress}
       />
+
+      {/* Password Modal */}
+      <Modal
+        title="Enter Room Password"
+        open={passwordModalVisible}
+        onCancel={() => {
+          setPasswordModalVisible(false);
+          setRoomPasswordToJoin('');
+        }}
+        footer={[
+          <Button key="cancel" onClick={() => setPasswordModalVisible(false)}>
+            Cancel
+          </Button>,
+          <Button key="submit" type="primary" onClick={handlePasswordSubmit}>
+            Join Room
+          </Button>,
+        ]}
+      >
+        <Input.Password
+          placeholder="Enter password"
+          value={roomPasswordToJoin}
+          onChange={(e) => setRoomPasswordToJoin(e.target.value)}
+          onPressEnter={handlePasswordSubmit}
+          autoFocus
+        />
+      </Modal>
+
+      {/* Tutorial Modal */}
+      <TutorialModal visible={tutorialVisible} onClose={() => setTutorialVisible(false)} />
     </Container>
   );
 };
@@ -250,7 +334,6 @@ export default GameLobby;
 const Container = styled.div`
   min-height: 100vh;
   max-height: 100vh;
-  overflow-y: auto;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 20px;
 
@@ -280,7 +363,7 @@ const HeaderText = styled.div`
 `;
 
 const Title = styled.h1`
-  font-size: 36px;
+  font-size: 32px;
   color: white;
   margin: 0 0 4px 0;
   text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
@@ -303,11 +386,42 @@ const Subtitle = styled.p`
 const WalletActions = styled.div`
   display: flex;
   gap: 12px;
+  align-items: center;
 
   @media (max-width: 768px) {
     width: 100%;
     flex-direction: column;
   }
+`;
+
+const BalanceDisplay = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+
+  @media (max-width: 768px) {
+    width: 100%;
+    align-items: center;
+  }
+`;
+
+const BalanceLabel = styled.div`
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+`;
+
+const BalanceValue = styled.div`
+  font-size: 16px;
+  font-weight: bold;
+  color: #FFD700;
+  text-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
 `;
 
 const DepositButton = styled.button`
@@ -376,6 +490,39 @@ const WithdrawButton = styled.button`
   }
 `;
 
+const TutorialButton = styled.button`
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #4ECDC4 0%, #45B7D1 100%);
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(78, 205, 196, 0.4);
+  white-space: nowrap;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(78, 205, 196, 0.6);
+    background: linear-gradient(135deg, #45B7D1 0%, #4ECDC4 100%);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  @media (max-width: 768px) {
+    width: 100%;
+    justify-content: center;
+    font-size: 14px;
+  }
+`;
+
 const Content = styled.div`
   max-width: 1400px;
   margin: 0 auto;
@@ -395,6 +542,11 @@ const ActionsPanel = styled.div`
   display: flex;
   flex-direction: column;
   gap: 14px;
+
+  @media (max-width: 1024px) {
+    flex-direction: row;
+    justify-content: space-between;
+  }
 `;
 
 const ActionCard = styled.div`
@@ -434,6 +586,31 @@ const ActionDescription = styled.p`
   font-size: 13px;
   color: rgba(255, 255, 255, 0.8);
   line-height: 1.4;
+`;
+
+const RightPanel = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+  }
 `;
 
 const RoomListPanel = styled.div`

@@ -128,17 +128,32 @@ export class GameService {
     if (!roundResult.isDraw) {
       if (roundResult.winner === player1.address) {
         player1.roundsWon++;
+        logger.info('Player 1 won round', {
+          player1Address: player1.address,
+          player1Score: player1.roundsWon,
+          player2Score: player2.roundsWon,
+        });
         if (player1.roundsWon >= room.winningScore) {
           gameOver = true;
           gameWinner = player1.address;
         }
       } else if (roundResult.winner === player2.address) {
         player2.roundsWon++;
+        logger.info('Player 2 won round', {
+          player2Address: player2.address,
+          player1Score: player1.roundsWon,
+          player2Score: player2.roundsWon,
+        });
         if (player2.roundsWon >= room.winningScore) {
           gameOver = true;
           gameWinner = player2.address;
         }
       }
+    } else {
+      logger.info('Round is a draw', {
+        player1Score: player1.roundsWon,
+        player2Score: player2.roundsWon,
+      });
     }
 
     // Check for max round limit (15 rounds)
@@ -165,10 +180,8 @@ export class GameService {
     player1.selectedCard = null;
     player2.selectedCard = null;
 
-    // Increment round
-    if (!gameOver) {
-      room.currentRound++;
-    }
+    // Don't increment round here - it's done in processRound handler
+    // This prevents double increment
 
     logger.info('Round processed', {
       roomId: room.roomId,
@@ -234,38 +247,6 @@ export class GameService {
     });
   }
 
-  /**
-   * Handle AFK timeout
-   */
-  handleAfkTimeout(room: Room, playerAddress: string): {
-    shouldForfeit: boolean;
-    afkCount: number;
-  } {
-    const player = room.players.find((p) => p.address === playerAddress);
-    
-    if (!player) {
-      return { shouldForfeit: false, afkCount: 0 };
-    }
-
-    player.afkCount++;
-
-    if (player.afkCount >= 3) {
-      return { shouldForfeit: true, afkCount: player.afkCount };
-    }
-
-    // Give point to opponent
-    const opponent = room.players.find((p) => p.address !== playerAddress);
-    if (opponent) {
-      opponent.roundsWon++;
-      
-      // Check if opponent won
-      if (opponent.roundsWon >= room.winningScore) {
-        return { shouldForfeit: true, afkCount: player.afkCount };
-      }
-    }
-
-    return { shouldForfeit: false, afkCount: player.afkCount };
-  }
 }
 
 export default new GameService();

@@ -131,42 +131,6 @@ export class LeaderboardService {
   }
 
   /**
-   * Record draw
-   */
-  async recordDraw(address1: string, address2: string) {
-    try {
-      const addresses = [address1.toLowerCase(), address2.toLowerCase()];
-
-      for (const address of addresses) {
-        await db
-          .insertInto('leaderboard')
-          .values({
-            address,
-            total_points: 0,
-            wins: 0,
-            losses: 0,
-            draws: 1,
-            total_games: 1,
-            last_game_at: new Date(),
-          })
-          .onConflict((oc) =>
-            oc.column('address').doUpdateSet((eb) => ({
-              draws: eb('leaderboard.draws', '+', 1),
-              total_games: eb('leaderboard.total_games', '+', 1),
-              last_game_at: new Date(),
-            }))
-          )
-          .execute();
-      }
-
-      logger.info('Draw recorded', { address1, address2 });
-    } catch (error) {
-      logger.error('Error recording draw:', error);
-      throw error;
-    }
-  }
-
-  /**
    * Get total player count
    */
   async getTotalPlayerCount(): Promise<number> {
