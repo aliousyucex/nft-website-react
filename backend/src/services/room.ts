@@ -254,6 +254,20 @@ export class RoomManager {
     return room;
   }
 
+  setPlayerNotReady(socketId: string): Room | null {
+    const room = this.getRoomBySocket(socketId);
+    
+    if (!room) return null;
+
+    const player = room.players.find((p) => p.socketId === socketId);
+    
+    if (player) {
+      player.ready = false;
+    }
+
+    return room;
+  }
+
   /**
    * Start game
    */
@@ -311,6 +325,17 @@ export class RoomManager {
    * Update player deck after card use
    */
   updatePlayerDeck(room: Room, playerIndex: number): void {
+    // Check if game is over
+    if (room.gameState === 'finished' || 
+        room.players[0]?.roundsWon >= room.winningScore || 
+        room.players[1]?.roundsWon >= room.winningScore) {
+      logger.info('Game finished, skipping deck update', { 
+        roomId: room.roomId, 
+        playerIndex 
+      });
+      return;
+    }
+
     const deck = playerIndex === 0 ? room.player1Deck : room.player2Deck;
     const player = room.players[playerIndex];
 

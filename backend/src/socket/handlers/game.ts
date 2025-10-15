@@ -115,6 +115,47 @@ export const setupGameHandlers = (io: Server, socket: Socket) => {
     }
   });
 
+  socket.on('player_not_ready', async (callback) => {
+    try {
+      const room = roomManager.getRoomBySocket(socket.id);
+
+      
+      if (!room) {
+        return callback({
+          success: false,
+          error: 'Room not found',
+          code: SocketErrorCode.NOT_IN_ROOM,
+        });
+      }
+
+      if (room.players[0].ready && room.players[1].ready) {
+        return callback({
+          success: false,
+          error: 'Both players ready',
+        });
+      }
+
+      roomManager.setPlayerNotReady(socket.id);
+
+      // Update room activity
+      roomManager.updateRoomActivity(room.roomId);
+
+      if (room.players.length !== 2) {
+        return callback({
+          success: false,
+          error: 'Waiting for second player',
+        });
+      }
+
+      // Notify room with updated room data
+      io.to(room.roomId).emit('room_updated', {
+        room: formatRoomData(room),
+      });   
+    } catch (error) {
+      logger.error('Error setting player not ready', error);
+    }
+  });
+
   /**
    * Select card
    */
@@ -141,6 +182,16 @@ export const setupGameHandlers = (io: Server, socket: Socket) => {
         return callback({
           success: false,
           error: 'Game is not in playing state',
+          code: SocketErrorCode.GAME_NOT_PLAYING,
+        });
+      }
+
+      // Check if game is already over (any player reached winning score)
+      if (room.players[0].roundsWon >= room.winningScore || 
+          room.players[1].roundsWon >= room.winningScore) {
+        return callback({
+          success: false,
+          error: 'Game has ended',
           code: SocketErrorCode.GAME_NOT_PLAYING,
         });
       }
@@ -316,6 +367,14 @@ function startSelectionTimeout(io: Server, roomId: string) {
   
   if (!room) return;
 
+  // Check if game is already over
+  if (room.gameState === 'finished' || 
+      room.players[0].roundsWon >= room.winningScore || 
+      room.players[1].roundsWon >= room.winningScore) {
+    logger.info('Game already finished, not starting timer', { roomId });
+    return;
+  }
+
   // Emit new round started event (currentRound will be incremented in processRound)
   const nextRound = room.currentRound + 1;
   io.to(roomId).emit('new_round_started', {
@@ -334,6 +393,14 @@ function startSelectionTimeout(io: Server, roomId: string) {
     const room = roomManager.getRoom(roomId);
 
     if (!room) return;
+
+    // Check if game ended while waiting
+    if (room.gameState === 'finished' || 
+        room.players[0].roundsWon >= room.winningScore || 
+        room.players[1].roundsWon >= room.winningScore) {
+      logger.info('Game already finished during timeout', { roomId });
+      return;
+    }
 
     const player1NoCard = !room.players[0].selectedCard;
     const player2NoCard = !room.players[1].selectedCard;
@@ -480,6 +547,17 @@ async function processRound(io: Server, room: any) {
     gameOver: result.gameOver,
   });
 
+  // Check if game is over - if so, skip deck updates and timer
+  if (result.gameOver) {
+    logger.info('Game over detected, skipping deck updates and timer', {
+      roomId: room.roomId,
+      winner: result.gameWinner,
+    });
+    gameService.endGame(room, result.gameWinner, 'normal');
+    await handleGameEnd(io, room);
+    return; // Exit early
+  }
+
   // Update decks
   roomManager.updatePlayerDeck(room, 0);
   roomManager.updatePlayerDeck(room, 1);
@@ -533,16 +611,10 @@ async function processRound(io: Server, room: any) {
     io.to(player.socketId).emit('round_result', roundData);
   });
 
-  // Check if game over
-  if (result.gameOver) {
-    gameService.endGame(room, result.gameWinner, 'normal');
-    await handleGameEnd(io, room);
-  } else {
-    // Start next round
-    setTimeout(() => {
-      startSelectionTimeout(io, room.roomId);
-    }, 2000);
-  }
+  // Start next round (game over is already handled above with early return)
+  setTimeout(() => {
+    startSelectionTimeout(io, room.roomId);
+  }, 2000);
 }
 
 /**

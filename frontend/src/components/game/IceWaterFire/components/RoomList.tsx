@@ -170,12 +170,9 @@ const RoomCard = styled.div`
   padding: 20px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   cursor: pointer;
-  transition: all 0.3s ease;
 
   &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
-    border-color: #3498DB;
+    background: rgba(255, 255, 255, 0.15);
   }
 `;
 
@@ -192,7 +189,7 @@ const RoomId = styled.div`
   font-size: 18px;
   font-weight: bold;
   color: white;
-  font-family: 'Courier New', monospace;
+  font-family: 'Poppins', monospace;
 `;
 
 const LockIcon = styled.span`

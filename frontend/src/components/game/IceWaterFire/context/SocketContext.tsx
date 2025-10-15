@@ -98,7 +98,6 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children, addres
     }, 25000);
 
     newSocket.on('pong', ({ timestamp }: { timestamp: number }) => {
-      console.log('Pong received, latency:', Date.now() - timestamp, 'ms');
     });
 
     setSocket(newSocket);

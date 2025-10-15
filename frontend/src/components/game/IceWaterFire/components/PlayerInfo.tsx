@@ -8,11 +8,10 @@ interface PlayerInfoProps {
 
 const PlayerInfo: React.FC<PlayerInfoProps> = ({ player }) => {
   return (
-    <InfoContainer>
+    <InfoContainer $isReady={player.ready}>
       <PlayerHeader>
         <StatusIndicator $isConnected={player.isConnected} />
-        <StatusText>{player.isConnected ? 'Connected' : 'Disconnected'}</StatusText>
-        {player.ready && <ReadyBadge>READY</ReadyBadge>}
+        <StatusText>{player.address}</StatusText>
       </PlayerHeader>
     </InfoContainer>
   );
@@ -20,13 +19,14 @@ const PlayerInfo: React.FC<PlayerInfoProps> = ({ player }) => {
 
 export default PlayerInfo;
 
-const InfoContainer = styled.div`
+const InfoContainer = styled.div<{ $isReady: boolean }>`
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
   backdrop-filter: blur(10px);
   border-radius: 12px;
   padding: 12px 20px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  background: ${(props) => (props.$isReady ? '#2ECC7188' : 'transparent')};
 
   @media (max-height: 900px) {
     padding: 10px 16px;

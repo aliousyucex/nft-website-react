@@ -39,12 +39,13 @@ const GameLobby: React.FC<GameLobbyProps> = ({
   const [depositModalVisible, setDepositModalVisible] = useState(false);
   const [withdrawModalVisible, setWithdrawModalVisible] = useState(false);
   const [tutorialVisible, setTutorialVisible] = useState(false);
-  const [betAmount, setBetAmount] = useState(0.01);
+  const [quickJoinModalVisible, setQuickJoinModalVisible] = useState(false);
+  const [betAmount, setBetAmount] = useState(0.001);
   const [password, setPassword] = useState('');
   const [roomIdToJoin, setRoomIdToJoin] = useState('');
   const [roomPasswordToJoin, setRoomPasswordToJoin] = useState('');
   const [selectedRoomId, setSelectedRoomId] = useState('');
-  const [quickBetAmount, setQuickBetAmount] = useState(0.01);
+  const [quickBetAmount, setQuickBetAmount] = useState(0.001);
 
   // Check if tutorial should be shown on first visit
   useEffect(() => {
@@ -101,6 +102,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({
       return;
     }
     quickJoin(quickBetAmount);
+    setQuickJoinModalVisible(false);
   };
 
   const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS || '';
@@ -146,29 +148,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({
             </ActionDescription>
           </ActionCard>
 
-          <ActionCard
-            onClick={() => {
-              Modal.confirm({
-                title: 'Quick Join',
-                content: (
-                  <div>
-                    <p>Select bet amount:</p>
-                    <InputNumber
-                      min={0.001}
-                      max={10}
-                      step={0.001}
-                      value={quickBetAmount}
-                      onChange={(val) => setQuickBetAmount(val || 0.01)}
-                      addonAfter="ETH"
-                      style={{ width: '100%' }}
-                    />
-                  </div>
-                ),
-                onOk: handleQuickJoin,
-                okText: 'Quick Join',
-              });
-            }}
-          >
+          <ActionCard onClick={() => setQuickJoinModalVisible(true)}>
             <ActionIcon>⚡</ActionIcon>
             <ActionTitle>Quick Join</ActionTitle>
             <ActionDescription>
@@ -224,9 +204,10 @@ const GameLobby: React.FC<GameLobbyProps> = ({
               style={{ width: '100%' }}
             />
             <PresetButtons>
-              <PresetButton onClick={() => setBetAmount(0.001)}>0.001</PresetButton>
-              <PresetButton onClick={() => setBetAmount(0.01)}>0.01</PresetButton>
-              <PresetButton onClick={() => setBetAmount(0.1)}>0.1</PresetButton>
+              <PresetButton active={betAmount === 0.001 ? `true` : undefined} onClick={() => setBetAmount(0.001)}>0.001</PresetButton>
+              <PresetButton active={betAmount === 0.01 ? `true` : undefined} onClick={() => setBetAmount(0.01)}>0.01</PresetButton>
+              <PresetButton active={betAmount === 0.1 ? `true` : undefined} onClick={() => setBetAmount(0.1)}>0.1</PresetButton>
+              <PresetButton active={betAmount === 1 ? `true` : undefined} onClick={() => setBetAmount(1)}>1</PresetButton>
             </PresetButtons>
           </FormGroup>
 
@@ -296,6 +277,46 @@ const GameLobby: React.FC<GameLobbyProps> = ({
         onClose={() => setWithdrawModalVisible(false)}
         contractAddress={contractAddress}
       />
+
+      {/* Quick Join Modal */}
+      <Modal
+        title="Quick Join"
+        open={quickJoinModalVisible}
+        onCancel={() => setQuickJoinModalVisible(false)}
+        footer={[
+          <Button key="cancel" onClick={() => setQuickJoinModalVisible(false)}>
+            Cancel
+          </Button>,
+          <Button key="join" type="primary" onClick={handleQuickJoin} loading={loading}>
+            Quick Join
+          </Button>,
+        ]}
+      >
+        <ModalContent>
+          <FormGroup>
+            <Label>Bet Amount (ETH)</Label>
+            <InputNumber
+              min={0.001}
+              max={10}
+              step={0.001}
+              value={quickBetAmount}
+              onChange={(value) => {
+                if (value) {
+                  setQuickBetAmount(value);
+                }
+              }}
+              addonAfter="ETH"
+              style={{ width: '100%' }}
+            />
+            <PresetButtons>
+              <PresetButton active={quickBetAmount === 0.001 ? `true` : undefined} onClick={() => setQuickBetAmount(0.001)}>0.001</PresetButton>
+              <PresetButton active={quickBetAmount === 0.01 ? `true` : undefined} onClick={() => setQuickBetAmount(0.01)}>0.01</PresetButton>
+              <PresetButton active={quickBetAmount === 0.1 ? `true` : undefined} onClick={() => setQuickBetAmount(0.1)}>0.1</PresetButton>
+              <PresetButton active={quickBetAmount === 1 ? `true` : undefined} onClick={() => setQuickBetAmount(1)}>1</PresetButton>
+            </PresetButtons>
+          </FormGroup>
+        </ModalContent>
+      </Modal>
 
       {/* Password Modal */}
       <Modal
@@ -370,16 +391,6 @@ const Title = styled.h1`
 
   @media (max-width: 768px) {
     font-size: 28px;
-  }
-`;
-
-const Subtitle = styled.p`
-  font-size: 16px;
-  color: rgba(255, 255, 255, 0.9);
-  margin: 0;
-
-  @media (max-width: 768px) {
-    font-size: 14px;
   }
 `;
 
@@ -477,39 +488,6 @@ const WithdrawButton = styled.button`
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(82, 196, 26, 0.6);
     background: linear-gradient(135deg, #73d13d 0%, #52c41a 100%);
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
-
-  @media (max-width: 768px) {
-    width: 100%;
-    justify-content: center;
-    font-size: 14px;
-  }
-`;
-
-const TutorialButton = styled.button`
-  padding: 10px 20px;
-  background: linear-gradient(135deg, #4ECDC4 0%, #45B7D1 100%);
-  border: none;
-  border-radius: 10px;
-  font-size: 15px;
-  font-weight: 600;
-  color: white;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(78, 205, 196, 0.4);
-  white-space: nowrap;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(78, 205, 196, 0.6);
-    background: linear-gradient(135deg, #45B7D1 0%, #4ECDC4 100%);
   }
 
   &:active {
@@ -643,28 +621,26 @@ const Hint = styled.div`
 `;
 
 const PresetButtons = styled.div`
-  display: flex;
-  gap: 8px;
   margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
 `;
 
-const PresetButton = styled.button`
-  flex: 1;
+const PresetButton = styled.button<{ active?: string | undefined }>`
   padding: 8px;
-  background: #f0f0f0;
-  border: 1px solid #d9d9d9;
-  border-radius: 6px;
+  border: 2px solid ${(props) => (props.active ? '#667eea' : '#e0e0e0')};
+  background: ${(props) => (props.active ? '#667eea' : 'white')};
+  color: ${(props) => (props.active ? 'white' : '#666')};
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 14px;
-  transition: all 0.2s ease;
+  font-size: 16px;
+  font-weight: 500;
+  transition: all 0.2s;
 
   &:hover {
-    background: #e0e0e0;
-    border-color: #40a9ff;
-  }
-
-  &:active {
-    transform: scale(0.98);
+    border-color: #667eea;
+    background: ${(props) => (props.active ? '#5568d3' : '#f0f0f0')};
   }
 `;
 

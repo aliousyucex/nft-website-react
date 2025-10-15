@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import CardHand from '../components/CardHand';
-import RoundHistory from '../components/RoundHistory';
 import Card from '../components/Card';
 import { Card as CardType, Player, EMOJIS, RoundResult, RoundHistoryItem } from '../types';
 import logger from '../utils/logger';
@@ -32,10 +31,8 @@ const GameBoard: React.FC<GameBoardProps> = ({
   opponentPlayer,
   selectedCard,
   opponentSelected,
-  currentRound: _currentRound, // Kept for future use
   timeRemaining,
   lastRoundResult,
-  roundHistory = [],
   receivedEmoji: receivedEmojiProp,
   onCardSelect,
   onSendEmoji,
@@ -47,17 +44,6 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
   // Track the last processed round to avoid duplicate animations
   const [lastProcessedRound, setLastProcessedRound] = useState<number>(0);
-
-  console.log('📊 GameBoard - myPlayer:', {
-    address: myPlayer.address,
-    roundsWon: myPlayer.roundsWon,
-    handSize: myPlayer.handSize,
-  });
-  console.log('📊 GameBoard - opponentPlayer:', {
-    address: opponentPlayer.address,
-    roundsWon: opponentPlayer.roundsWon,
-    handSize: opponentPlayer.handSize,
-  });
 
   // Show round result overlay when round completes - ONLY for NEW rounds
   useEffect(() => {
@@ -74,6 +60,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
       // Mark this round as processed
       setLastProcessedRound(lastRoundResult.round);
 
+      console.log('lastRoundResult', lastRoundResult);
       const result = determineResult();
 
       // Play sounds
@@ -106,13 +93,6 @@ const GameBoard: React.FC<GameBoardProps> = ({
     // Case-insensitive address comparison (backend uses lowercase, frontend might be checksum)
     const winnerAddress = lastRoundResult.winner?.toLowerCase();
     const myAddress = myPlayer.address.toLowerCase();
-
-    console.log('🎯 Determining round result:', {
-      winnerAddress,
-      myAddress,
-      isWinner: winnerAddress === myAddress,
-      isDraw: lastRoundResult.isDraw,
-    });
 
     if (winnerAddress === myAddress) return 'win';
     return 'lose';
@@ -190,13 +170,17 @@ const GameBoard: React.FC<GameBoardProps> = ({
                 </OpponentRevealedCard>
               </>
             ) : (
-              <CardBackContainer count={opponentPlayer.handSize}>
-                {Array.from({ length: opponentPlayer.handSize }).map((_, i) => (
-                  <CardBack key={i} index={i}>
-                    🎴
-                  </CardBack>
-                ))}
-              </CardBackContainer>
+              <CardHand
+                cards={Array.from({ length: opponentPlayer.handSize }).map((_, i) => ({
+                  id: `opponent-${i}`,
+                  type: 'fire',
+                  value: 3,
+                  image: ''
+                }))}
+                selectedCard={null}
+                disabled={true}
+                isOpponent={true}
+              />
             )}
           </OpponentCards>
 
@@ -320,32 +304,6 @@ const RevealLabel = styled.div`
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 1px;
-`;
-
-const CardBackContainer = styled.div<{ count: number }>`
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: ${(props) => Math.min(props.count * 60, 300)}px;
-  height: 100px;
-`;
-
-const CardBack = styled.div<{ index: number }>`
-  position: absolute;
-  left: ${(props) => props.index * 50}px;
-  width: 80px;
-  height: 120px;
-  background: linear-gradient(135deg, #2C3E50 0%, #34495E 100%);
-  border: 3px solid #3498DB;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 40px;
-  opacity: 0.8;
-  transform: rotate(${(props) => (props.index - 2) * 5}deg);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 `;
 
 const SelectionIndicator = styled.div`
@@ -483,7 +441,7 @@ const TimerText = styled.div`
   font-size: 24px;
   color: white;
   font-weight: bold;
-  font-family: 'Courier New', monospace;
+  font-family: 'Poppins', monospace;
   min-width: 45px;
   text-align: center;
 

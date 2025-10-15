@@ -59,59 +59,25 @@ const Card: React.FC<CardProps> = ({
   const cardVariants = {
     initial: { 
       scale: 0,
-      opacity: 0,
-      rotateY: 180
     },
     animate: { 
       scale: 1,
       opacity: 1,
       rotateY: 0,
-      transition: {
-        type: "spring",
-        stiffness: 260,
-        damping: 20
-      }
     },
     hover: {
       y: -20,
       scale: 1.05,
       boxShadow: `0 15px 35px ${getCardColor(card.type)}60`,
-      transition: {
-        type: "spring",
-        stiffness: 400,
-        damping: 10
-      }
     },
     selected: {
       y: -30,
       scale: 1.1,
       boxShadow: `0 20px 40px ${getCardColor(card.type)}90`,
-      transition: {
-        type: "spring",
-        stiffness: 400,
-        damping: 15
-      }
     },
     tap: {
       scale: 0.95,
       transition: { duration: 0.1 }
-    }
-  };
-
-  const flipVariants = {
-    front: {
-      rotateY: 0,
-      transition: {
-        duration: 0.6,
-        ease: "easeInOut"
-      }
-    },
-    back: {
-      rotateY: 180,
-      transition: {
-        duration: 0.6,
-        ease: "easeInOut"
-      }
     }
   };
 
@@ -135,9 +101,6 @@ const Card: React.FC<CardProps> = ({
     >
       {isOpponent && !isRevealed ? (
         <CardBack
-          as={motion.div}
-          variants={flipVariants}
-          animate="back"
           $hasImage={!backImageError}
         >
           {!backImageError ? (
@@ -147,27 +110,13 @@ const Card: React.FC<CardProps> = ({
               onError={() => setBackImageError(true)}
             />
           ) : (
-            <BackPattern
-              as={motion.div}
-              animate={{ 
-                rotate: [0, 10, -10, 0],
-                scale: [1, 1.1, 1.1, 1]
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                repeatType: "reverse"
-              }}
-            >
+            <BackPattern>
               🎴
             </BackPattern>
           )}
         </CardBack>
       ) : (
         <CardFront
-          as={motion.div}
-          variants={flipVariants}
-          animate="front"
           $hasImage={!imageError}
           $cardType={card.type}
           $cardValue={card.value}
@@ -182,47 +131,21 @@ const Card: React.FC<CardProps> = ({
           <CardOverlay />
           <CardContent>
             {imageError && (
-              <CardIcon
-                as={motion.div}
-                animate={{ 
-                  scale: [1, 1.1, 1],
-                  rotate: [0, 5, -5, 0]
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  repeatType: "reverse"
-                }}
-              >
+              <CardIcon>
                 {getCardIcon(card.type)}
               </CardIcon>
             )}
-            <CardValue
-              as={motion.div}
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.2, type: "spring" }}
-            >
+            <CardValue>
               {card.value}
             </CardValue>
-            <CardTypea
-              as={motion.div}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
+            <CardTypea>
               {card.type.toUpperCase()}
             </CardTypea>
           </CardContent>
         </CardFront>
       )}
       {isSelected && (
-        <SelectedIndicator
-          as={motion.div}
-          initial={{ scale: 0, rotate: -180 }}
-          animate={{ scale: 1, rotate: 0 }}
-          transition={{ type: "spring", stiffness: 500, damping: 15 }}
-        />
+        <SelectedIndicator />
       )}
     </CardWrapper>
   );
@@ -241,7 +164,7 @@ const CardWrapper = styled.div<{
   width: 100px;
   height: 150px;
   border-radius: 12px;
-  background: ${(props) => (props.$isOpponent && !props.$isRevealed ? '#2C3E50' : props.$cardColor)};
+  background: ${(props) => (props.$isOpponent && !props.$isRevealed ? '#8B0000' : props.$cardColor)};
   cursor: ${(props) => (props.$disabled || props.$isOpponent ? 'default' : 'pointer')};
   position: relative;
   user-select: none;
@@ -257,7 +180,6 @@ const CardWrapper = styled.div<{
     props.$disabled &&
     !props.$isSelected &&
     `
-    opacity: 0.6;
     cursor: not-allowed;
   `}
 `;
@@ -277,7 +199,6 @@ const CardFront = styled.div<{
   color: white;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   position: relative;
-  overflow: hidden;
   border-radius: 12px;
 `;
 
@@ -287,10 +208,9 @@ const CardBack = styled.div<{ $hasImage?: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
-  background: ${props => props.$hasImage ? 'transparent' : 'linear-gradient(135deg, #2C3E50 0%, #34495E 100%)'};
-  border: 3px solid #3498DB;
+  background: ${props => props.$hasImage ? 'transparent' : 'linear-gradient(135deg, #8B0000 0%, #B22222 100%)'};
+  border: 3px solid #DC143C;
   position: relative;
-  overflow: hidden;
   border-radius: 12px;
 `;
 

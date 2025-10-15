@@ -148,11 +148,8 @@ export class ContractService {
       const totalPot = betAmount * 2;
       const { commission, winnerAmount } = this.calculatePayout(totalPot);
 
-      // Update balances: winner gets prize, loser loses bet
-      await this.updateBalances([
-        { address: winnerAddress, amount: winnerAmount },
-        { address: loserAddress, amount: -betAmount },
-      ]);
+      // Update balances: winner gets prize
+      await this.updateBalance(winnerAddress, winnerAmount);
 
       logger.info('Game payout processed', {
         winner: winnerAddress,

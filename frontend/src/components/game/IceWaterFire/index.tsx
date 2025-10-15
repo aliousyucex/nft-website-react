@@ -51,10 +51,12 @@ interface GameContainerProps {
 
 const GameContainer: React.FC<GameContainerProps> = ({ userAddress }) => {
   const [currentPage, setCurrentPage] = useState<GamePage>('room');
-  const [timeRemaining, setTimeRemaining] = useState(10); // 10 seconds per round
+  const [timeRemaining, setTimeRemaining] = useState(10);
   const [showGameResult, setShowGameResult] = useState(false);
   const [gameResult, setGameResult] = useState<any>(null);
   const [balance, setBalance] = useState<string>('0');
+  const [isShownGameResult, setIsShownGameResult] = useState(false);
+  const [waitingForAnimations, setWaitingForAnimations] = useState(false);
 
   const {
     availableRooms,
@@ -68,6 +70,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ userAddress }) => {
     quickJoin,
     leaveRoom,
     setReady,
+    setNotReady,
     selectCard,
     sendEmoji,
     clearAnimations,
@@ -84,12 +87,10 @@ const GameContainer: React.FC<GameContainerProps> = ({ userAddress }) => {
 
     const fetchBalance = async () => {
       try {
-        console.log('💰 Fetching balance for:', userAddress);
         const response = await fetch(`/api/contract/balance/${userAddress}`);
         if (response.ok) {
           const data = await response.json();
           setBalance(data.balance || '0');
-          console.log('✅ Balance fetched:', data.balance);
         } else {
           console.error('❌ Balance fetch failed:', response.status, response.statusText);
         }
@@ -106,9 +107,9 @@ const GameContainer: React.FC<GameContainerProps> = ({ userAddress }) => {
 
   // Timer countdown - runs during playing phase
   useEffect(() => {
-    if (currentPage === 'playing' && gameState && !gameState.selectedCard) {
-      logger.timer('Starting countdown', { timeRemaining });
-      
+    // Add check for game over condition
+    if (currentPage === 'playing' && gameState && !gameState.selectedCard &&
+        gameState.myScore < 3 && gameState.opponentScore < 3 && !waitingForAnimations) {
       const timer = setInterval(() => {
         setTimeRemaining((prev) => {
           const newTime = prev - 1;
@@ -127,7 +128,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ userAddress }) => {
 
       return () => clearInterval(timer);
     }
-  }, [currentPage, gameState, gameState?.selectedCard, playSound]);
+  }, [currentPage, gameState, gameState?.selectedCard, waitingForAnimations, playSound]);
 
   // Reset timer when new round starts (from backend event)
   useEffect(() => {
@@ -154,11 +155,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ userAddress }) => {
 
   // Handle room changes (when user joins/creates a room)
   useEffect(() => {
-    logger.ui('Room change detected', { hasRoom: !!currentRoom, page: currentPage });
     if (currentRoom && currentPage === 'lobby') {
-      // if its leave room event we shouldnt show this message :D 
-      message.success('Joined room successfully!');
-      logger.success('Navigating to room page');
       playSound('roomJoin');
       setCurrentPage('room');
     } else if (!currentRoom && currentPage === 'room') {
@@ -172,34 +169,21 @@ const GameContainer: React.FC<GameContainerProps> = ({ userAddress }) => {
   useEffect(() => {
     if (gameState) {
       if (gameState.gameState === 'waiting') {
-        logger.ui('Game state: waiting');
         setCurrentPage('room');
       } else if (gameState.gameState === 'playing') {
-        logger.ui('Game state: playing');
         setCurrentPage('playing');
-      } else if (gameState.gameState === 'finished') {
-        logger.ui('Game state: finished', {
-          winner: gameState.winner,
-          myScore: gameState.myScore,
-          opponentScore: gameState.opponentScore,
-          finalScores: gameState.finalScores,
-        });
+      } else if (gameState.gameState === 'finished' && !isShownGameResult && !showGameResult) {
+        // Mark that we've shown the result to prevent re-triggering
+        setIsShownGameResult(true);
         
-        // Clear all animations before showing game end modal
-        clearAnimations();
+        // Set waiting flag to let animations complete
+        setWaitingForAnimations(true);
         
         // Case-insensitive address comparison for winner check
         const isWinner = gameState.winner?.toLowerCase() === userAddress.toLowerCase();
         const isDraw = !gameState.winner; // null winner means draw
-        
-        console.log('🏆 Game Winner Check:', {
-          winnerAddress: gameState.winner?.toLowerCase(),
-          myAddress: userAddress.toLowerCase(),
-          isWinner,
-          isDraw,
-        });
-        
-        // Set game result with proper winner determination
+
+        // Set game result (but don't show modal yet)
         setGameResult({
           winner: gameState.winner || null,
           myScore: gameState.myScore || 0,
@@ -209,20 +193,25 @@ const GameContainer: React.FC<GameContainerProps> = ({ userAddress }) => {
           isDraw,
         });
         
-        // Show modal after a brief delay to ensure animations are cleared
-        setTimeout(() => {
-          setShowGameResult(true);
-        }, 100);
-        
-        // Play win/lose/draw sound
+        // Play win/lose/draw sound immediately
         if (isDraw) {
           playSound('gameLose'); // or add a draw sound
         } else {
           playSound(isWinner ? 'gameWin' : 'gameLose');
         }
+        
+        // Wait for animations to complete before showing modal
+        // CardReveal total time: ~4 seconds (entering 800ms + revealing 1000ms + result 800ms + score 800ms + complete 500ms)
+        // GameBoard timer: 600ms already waited, add extra buffer
+        setTimeout(() => {
+          console.log('Showing game result MODAL ULAN');
+          clearAnimations();
+          setWaitingForAnimations(false);
+          setShowGameResult(true);
+        }, 4500); // Total animation time + small buffer
       }
     }
-  }, [gameState?.gameState, gameState?.winner, gameState?.myScore, gameState?.opponentScore, userAddress, playSound]);
+  }, [gameState?.gameState, isShownGameResult, showGameResult, userAddress, clearAnimations, playSound]);
 
   const handleLeaveRoom = () => {
     leaveRoom();
@@ -230,27 +219,29 @@ const GameContainer: React.FC<GameContainerProps> = ({ userAddress }) => {
   };
 
   const handleReturnToLobby = () => {
-    // First prevent re-triggering by clearing gameState dependencies
-    const shouldClear = showGameResult;
-    
-    if (!shouldClear) return; // Prevent double execution
-    
     // Clear all game-related states immediately
     setShowGameResult(false);
     setGameResult(null);
+    setIsShownGameResult(false); // Reset flag so next game can show result
+    setWaitingForAnimations(false); // Reset animation wait flag
     clearAnimations();
     setTimeRemaining(10);
-    
+
     // Leave room and navigate
     leaveRoom();
     setCurrentPage('lobby');
   };
 
   const handleCardSelect = (card: Card) => {
+    // Prevent card selection if game is over OR waiting for animations
+    if (gameState && (gameState.myScore >= 3 || gameState.opponentScore >= 3 || waitingForAnimations)) {
+      logger.warn('Game is over or waiting for animations, cannot select card');
+      return;
+    }
+    
     logger.game('Card selected', { cardId: card.id });
     playSound('cardSelect');
     selectCard(card);
-    message.info('Card selected! Waiting for opponent...');
   };
 
   // Round results are now handled by CardReveal component in GameBoard
@@ -294,7 +285,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ userAddress }) => {
         prizeAmount: gameState.prizeAmount,
       });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameState?.myScore, gameState?.opponentScore, gameState?.currentRound, gameState?.gameState, currentPage]);
 
   const mockCards: Card[] = [
@@ -308,18 +299,18 @@ const GameContainer: React.FC<GameContainerProps> = ({ userAddress }) => {
   return (
     <>
       {currentPage === 'lobby' && (
-      <GameLobby
-        availableRooms={availableRooms}
-        loading={loading}
-        balance={balance}
-        createRoom={createRoom}
-        joinRoom={joinRoom}
-        quickJoin={quickJoin}
-        soundsEnabled={soundsEnabled}
-        volume={volume}
-        onToggleSounds={toggleSounds}
-        onVolumeChange={setVolume}
-      />
+        <GameLobby
+          availableRooms={availableRooms}
+          loading={loading}
+          balance={balance}
+          createRoom={createRoom}
+          joinRoom={joinRoom}
+          quickJoin={quickJoin}
+          soundsEnabled={soundsEnabled}
+          volume={volume}
+          onToggleSounds={toggleSounds}
+          onVolumeChange={setVolume}
+        />
       )}
 
       {currentPage === 'room' && currentRoom && (
@@ -331,6 +322,9 @@ const GameContainer: React.FC<GameContainerProps> = ({ userAddress }) => {
           onReady={() => {
             playSound('ready');
             setReady();
+          }}
+          onNotReady={() => {
+            setNotReady();
           }}
           onLeave={handleLeaveRoom}
         />
@@ -367,8 +361,8 @@ const GameContainer: React.FC<GameContainerProps> = ({ userAddress }) => {
         <GameResultModal
           visible={showGameResult}
           result={
-            gameResult.isDraw 
-              ? 'draw' 
+            gameResult.isDraw
+              ? 'draw'
               : (gameResult.isWinner ? 'win' : 'lose')
           }
           finalScore={{
@@ -376,7 +370,11 @@ const GameContainer: React.FC<GameContainerProps> = ({ userAddress }) => {
             opponent: gameResult.opponentScore,
           }}
           prizeAmount={gameResult.prizeAmount}
-          onClose={() => setShowGameResult(false)}
+          onClose={() => {
+            setShowGameResult(false);
+            setIsShownGameResult(false);
+            setWaitingForAnimations(false);
+          }}
           onReturnToLobby={handleReturnToLobby}
         />
       )}

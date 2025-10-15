@@ -12,6 +12,14 @@ export const useGame = (userAddress: string) => {
   const [error, setError] = useState<string | null>(null);
   const [receivedEmoji, setReceivedEmoji] = useState<{ emoji: string; timestamp: number } | null>(null);
 
+  // Helper function to check if game is over
+  const isGameOver = useCallback((state: GameState | null) => {
+    if (!state) return false;
+    return state.gameState === 'finished' || 
+           (state.myScore !== undefined && state.myScore >= 3) ||
+           (state.opponentScore !== undefined && state.opponentScore >= 3);
+  }, []);
+
   // Fetch available rooms
   const fetchRooms = useCallback(() => {
     if (!socket) return;
@@ -153,6 +161,23 @@ export const useGame = (userAddress: string) => {
     });
   }, [socket]);
 
+  // Player not ready
+  const setNotReady = useCallback(() => {
+    if (!socket) return;
+
+    socket.emit('player_not_ready', (response: any) => {
+      logger.socket('Player ready response', response);
+      if (response.success) {
+        if (response.room) {
+          setCurrentRoom(response.room);
+        }
+      } else {
+        logger.error('Failed to set not ready', response.error);
+        setError(response.error || 'Failed to set not ready');
+      }
+    });
+  }, [socket]);
+
   // Select card
   const selectCard = useCallback(
     (card: Card) => {
@@ -247,6 +272,12 @@ export const useGame = (userAddress: string) => {
 
     // Cards dealt
     socket.on('cards_dealt', (data: any) => {
+      // Check if game is over first
+      if (isGameOver(gameState)) {
+        logger.warn('Ignoring cards_dealt - game is over');
+        return;
+      }
+      
       logger.game('Cards dealt', { count: data.cards?.length, phase: data.phase });
       setGameState((prev) => {
         if (!prev) {
@@ -281,6 +312,14 @@ export const useGame = (userAddress: string) => {
 
     // Round result
     socket.on('round_result', (data: any) => {
+      // Check if already at winning score
+      if (data.myScore >= 3 || data.opponentScore >= 3) {
+        logger.info('Game ending - player reached winning score', {
+          myScore: data.myScore,
+          opponentScore: data.opponentScore,
+        });
+      }
+      
       logger.game('Round result received', {
         round: data.round,
         winner: data.winner ? 'determined' : 'draw',
@@ -342,6 +381,11 @@ export const useGame = (userAddress: string) => {
 
     // New round started (for timer reset)
     socket.on('new_round_started', (data: { round: number, timeLimit: number }) => {
+      if (isGameOver(gameState)) {
+        logger.warn('Ignoring new_round_started - game is over');
+        return;
+      }
+      
       logger.timer('New round started', { round: data.round, timeLimit: data.timeLimit });
       setGameState((prev) =>
         prev
@@ -407,7 +451,6 @@ export const useGame = (userAddress: string) => {
 
     // AFK warning (player was AFK and card was auto-selected)
     socket.on('afk_warning', (data: { message: string; autoSelectedCard: any }) => {
-      return;
       logger.warn('AFK warning received', { 
         message: data.message, 
         card: data.autoSelectedCard 
@@ -419,7 +462,6 @@ export const useGame = (userAddress: string) => {
 
     // Both players AFK warning
     socket.on('both_afk_warning', (data: { message: string; consecutiveAfkRounds: number }) => {
-      return;
       logger.warn('Both players AFK warning', { 
         message: data.message,
         consecutiveRounds: data.consecutiveAfkRounds
@@ -431,7 +473,6 @@ export const useGame = (userAddress: string) => {
 
     // Room dismissed due to repeated AFK
     socket.on('room_dismissed_afk', (data: { message: string }) => {
-      return;
       logger.error('Room dismissed - repeated AFK', { message: data.message });
       setError(data.message);
       // Reset state
@@ -497,6 +538,7 @@ export const useGame = (userAddress: string) => {
     quickJoin,
     leaveRoom,
     setReady,
+    setNotReady,
     selectCard,
     sendEmoji,
     clearAnimations,

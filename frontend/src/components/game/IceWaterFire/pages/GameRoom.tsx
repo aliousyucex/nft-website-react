@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
-import { message } from 'antd';
+import { Flex, message } from 'antd';
 import PlayerInfo from '../components/PlayerInfo';
 import { Player } from '../types';
 
@@ -11,6 +11,7 @@ interface GameRoomProps {
   players: Player[];
   currentUserAddress: string;
   onReady: () => void;
+  onNotReady: () => void;
   onLeave: () => void;
 }
 
@@ -20,13 +21,14 @@ const GameRoom: React.FC<GameRoomProps> = ({
   players,
   currentUserAddress,
   onReady,
+  onNotReady,
   onLeave,
 }) => {
   const [copied, setCopied] = useState(false);
 
   // Defensive check for players
   const playersList = players || [];
-  
+
   // Case-insensitive address comparison
   const currentPlayer = playersList.find(
     (p) => p.address.toLowerCase() === currentUserAddress.toLowerCase()
@@ -36,10 +38,10 @@ const GameRoom: React.FC<GameRoomProps> = ({
   );
   const bothReady = playersList.every((p) => p.ready);
   const waitingForOpponent = playersList.length < 2;
-  
+
   // Use backend ready state instead of local state
   const isReady = currentPlayer?.ready || false;
-  
+
   // Debug logs - Log whenever players prop changes
   useEffect(() => {
     console.log('🎮 GameRoom Players Updated:', {
@@ -67,101 +69,43 @@ const GameRoom: React.FC<GameRoomProps> = ({
   };
 
   const handleReady = () => {
+    if (currentPlayer?.ready) {
+      onNotReady();
+      return;
+    }
     onReady();
-    message.success('You are ready! Waiting for opponent...');
-  };
-
-  useEffect(() => {
-    // Only show "Game starting" if both ready AND we have 2 players
-    if (bothReady && !waitingForOpponent) {
-      message.info('Game starting in 3 seconds...');
-    }
-  }, [bothReady, waitingForOpponent]);
-
-  const pageVariants = {
-    initial: { opacity: 0, scale: 0.9 },
-    animate: { 
-      opacity: 1, 
-      scale: 1,
-      transition: {
-        duration: 0.4,
-        ease: "easeOut"
-      }
-    },
-    exit: { 
-      opacity: 0, 
-      scale: 0.9,
-      transition: { duration: 0.3 }
-    }
   };
 
   return (
-    <Container
-      as={motion.div}
-      variants={pageVariants}
-      initial="initial"
-      animate="animate"
-      exit="exit"
-    >
+    <Container>
       <Background />
 
-      <Content
-        as={motion.div}
-        initial={{ y: 50, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.2, duration: 0.5 }}
-      >
-        <Header
-          as={motion.div}
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.3 }}
-        >
+      <Content>
+        <Header>
           <BackButton
-            as={motion.button}
-            whileHover={{ scale: 1.05, x: -5 }}
-            whileTap={{ scale: 0.95 }}
             onClick={onLeave}
           >
             <BackIcon>←</BackIcon>
             Leave Room
           </BackButton>
 
-          <RoomInfo
-            as={motion.div}
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
-          >
+          <RoomInfo>
             <RoomIdContainer>
               <RoomIdLabel>Room ID:</RoomIdLabel>
-              <RoomId
-                as={motion.button}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={copyRoomId}
-              >
+              <RoomId onClick={copyRoomId}>
                 {roomId}
                 {copied ? ' ✓' : ' 📋'}
               </RoomId>
             </RoomIdContainer>
             <BetInfo>
               <BetLabel>Bet:</BetLabel>
-              <BetAmount
-                as={motion.span}
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.5, type: "spring" }}
-              >
+              <BetAmount>
                 {betAmount} ETH
               </BetAmount>
             </BetInfo>
           </RoomInfo>
 
           <ShareButton
-            as={motion.button}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
             onClick={shareLink}
           >
             <ShareIcon>🔗</ShareIcon>
@@ -169,27 +113,13 @@ const GameRoom: React.FC<GameRoomProps> = ({
           </ShareButton>
         </Header>
 
-        <GameArea
-          as={motion.div}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6, duration: 0.5 }}
-        >
+        <GameArea>
           <AnimatePresence mode="wait">
             {waitingForOpponent ? (
-              <WaitingState
-                as={motion.div}
+              <WaitingState             
                 key="waiting"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ duration: 0.4 }}
               >
-                <WaitingIcon
-                  as={motion.div}
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                >
+                <WaitingIcon>
                   ⏳
                 </WaitingIcon>
                 <WaitingTitle
@@ -208,7 +138,7 @@ const GameRoom: React.FC<GameRoomProps> = ({
                 >
                   Share the room ID or link with your friend
                 </WaitingText>
-                
+
                 <ShareOptions
                   as={motion.div}
                   initial={{ opacity: 0, y: 20 }}
@@ -216,17 +146,11 @@ const GameRoom: React.FC<GameRoomProps> = ({
                   transition={{ delay: 0.4 }}
                 >
                   <ShareOptionButton
-                    as={motion.button}
-                    whileHover={{ scale: 1.05, y: -2 }}
-                    whileTap={{ scale: 0.95 }}
                     onClick={copyRoomId}
                   >
                     📋 Copy Room ID
                   </ShareOptionButton>
                   <ShareOptionButton
-                    as={motion.button}
-                    whileHover={{ scale: 1.05, y: -2 }}
-                    whileTap={{ scale: 0.95 }}
                     onClick={shareLink}
                   >
                     🔗 Copy Share Link
@@ -234,40 +158,40 @@ const GameRoom: React.FC<GameRoomProps> = ({
                 </ShareOptions>
 
                 <LoadingDots>
-                  <Dot 
+                  <Dot
                     as={motion.div}
                     $delay={0}
-                    animate={{ 
+                    animate={{
                       scale: [0, 1, 0],
-                      opacity: [0, 1, 0] 
+                      opacity: [0, 1, 0]
                     }}
-                    transition={{ 
+                    transition={{
                       duration: 1.4,
                       repeat: Infinity,
                       delay: 0
                     }}
                   />
-                  <Dot 
+                  <Dot
                     as={motion.div}
                     $delay={0.2}
-                    animate={{ 
+                    animate={{
                       scale: [0, 1, 0],
-                      opacity: [0, 1, 0] 
+                      opacity: [0, 1, 0]
                     }}
-                    transition={{ 
+                    transition={{
                       duration: 1.4,
                       repeat: Infinity,
                       delay: 0.2
                     }}
                   />
-                  <Dot 
+                  <Dot
                     as={motion.div}
                     $delay={0.4}
-                    animate={{ 
+                    animate={{
                       scale: [0, 1, 0],
-                      opacity: [0, 1, 0] 
+                      opacity: [0, 1, 0]
                     }}
-                    transition={{ 
+                    transition={{
                       duration: 1.4,
                       repeat: Infinity,
                       delay: 0.4
@@ -276,122 +200,55 @@ const GameRoom: React.FC<GameRoomProps> = ({
                 </LoadingDots>
               </WaitingState>
             ) : (
-              <PlayersContainer
-                as={motion.div}
-                key="players"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ duration: 0.4 }}
-              >
-                {/* Current Player */}
-                <PlayerSection
-                  as={motion.div}
-                  initial={{ x: -100, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: 0.2, type: "spring" }}
+
+              <Flex vertical align="center" justify="center" gap={20}>
+
+                <PlayersContainer
+                  key="players"
                 >
-                  <PlayerLabel>You</PlayerLabel>
-                  {currentPlayer && (
-                    <>
+                  {/* Current Player */}
+                  <PlayerSection>
+                    <PlayerLabel>You</PlayerLabel>
+                    {currentPlayer &&
                       <PlayerInfo player={currentPlayer} />
-                      <AnimatePresence mode="wait">
-                        {!isReady ? (
-                          <ReadyButton
-                            as={motion.button}
-                            key="ready-button"
-                            initial={{ scale: 0, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0, opacity: 0 }}
-                            whileHover={{ 
-                              scale: 1.1,
-                              boxShadow: "0 8px 24px rgba(46, 204, 113, 0.6)"
-                            }}
-                            whileTap={{ scale: 0.95 }}
-                            transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                            onClick={handleReady}
-                          >
-                            <ReadyIcon>✓</ReadyIcon>
-                            I'm Ready!
-                          </ReadyButton>
-                        ) : (
-                          <ReadyIndicator
-                            as={motion.div}
-                            key="ready-indicator"
-                            initial={{ scale: 0, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0, opacity: 0 }}
-                            transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                          >
-                            <CheckIcon
-                              as={motion.span}
-                              animate={{ 
-                                rotate: [0, 10, -10, 0],
-                                scale: [1, 1.2, 1]
-                              }}
-                              transition={{ 
-                                duration: 0.5,
-                                repeat: Infinity,
-                                repeatDelay: 1
-                              }}
-                            >
-                              ✓
-                            </CheckIcon>
-                            Ready!
-                          </ReadyIndicator>
-                        )}
-                      </AnimatePresence>
-                    </>
+                    }
+                  </PlayerSection>
+
+                  {/* VS Indicator */}
+                  <VSContainer>
+                    <VSText>
+                      VS
+                    </VSText>
+                    <VSIcon>
+                      ⚔️
+                    </VSIcon>
+                  </VSContainer>
+
+                  {/* Opponent */}
+                  <PlayerSection>
+                    <PlayerLabel>Opponent</PlayerLabel>
+                    {opponent && <PlayerInfo player={opponent} />}
+                  </PlayerSection>
+                </PlayersContainer>
+                <AnimatePresence mode="wait">
+                  {!isReady ? (
+                    <ReadyButton
+                      key="ready-button"
+                      onClick={handleReady}
+                    >
+                      Ready!
+                    </ReadyButton>
+                  ) : (
+                    <NotReadyButton
+                      key="not-ready-button"
+                      onClick={handleReady}
+                    >
+                      Not Ready!
+                    </NotReadyButton>
                   )}
-                </PlayerSection>
+                </AnimatePresence>
+              </Flex>
 
-                {/* VS Indicator */}
-                <VSContainer
-                  as={motion.div}
-                  initial={{ scale: 0, rotate: -180 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
-                >
-                  <VSText
-                    as={motion.div}
-                    animate={{ 
-                      scale: [1, 1.1, 1],
-                      rotate: [0, 5, -5, 0]
-                    }}
-                    transition={{ 
-                      duration: 2,
-                      repeat: Infinity,
-                      repeatType: "reverse"
-                    }}
-                  >
-                    VS
-                  </VSText>
-                  <VSIcon
-                    as={motion.div}
-                    animate={{ 
-                      rotate: [0, 20, -20, 0]
-                    }}
-                    transition={{ 
-                      duration: 1.5,
-                      repeat: Infinity,
-                      repeatType: "reverse"
-                    }}
-                  >
-                    ⚔️
-                  </VSIcon>
-                </VSContainer>
-
-                {/* Opponent */}
-                <PlayerSection
-                  as={motion.div}
-                  initial={{ x: 100, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: 0.2, type: "spring" }}
-                >
-                  <PlayerLabel>Opponent</PlayerLabel>
-                  {opponent && <PlayerInfo player={opponent} />}
-                </PlayerSection>
-              </PlayersContainer>
             )}
           </AnimatePresence>
 
@@ -494,7 +351,6 @@ const BackButton = styled.button`
 
   &:hover {
     background: rgba(255, 255, 255, 0.3);
-    transform: translateX(-4px);
   }
 `;
 
@@ -528,13 +384,12 @@ const RoomId = styled.button`
   color: white;
   font-size: 24px;
   font-weight: bold;
-  font-family: 'Courier New', monospace;
+  font-family: 'Poppins', sans-serif;
   cursor: pointer;
   transition: all 0.2s ease;
 
   &:hover {
     background: rgba(255, 255, 255, 0.3);
-    transform: scale(1.05);
   }
 `;
 
@@ -707,45 +562,29 @@ const ReadyButton = styled.button`
   box-shadow: 0 4px 16px rgba(46, 204, 113, 0.4);
 
   &:hover {
-    transform: scale(1.05);
     box-shadow: 0 8px 24px rgba(46, 204, 113, 0.6);
   }
-
-  &:active {
-    transform: scale(0.98);
-  }
 `;
 
-const ReadyIcon = styled.span`
-  font-size: 24px;
-`;
-
-const ReadyIndicator = styled.div`
+const NotReadyButton = styled.button`
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 12px;
   padding: 16px 40px;
-  background: rgba(46, 204, 113, 0.3);
-  border: 2px solid #2ECC71;
+  background: linear-gradient(135deg, #E74C3C 0%, #C0392B 100%);
+  border: none;
   border-radius: 12px;
   color: white;
   font-size: 20px;
   font-weight: bold;
-  animation: pulse 2s infinite;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(231, 76, 60, 0.4);
 
-  @keyframes pulse {
-    0%,
-    100% {
-      box-shadow: 0 0 20px rgba(46, 204, 113, 0.4);
-    }
-    50% {
-      box-shadow: 0 0 40px rgba(46, 204, 113, 0.8);
-    }
+  &:hover {
+    box-shadow: 0 8px 24px rgba(231, 76, 60, 0.6);
   }
-`;
-
-const CheckIcon = styled.span`
-  font-size: 24px;
 `;
 
 const VSContainer = styled.div`

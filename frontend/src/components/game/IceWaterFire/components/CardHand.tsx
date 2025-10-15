@@ -24,7 +24,6 @@ const CardHand: React.FC<CardHandProps> = ({
   const rotationStep = cardCount > 1 ? (maxRotation * 2) / (cardCount - 1) : 0;
 
   const containerVariants = {
-    hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
@@ -35,36 +34,17 @@ const CardHand: React.FC<CardHandProps> = ({
   };
 
   const cardSlotVariants = {
-    hidden: { 
-      opacity: 0, 
-      y: 100,
-      scale: 0
-    },
     visible: {
       opacity: 1,
       y: 0,
       scale: 1,
-      transition: {
-        type: "spring",
-        stiffness: 300,
-        damping: 24
-      }
     },
-    exit: {
-      opacity: 0,
-      scale: 0,
-      y: -100,
-      transition: {
-        duration: 0.3
-      }
-    }
   };
 
   return (
     <HandContainer
       as={motion.div}
       variants={containerVariants}
-      initial="hidden"
       animate="visible"
     >
       <CardsWrapper 
