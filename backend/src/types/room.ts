@@ -28,6 +28,7 @@ export interface Room {
   gameState: GameState;
   currentRound: number;
   consecutiveAfkRounds: number; // Track consecutive rounds where both players AFK
+  roundStartTime: number | null; // Timestamp when current round started (for timer sync)
   
   // Decks
   player1Deck: Deck;

@@ -5,7 +5,6 @@ import { SocketProvider } from './context/SocketContext';
 import GameLobby from './pages/GameLobby';
 import GameRoom from './pages/GameRoom';
 import GameBoard from './pages/GameBoard';
-import { GameResultModal } from './components/ResultModal';
 import { useGame } from './hooks/useGame';
 import { useSoundEffects } from './hooks/useSoundEffects';
 import { Card } from './types';
@@ -52,10 +51,7 @@ interface GameContainerProps {
 const GameContainer: React.FC<GameContainerProps> = ({ userAddress }) => {
   const [currentPage, setCurrentPage] = useState<GamePage>('room');
   const [timeRemaining, setTimeRemaining] = useState(10);
-  const [showGameResult, setShowGameResult] = useState(false);
-  const [gameResult, setGameResult] = useState<any>(null);
   const [balance, setBalance] = useState<string>('0');
-  const [isShownGameResult, setIsShownGameResult] = useState(false);
   const [waitingForAnimations, setWaitingForAnimations] = useState(false);
 
   const {
@@ -105,46 +101,63 @@ const GameContainer: React.FC<GameContainerProps> = ({ userAddress }) => {
     return () => clearInterval(interval);
   }, [userAddress]);
 
-  // Timer countdown - runs during playing phase
+  // Timer countdown - synced with backend timestamp
   useEffect(() => {
-    // Add check for game over condition
-    if (currentPage === 'playing' && gameState && !gameState.selectedCard &&
-        gameState.myScore < 3 && gameState.opponentScore < 3 && !waitingForAnimations) {
+    // Timer continues running even after player selects to show opponent's remaining time
+    if (currentPage === 'playing' && gameState &&
+        gameState.myScore < 3 && gameState.opponentScore < 3 && !waitingForAnimations &&
+        gameState.roundStartTime && gameState.timeLimit) {
+      
+      logger.timer('Starting timer sync', {
+        roundStartTime: gameState.roundStartTime,
+        timeLimit: gameState.timeLimit,
+        currentTime: Date.now(),
+        hasSelected: !!gameState.selectedCard
+      });
+      
+      // Calculate time based on server timestamp
+      const calculateTimeRemaining = () => {
+        const elapsed = (Date.now() - gameState.roundStartTime!) / 1000; // Convert to seconds
+        const remaining = Math.max(0, Math.ceil(gameState.timeLimit! - elapsed));
+        return remaining;
+      };
+
+      // Update immediately
+      const initialTime = calculateTimeRemaining();
+      setTimeRemaining(initialTime);
+      logger.timer('Timer initialized', { initialTime, hasSelected: !!gameState.selectedCard });
+
+      // Track last warning to avoid spamming
+      let hasPlayedWarning = false;
+
+      // Then update every 100ms for smooth countdown
       const timer = setInterval(() => {
-        setTimeRemaining((prev) => {
-          const newTime = prev - 1;
-          if (newTime <= 0) {
-            logger.warn('Time expired, auto-selecting card');
-            clearInterval(timer);
-            return 0;
-          }
-          if (newTime === 2) {
-            logger.timer('Low time warning', { remaining: newTime });
-            playSound('timerWarning');
-          }
-          return newTime;
-        });
-      }, 1000);
+        const newTime = calculateTimeRemaining();
+        
+        if (newTime <= 0) {
+          logger.warn('Time expired (synced with backend)');
+          clearInterval(timer);
+          setTimeRemaining(0);
+          return;
+        }
+        
+        // Play warning sound at 3 seconds (only if player hasn't selected yet)
+        if (newTime <= 3 && !hasPlayedWarning && !gameState.selectedCard) {
+          logger.timer('Low time warning', { remaining: newTime });
+          playSound('timerWarning');
+          hasPlayedWarning = true;
+        }
+        
+        setTimeRemaining(newTime);
+      }, 100); // Update every 100ms for smooth countdown
 
-      return () => clearInterval(timer);
+      return () => {
+        clearInterval(timer);
+        logger.timer('Timer cleanup');
+      };
     }
-  }, [currentPage, gameState, gameState?.selectedCard, waitingForAnimations, playSound]);
-
-  // Reset timer when new round starts (from backend event)
-  useEffect(() => {
-    if (gameState?.currentRound) {
-      logger.timer('Timer reset for new round', { round: gameState.currentRound });
-      setTimeRemaining(10); // Updated to 10 seconds
-    }
-  }, [gameState?.currentRound]);
-
-  // Reset timer when both players select and round ends
-  useEffect(() => {
-    if (gameState?.lastRoundResult) {
-      logger.timer('Round ended, will reset timer after animation');
-      // Timer will reset when new_round_started event is received
-    }
-  }, [gameState?.lastRoundResult]);
+  }, [currentPage, gameState?.roundStartTime, gameState?.timeLimit, 
+      gameState?.myScore, gameState?.opponentScore, waitingForAnimations, playSound, gameState?.selectedCard]);
 
   // Handle errors
   useEffect(() => {
@@ -172,46 +185,20 @@ const GameContainer: React.FC<GameContainerProps> = ({ userAddress }) => {
         setCurrentPage('room');
       } else if (gameState.gameState === 'playing') {
         setCurrentPage('playing');
-      } else if (gameState.gameState === 'finished' && !isShownGameResult && !showGameResult) {
-        // Mark that we've shown the result to prevent re-triggering
-        setIsShownGameResult(true);
-        
-        // Set waiting flag to let animations complete
-        setWaitingForAnimations(true);
-        
-        // Case-insensitive address comparison for winner check
-        const isWinner = gameState.winner?.toLowerCase() === userAddress.toLowerCase();
-        const isDraw = !gameState.winner; // null winner means draw
-
-        // Set game result (but don't show modal yet)
-        setGameResult({
-          winner: gameState.winner || null,
-          myScore: gameState.myScore || 0,
-          opponentScore: gameState.opponentScore || 0,
-          prizeAmount: gameState.prizeAmount || 0,
-          isWinner, // Store the winner check result
-          isDraw,
-        });
-        
+      } else if (gameState.gameState === 'finished') {
+        // Game finished - stay on playing page, modal will show there
         // Play win/lose/draw sound immediately
+        const isWinner = gameState.winner?.toLowerCase() === userAddress.toLowerCase();
+        const isDraw = !gameState.winner;
+        
         if (isDraw) {
           playSound('gameLose'); // or add a draw sound
         } else {
           playSound(isWinner ? 'gameWin' : 'gameLose');
         }
-        
-        // Wait for animations to complete before showing modal
-        // CardReveal total time: ~4 seconds (entering 800ms + revealing 1000ms + result 800ms + score 800ms + complete 500ms)
-        // GameBoard timer: 600ms already waited, add extra buffer
-        setTimeout(() => {
-          console.log('Showing game result MODAL ULAN');
-          clearAnimations();
-          setWaitingForAnimations(false);
-          setShowGameResult(true);
-        }, 4500); // Total animation time + small buffer
       }
     }
-  }, [gameState?.gameState, isShownGameResult, showGameResult, userAddress, clearAnimations, playSound]);
+  }, [gameState?.gameState, userAddress, playSound]);
 
   const handleLeaveRoom = () => {
     leaveRoom();
@@ -219,15 +206,12 @@ const GameContainer: React.FC<GameContainerProps> = ({ userAddress }) => {
   };
 
   const handleReturnToLobby = () => {
-    // Clear all game-related states immediately
-    setShowGameResult(false);
-    setGameResult(null);
-    setIsShownGameResult(false); // Reset flag so next game can show result
-    setWaitingForAnimations(false); // Reset animation wait flag
+    // Clear all game-related states
+    setWaitingForAnimations(false);
     clearAnimations();
     setTimeRemaining(10);
 
-    // Leave room and navigate
+    // Leave room and navigate to lobby
     leaveRoom();
     setCurrentPage('lobby');
   };
@@ -332,6 +316,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ userAddress }) => {
 
       {currentPage === 'playing' && gameState && (
         <GameBoard
+          betAmount={currentRoom?.betAmount || 0}
           myCards={gameState.myCards || mockCards}
           myPlayer={myPlayer}
           opponentPlayer={opponentPlayer}
@@ -342,6 +327,8 @@ const GameContainer: React.FC<GameContainerProps> = ({ userAddress }) => {
           lastRoundResult={gameState.lastRoundResult}
           roundHistory={gameState.roundHistory || []}
           receivedEmoji={receivedEmoji?.emoji || null}
+          gameState={gameState}
+          currentUserAddress={userAddress}
           onCardSelect={handleCardSelect}
           onSendEmoji={sendEmoji}
           onRoundResultComplete={() => {
@@ -352,28 +339,6 @@ const GameContainer: React.FC<GameContainerProps> = ({ userAddress }) => {
             if (result === 'win') playSound('roundWin');
             else if (result === 'lose') playSound('roundLose');
             else if (result === 'draw') playSound('roundDraw');
-          }}
-        />
-      )}
-
-      {/* Game Result Modal */}
-      {showGameResult && gameResult && (
-        <GameResultModal
-          visible={showGameResult}
-          result={
-            gameResult.isDraw
-              ? 'draw'
-              : (gameResult.isWinner ? 'win' : 'lose')
-          }
-          finalScore={{
-            my: gameResult.myScore,
-            opponent: gameResult.opponentScore,
-          }}
-          prizeAmount={gameResult.prizeAmount}
-          onClose={() => {
-            setShowGameResult(false);
-            setIsShownGameResult(false);
-            setWaitingForAnimations(false);
           }}
           onReturnToLobby={handleReturnToLobby}
         />

@@ -10,7 +10,14 @@ export class LeaderboardService {
     try {
       const players = await db
         .selectFrom('leaderboard')
-        .selectAll()
+        .select([
+          'address',
+          'total_points as totalPoints',
+          'wins',
+          'losses',
+          'draws',
+          'total_games as totalGames',
+        ])
         .orderBy('total_points', 'desc')
         .limit(limit)
         .offset(offset)
@@ -30,7 +37,14 @@ export class LeaderboardService {
     try {
       const player = await db
         .selectFrom('leaderboard')
-        .selectAll()
+        .select([
+          'address',
+          'total_points as totalPoints',
+          'wins',
+          'losses',
+          'draws',
+          'total_games as totalGames',
+        ])
         .where('address', '=', address.toLowerCase())
         .executeTakeFirst();
 
@@ -138,6 +152,7 @@ export class LeaderboardService {
       const result = await db
         .selectFrom('leaderboard')
         .select((eb) => eb.fn.count<number>('id').as('count'))
+        .limit(10)
         .executeTakeFirst();
 
       return Number(result?.count || 0);

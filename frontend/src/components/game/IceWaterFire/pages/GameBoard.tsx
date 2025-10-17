@@ -3,13 +3,16 @@ import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import CardHand from '../components/CardHand';
 import Card from '../components/Card';
-import { Card as CardType, Player, EMOJIS, RoundResult, RoundHistoryItem } from '../types';
+import { GameResultModal } from '../components/ResultModal';
+import { Card as CardType, Player, EMOJIS, RoundResult, RoundHistoryItem, GameState } from '../types';
 import logger from '../utils/logger';
 import { Col, Flex, Row } from 'antd';
+import logo from "../../../../../public/logo.svg";
 
 interface GameBoardProps {
   myCards: CardType[];
   myPlayer: Player;
+  betAmount: number;
   opponentPlayer: Player;
   selectedCard: CardType | null;
   opponentSelected: boolean;
@@ -18,11 +21,14 @@ interface GameBoardProps {
   lastRoundResult?: RoundResult | null;
   roundHistory?: RoundHistoryItem[];
   receivedEmoji?: string | null;
+  gameState: GameState | null;
+  currentUserAddress: string;
   onCardSelect: (card: CardType) => void;
   onSendEmoji: (emojiId: string) => void;
   onRoundResultComplete?: () => void;
   onCardReveal?: () => void;
   onRoundResult?: (result: 'win' | 'lose' | 'draw') => void;
+  onReturnToLobby: () => void;
 }
 
 const GameBoard: React.FC<GameBoardProps> = ({
@@ -34,16 +40,56 @@ const GameBoard: React.FC<GameBoardProps> = ({
   timeRemaining,
   lastRoundResult,
   receivedEmoji: receivedEmojiProp,
+  gameState,
+  betAmount,
+  currentUserAddress,
   onCardSelect,
   onSendEmoji,
   onRoundResultComplete,
   onCardReveal,
   onRoundResult,
+  onReturnToLobby,
 }) => {
   const [showEmojiPanel, setShowEmojiPanel] = useState(false);
+  const [showGameResult, setShowGameResult] = useState(false);
+  const [gameResult, setGameResult] = useState<{
+    winner: string | null;
+    myScore: number;
+    opponentScore: number;
+    prizeAmount: number;
+    isWinner: boolean;
+    isDraw: boolean;
+  } | null>(null);
 
   // Track the last processed round to avoid duplicate animations
   const [lastProcessedRound, setLastProcessedRound] = useState<number>(0);
+  // Track if round result animation is playing
+  const [isAnimationPlaying, setIsAnimationPlaying] = useState(false);
+  
+  // Emoji spam system - array of active emojis
+  const [activeEmojis, setActiveEmojis] = useState<Array<{
+    id: string;
+    emoji: string;
+    timestamp: number;
+  }>>([]);
+
+  // Handle incoming emoji - add to spam array
+  useEffect(() => {
+    if (receivedEmojiProp) {
+      const newEmoji = {
+        id: `emoji-${Date.now()}-${Math.random()}`,
+        emoji: receivedEmojiProp,
+        timestamp: Date.now(),
+      };
+      
+      setActiveEmojis(prev => [...prev, newEmoji]);
+      
+      // Auto-remove after 2 seconds (animation duration)
+      setTimeout(() => {
+        setActiveEmojis(prev => prev.filter(e => e.id !== newEmoji.id));
+      }, 2000);
+    }
+  }, [receivedEmojiProp]);
 
   // Show round result overlay when round completes - ONLY for NEW rounds
   useEffect(() => {
@@ -59,6 +105,9 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
       // Mark this round as processed
       setLastProcessedRound(lastRoundResult.round);
+      
+      // Set animation playing flag
+      setIsAnimationPlaying(true);
 
       console.log('lastRoundResult', lastRoundResult);
       const result = determineResult();
@@ -69,14 +118,42 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
       // Auto-hide after animation completes
       const timer = setTimeout(() => {
+        setIsAnimationPlaying(false);
         if (onRoundResultComplete) onRoundResultComplete();
       }, 600); // Match with animation duration
 
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(timer);
+        setIsAnimationPlaying(false);
+      };
     }
   }, [lastRoundResult?.round]); // Only depend on round number
 
-  // Game end will be handled by parent component (index.tsx) via GameResultModal
+  // Handle game finish - Show result modal
+  useEffect(() => {
+    if (gameState && gameState.gameState === 'finished' && !showGameResult) {
+      console.log('🏁 Game finished in GameBoard, showing modal');
+      
+      // Case-insensitive address comparison for winner check
+      const isWinner = gameState.winner?.toLowerCase() === currentUserAddress.toLowerCase();
+      const isDraw = !gameState.winner; // null winner means draw
+
+      // Set game result and show modal
+      setGameResult({
+        winner: gameState.winner || null,
+        myScore: gameState.myScore || 0,
+        opponentScore: gameState.opponentScore || 0,
+        prizeAmount: gameState.prizeAmount || 0,
+        isWinner,
+        isDraw,
+      });
+      
+      // Wait a moment for animations to complete before showing modal
+      setTimeout(() => {
+        setShowGameResult(true);
+      }, 2500);
+    }
+  }, [gameState?.gameState, currentUserAddress, showGameResult]);
 
   const handleEmojiSend = (emoji: string) => {
     onSendEmoji(emoji);
@@ -84,7 +161,8 @@ const GameBoard: React.FC<GameBoardProps> = ({
   };
 
   const isLowTime = timeRemaining <= 2;
-  const canSelectCard = !selectedCard && timeRemaining > 0;
+  // Prevent card selection during animations, when card is already selected, or when time is up
+  const canSelectCard = !selectedCard && timeRemaining > 0 && !isAnimationPlaying;
 
   const determineResult = (): 'win' | 'lose' | 'draw' => {
     if (!lastRoundResult) return 'draw';
@@ -100,6 +178,14 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
   return (
     <Container>
+      {/* Home Button */}
+      <HomeButton
+        onClick={() => window.location.href = '/'}
+        title="Return to Homepage"
+      >
+        <img src={logo} alt="Home" />
+      </HomeButton>
+
       {/* Round Result Overlay - Key-based rendering for proper animation */}
       <AnimatePresence mode="wait">
         {lastRoundResult && lastRoundResult.round === lastProcessedRound && (
@@ -184,24 +270,34 @@ const GameBoard: React.FC<GameBoardProps> = ({
             )}
           </OpponentCards>
 
-          <AnimatePresence mode="wait">
-            {receivedEmojiProp && (
+          <AnimatePresence>
+            {activeEmojis.map((emojiData) => (
               <EmojiFloat
                 as={motion.div}
-                key={`emoji-${receivedEmojiProp}`}
-                initial={{ opacity: 0, scale: 0.5, y: 0 }}
-                animate={{ opacity: 1, scale: 1.2, y: -50 }}
-                exit={{ opacity: 0, scale: 0.8, y: -100 }}
+                key={emojiData.id}
+                initial={{ opacity: 0, scale: 0.5, y: 0, x: -50 }}
+                animate={{ opacity: 1, scale: 1.2, y: -50, x: -50 }}
+                exit={{ opacity: 0, scale: 0.8, y: -100, x: -50 }}
                 transition={{ duration: 2, ease: 'easeOut' }}
               >
-                {receivedEmojiProp}
+                {emojiData.emoji}
               </EmojiFloat>
-            )}
+            ))}
           </AnimatePresence>
 
           <TimerContainer $isLowTime={isLowTime}>
             <TimerIcon>{isLowTime ? '⚠️' : '⏱️'}</TimerIcon>
             <TimerText>{timeRemaining}s</TimerText>
+            {isLowTime && !selectedCard && (
+              <TimerWarning>
+                Select a card quickly!
+              </TimerWarning>
+            )}
+            {isLowTime && selectedCard && (
+              <TimerWarning style={{ color: '#4ECDC4' }}>
+                Waiting for opponent...
+              </TimerWarning>
+            )}
           </TimerContainer>
         </MiddleArea>
 
@@ -239,6 +335,33 @@ const GameBoard: React.FC<GameBoardProps> = ({
           )}
         </PlayerSide>
       </GameContainer>
+
+      {/* Game Result Modal */}
+      {showGameResult && gameResult && (
+        <GameResultModal
+          visible={showGameResult}
+          result={
+            gameResult.isDraw
+              ? 'draw'
+              : (gameResult.isWinner ? 'win' : 'lose')
+          }
+          finalScore={{
+            my: gameResult.myScore,
+            opponent: gameResult.opponentScore,
+          }}
+          prizeAmount={gameResult.prizeAmount}
+          betAmount={betAmount}
+          onClose={() => {
+            setShowGameResult(false);
+            setGameResult(null);
+          }}
+          onReturnToLobby={() => {
+            setShowGameResult(false);
+            setGameResult(null);
+            onReturnToLobby();
+          }}
+        />
+      )}
     </Container>
   );
 };
@@ -254,9 +377,28 @@ const Container = styled.div`
   align-items: center;
   justify-content: center;
   padding: 10px;
+  position: relative;
 
   @media (max-height: 900px) {
     padding: 5px;
+  }
+`;
+
+const HomeButton = styled.button`
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  width: 50px;
+  height: 50px;
+  cursor: pointer;
+  z-index: 100;
+
+  @media (max-width: 768px) {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+    top: 10px;
+    left: 10px;
   }
 `;
 
@@ -412,6 +554,7 @@ const TimerContainer = styled.div<{ $isLowTime: boolean }>`
   border: 2px solid ${(props) => (props.$isLowTime ? '#E74C3C' : 'rgba(255, 255, 255, 0.2)')};
   border-radius: 12px;
   animation: ${(props) => (props.$isLowTime ? 'urgentPulse 0.5s infinite' : 'none')};
+  position: relative;
 
   @keyframes urgentPulse {
     0%,
@@ -448,6 +591,34 @@ const TimerText = styled.div`
   @media (max-height: 900px) {
     font-size: 20px;
     min-width: 40px;
+  }
+`;
+
+const TimerWarning = styled.div`
+  position: absolute;
+  bottom: -30px;
+  font-size: 12px;
+  color: #FFC107;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  animation: pulse 0.8s infinite;
+  white-space: nowrap;
+
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.7;
+      transform: scale(1.05);
+    }
+  }
+
+  @media (max-height: 900px) {
+    font-size: 11px;
+    bottom: -25px;
   }
 `;
 

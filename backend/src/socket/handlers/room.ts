@@ -345,28 +345,33 @@ export const setupRoomHandlers = (io: Server, socket: Socket) => {
       // If game is playing, send current game state
       if (room.gameState === 'playing') {
         const player = room.players.find((p) => p.address.toLowerCase() === address.toLowerCase());
+        const opponent = room.players.find((p) => p.address.toLowerCase() !== address.toLowerCase());
         
         if (player) {
-          // Send player's cards
-          socket.emit('cards_dealt', {
-            cards: player.hand,
-            phase: 'reconnect',
-            message: 'Reconnected to game',
+          // Send complete game state for full recovery
+          socket.emit('game_state_reconnect', {
+            currentRound: room.currentRound,
+            myCards: player.hand,
+            myScore: player.roundsWon,
+            opponentScore: opponent?.roundsWon || 0,
+            opponentHandSize: opponent?.hand?.length || 0,
+            selectedCard: player.selectedCard || null,
+            opponentSelected: !!opponent?.selectedCard,
+            roundHistory: room.roundHistory || [],
+            roomId: room.roomId,
+            // Timer sync data
+            roundStartTime: room.roundStartTime || Date.now(),
+            timeLimit: 10, // From config
           });
 
-          // Send current game state
-          const opponent = room.players.find((p) => p.address.toLowerCase() !== address.toLowerCase());
-          
-          socket.emit('game_started', {
-            message: 'Reconnected to ongoing game',
-          });
-
-          logger.info('Sent reconnect game state', {
+          logger.info('Sent full reconnect game state', {
             roomId,
             address,
             currentRound: room.currentRound,
             playerScore: player.roundsWon,
             opponentScore: opponent?.roundsWon,
+            hasSelectedCard: !!player.selectedCard,
+            opponentSelected: !!opponent?.selectedCard,
           });
         }
       }

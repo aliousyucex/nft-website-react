@@ -92,7 +92,7 @@ export default CardHand;
 const HandContainer = styled.div`
   display: flex;
   justify-content: center;
-  align-items: flex-end;
+  align-items: center;
   padding: 10px;
   min-height: 200px;
   max-height: 200px;
@@ -108,7 +108,7 @@ const CardsWrapper = styled.div<{ $cardCount: number }>`
   position: relative;
   display: flex;
   justify-content: center;
-  align-items: flex-end;
+  align-items: center;
   width: ${(props) => Math.min(props.$cardCount * 120, 600)}px;
   height: 180px;
 

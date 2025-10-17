@@ -47,6 +47,9 @@ export interface GameState {
   // Added for round result display
   lastRoundResult?: RoundResult;
   roundHistory?: RoundHistoryItem[];
+  // Added for backend timer sync
+  roundStartTime?: number; // Server timestamp when round started
+  timeLimit?: number; // Time limit in seconds
 }
 
 export interface RoundResult {

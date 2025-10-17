@@ -1,8 +1,6 @@
+- Timer backend'den alindiginda, frontend'deki timer elementimiz güncellenmeli
+- Kullanıcı disconnect sonrası geri devam eden oyuna geri katıldığında, room, card vb oyun için gerekli bütün bilgileri hızlıca fetch edip oyuna devam edebilmesini sağlamalıyız. Kartlarını göremiyor.
+- Kullanıcıların AFK olup olmadığı kontrollerini sağlıklı şekilde ilerletmiyoruz. Bu süreci uçtan uca kontrol etmeliyiz.
 
-- İlgili sesleri bulmalıyız
-- Emoji gönderimi için, her bir gönderim ayrı bir element oluşturup animate edip dispose etmeli, spamlanabilmeli
-- internet sitesine dönüş için ufak bir logo eklenmeli
-- Oyuna isim bulunmalı
-- leaderboard'u görebilmek için, bir ui eklemeli ve bunu kötü gözükmeyecek şekilde sunmalı
-- Animasyonlaar bitmeden yeni kart seçilirse, animasyonlar sıfırlanıyor. Ya seçilemesin ya da sıfırlanmasın.
-- Siktiğimin resultModal'ı 2 kere gösteriliyor. Başka bir yerde konumlandırma, bu race condition'dan kurtarır mı?
+- Gemini kart çerçevesi tasarımı
+- Gemini, kart çeşitlerinin baştan ve düzgün formatta tasarlanması

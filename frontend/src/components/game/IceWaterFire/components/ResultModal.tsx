@@ -72,6 +72,7 @@ interface GameResultProps {
   result: 'win' | 'lose' | 'draw';
   finalScore: { my: number; opponent: number };
   prizeAmount?: number;
+  betAmount: number;
   onClose: () => void;
   onReturnToLobby: () => void;
 }
@@ -81,6 +82,7 @@ export const GameResultModal: React.FC<GameResultProps> = ({
   result,
   finalScore,
   prizeAmount,
+  betAmount,
   onClose,
   onReturnToLobby,
 }) => {
@@ -93,11 +95,7 @@ export const GameResultModal: React.FC<GameResultProps> = ({
       width={500}
       closable={false}
     >
-      <GameResultContainer>
-        <GameResultIcon>
-          {result === 'win' ? '🏆' : result === 'draw' ? '🤝' : '😔'}
-        </GameResultIcon>
-        
+      <GameResultContainer>        
         <GameResultTitle result={result}>
           {result === 'win' ? 'Victory!' : result === 'draw' ? 'Draw!' : 'Defeat'}
         </GameResultTitle>
@@ -110,20 +108,15 @@ export const GameResultModal: React.FC<GameResultProps> = ({
             : 'Better luck next time!'}
         </GameResultSubtitle>
 
+        {result === 'win' && prizeAmount !== undefined && <PrizeAmount>{prizeAmount} ETH</PrizeAmount>}
+        {result !== 'win' && prizeAmount !== undefined && <LoseAmount>{betAmount} ETH</LoseAmount>}
+
         <FinalScoreDisplay>
           <FinalScoreLabel>Final Score</FinalScoreLabel>
           <FinalScoreValue>
             {finalScore.my} - {finalScore.opponent}
           </FinalScoreValue>
         </FinalScoreDisplay>
-
-        {result === 'win' && prizeAmount !== undefined && (
-          <PrizeDisplay>
-            <PrizeIcon>💰</PrizeIcon>
-            <PrizeText>You won</PrizeText>
-            <PrizeAmount>{prizeAmount} ETH</PrizeAmount>
-          </PrizeDisplay>
-        )}
 
         <ButtonGroup>
           <ActionButton type="default" size="large" onClick={onReturnToLobby}>
@@ -272,31 +265,16 @@ const FinalScoreValue = styled.div`
   color: rgba(0, 0, 0, 0.85);
 `;
 
-const PrizeDisplay = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 12px 20px;
-  background: linear-gradient(135deg, rgba(46, 204, 113, 0.1) 0%, rgba(39, 174, 96, 0.1) 100%);
-  border-radius: 12px;
-  border: 2px solid rgba(46, 204, 113, 0.3);
-  margin-top: 8px;
-`;
-
-const PrizeIcon = styled.div`
-  font-size: 28px;
-`;
-
-const PrizeText = styled.div`
-  font-size: 11px;
-  color: rgba(0, 0, 0, 0.65);
-`;
-
 const PrizeAmount = styled.div`
   font-size: 20px;
   font-weight: bold;
   color: #2ECC71;
+`;
+
+const LoseAmount = styled.div`
+  font-size: 20px;
+  font-weight: bold;
+  color: #E74C3C;
 `;
 
 const ButtonGroup = styled.div`

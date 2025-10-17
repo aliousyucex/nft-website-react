@@ -11,22 +11,14 @@ const router = Router();
  */
 router.get('/', async (req: Request, res: Response, next) => {
   try {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 100;
-
-    validatePagination(page, limit);
-
-    const offset = (page - 1) * limit;
-    const players = await leaderboardService.getTopPlayers(limit, offset);
+    const players = await leaderboardService.getTopPlayers(10, 0);
     const totalPlayers = await leaderboardService.getTotalPlayerCount();
 
     res.json({
       data: players,
       pagination: {
-        page,
-        limit,
         total: totalPlayers,
-        totalPages: Math.ceil(totalPlayers / limit),
+        totalPages: 1,
       },
     });
   } catch (error) {

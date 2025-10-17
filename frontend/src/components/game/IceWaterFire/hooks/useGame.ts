@@ -218,6 +218,34 @@ export const useGame = (userAddress: string) => {
       setCurrentRoom(data.room);
     });
 
+    // Full game state on reconnection
+    socket.on('game_state_reconnect', (data: any) => {
+      logger.success('Received full game state on reconnect', {
+        currentRound: data.currentRound,
+        myScore: data.myScore,
+        opponentScore: data.opponentScore,
+        cardsCount: data.myCards?.length,
+        hasSelectedCard: !!data.selectedCard,
+      });
+      
+      // Reconstruct full game state
+      setGameState({
+        roomId: data.roomId,
+        gameState: 'playing',
+        currentRound: data.currentRound,
+        myCards: data.myCards || [],
+        myScore: data.myScore,
+        opponentScore: data.opponentScore,
+        opponentHandSize: data.opponentHandSize,
+        selectedCard: data.selectedCard,
+        opponentSelected: data.opponentSelected,
+        isMyTurn: true,
+        roundHistory: data.roundHistory || [],
+        roundStartTime: data.roundStartTime,
+        timeLimit: data.timeLimit,
+      });
+    });
+
     // Room updated (player joined/left, ready status changed)
     socket.on('room_updated', (data: { room: Room }) => {
       logger.socket('Room updated', data);
@@ -380,13 +408,19 @@ export const useGame = (userAddress: string) => {
     });
 
     // New round started (for timer reset)
-    socket.on('new_round_started', (data: { round: number, timeLimit: number }) => {
+    socket.on('new_round_started', (data: { round: number, timeLimit: number, startTime: number }) => {
       if (isGameOver(gameState)) {
         logger.warn('Ignoring new_round_started - game is over');
         return;
       }
       
-      logger.timer('New round started', { round: data.round, timeLimit: data.timeLimit });
+      logger.timer('New round started', { 
+        round: data.round, 
+        timeLimit: data.timeLimit,
+        startTime: data.startTime,
+        clientTime: Date.now(),
+        latency: Date.now() - data.startTime
+      });
       setGameState((prev) =>
         prev
           ? {
@@ -395,6 +429,8 @@ export const useGame = (userAddress: string) => {
               selectedCard: null,
               opponentSelected: false,
               lastRoundResult: undefined, // Clear last round result
+              roundStartTime: data.startTime, // Store server timestamp
+              timeLimit: data.timeLimit, // Store time limit
             }
           : null
       );
@@ -491,6 +527,7 @@ export const useGame = (userAddress: string) => {
     return () => {
       socket.off('room_list');
       socket.off('reconnect_success');
+      socket.off('game_state_reconnect');
       socket.off('room_updated');
       socket.off('player_joined');
       socket.off('player_left');

@@ -66,6 +66,7 @@ export class RoomManager {
       gameState: 'waiting',
       currentRound: 0,
       consecutiveAfkRounds: 0,
+      roundStartTime: null,
       player1Deck: { inHand: [], remaining: [], used: [] },
       player2Deck: { inHand: [], remaining: [], used: [] },
       roundHistory: [],

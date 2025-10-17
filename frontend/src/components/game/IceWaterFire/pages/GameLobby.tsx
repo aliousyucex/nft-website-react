@@ -5,7 +5,9 @@ import DepositModal from '../components/DepositModal';
 import WithdrawModal from '../components/WithdrawModal';
 import TutorialModal from '../components/TutorialModal';
 import SoundSettings from '../components/SoundSettings';
+import { LeaderboardModal } from '../components/LeaderboardModal';
 import { Modal, Input, Button, InputNumber, message } from 'antd';
+import logo from "../../../../../public/logo.svg";
 
 interface GameLobbyProps {
   availableRooms: any[];
@@ -40,6 +42,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({
   const [withdrawModalVisible, setWithdrawModalVisible] = useState(false);
   const [tutorialVisible, setTutorialVisible] = useState(false);
   const [quickJoinModalVisible, setQuickJoinModalVisible] = useState(false);
+  const [leaderboardVisible, setLeaderboardVisible] = useState(false);
   const [betAmount, setBetAmount] = useState(0.001);
   const [password, setPassword] = useState('');
   const [roomIdToJoin, setRoomIdToJoin] = useState('');
@@ -109,6 +112,14 @@ const GameLobby: React.FC<GameLobbyProps> = ({
 
   return (
     <Container>
+      {/* Home Button */}
+      <HomeButton
+        onClick={() => window.location.href = '/'}
+        title="Return to Homepage"
+      >
+        <img src={logo} alt="Home" width={50} height={50} />
+      </HomeButton>
+
       <Header>
         <HeaderContent>
           <HeaderText>
@@ -153,6 +164,14 @@ const GameLobby: React.FC<GameLobbyProps> = ({
             <ActionTitle>Quick Join</ActionTitle>
             <ActionDescription>
               Instantly join or create a room
+            </ActionDescription>
+          </ActionCard>
+
+          <ActionCard onClick={() => setLeaderboardVisible(true)}>
+            <ActionIcon>🏆</ActionIcon>
+            <ActionTitle>Leaderboard</ActionTitle>
+            <ActionDescription>
+              View top players and rankings
             </ActionDescription>
           </ActionCard>
         </ActionsPanel>
@@ -346,6 +365,12 @@ const GameLobby: React.FC<GameLobbyProps> = ({
 
       {/* Tutorial Modal */}
       <TutorialModal visible={tutorialVisible} onClose={() => setTutorialVisible(false)} />
+      
+      {/* Leaderboard Modal */}
+      <LeaderboardModal
+        visible={leaderboardVisible}
+        onClose={() => setLeaderboardVisible(false)}
+      />
     </Container>
   );
 };
@@ -357,9 +382,23 @@ const Container = styled.div`
   max-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 20px;
+  position: relative;
 
   @media (min-height: 900px) {
     overflow-y: hidden;
+  }
+`;
+
+const HomeButton = styled.button`
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  cursor: pointer;
+  z-index: 100;
+
+  @media (max-width: 768px) {
+    top: 10px;
+    left: 10px;
   }
 `;
 

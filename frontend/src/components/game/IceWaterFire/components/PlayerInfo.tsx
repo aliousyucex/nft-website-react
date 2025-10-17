@@ -6,12 +6,18 @@ interface PlayerInfoProps {
   player: Player;
 }
 
+// Format address to show first 5 and last 3 characters
+const formatAddress = (address: string): string => {
+  if (!address || address.length < 10) return address;
+  return `${address.slice(0, 5)}...${address.slice(-3)}`;
+};
+
 const PlayerInfo: React.FC<PlayerInfoProps> = ({ player }) => {
   return (
     <InfoContainer $isReady={player.ready}>
       <PlayerHeader>
         <StatusIndicator $isConnected={player.isConnected} />
-        <StatusText>{player.address}</StatusText>
+        <StatusText>{formatAddress(player.address)}</StatusText>
       </PlayerHeader>
     </InfoContainer>
   );
@@ -67,23 +73,6 @@ const StatusText = styled.span`
 
   @media (max-height: 900px) {
     font-size: 12px;
-  }
-`;
-
-const ReadyBadge = styled.span`
-  background: #2ECC71;
-  color: white;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: bold;
-  margin-left: auto;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-
-  @media (max-height: 900px) {
-    font-size: 10px;
-    padding: 3px 10px;
   }
 `;
 

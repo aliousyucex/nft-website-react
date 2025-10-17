@@ -128,13 +128,6 @@ export const setupGameHandlers = (io: Server, socket: Socket) => {
         });
       }
 
-      if (room.players[0].ready && room.players[1].ready) {
-        return callback({
-          success: false,
-          error: 'Both players ready',
-        });
-      }
-
       roomManager.setPlayerNotReady(socket.id);
 
       // Update room activity
@@ -150,9 +143,18 @@ export const setupGameHandlers = (io: Server, socket: Socket) => {
       // Notify room with updated room data
       io.to(room.roomId).emit('room_updated', {
         room: formatRoomData(room),
-      });   
+      });
+
+      callback({
+        success: true,
+        room: formatRoomData(room),
+      });
     } catch (error) {
       logger.error('Error setting player not ready', error);
+      callback({
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to set not ready',
+      });
     }
   });
 
@@ -377,9 +379,15 @@ function startSelectionTimeout(io: Server, roomId: string) {
 
   // Emit new round started event (currentRound will be incremented in processRound)
   const nextRound = room.currentRound + 1;
+  const roundStartTime = Date.now();
+  
+  // Store round start time for reconnection
+  room.roundStartTime = roundStartTime;
+  
   io.to(roomId).emit('new_round_started', {
     round: nextRound,
     timeLimit: config.game.cardSelectionTimeout / 1000,
+    startTime: roundStartTime, // Add server timestamp for timer sync
   });
 
   logger.info('Round timer started', {
@@ -387,6 +395,7 @@ function startSelectionTimeout(io: Server, roomId: string) {
     round: nextRound,
     currentRound: room.currentRound,
     timeLimit: config.game.cardSelectionTimeout / 1000,
+    startTime: roundStartTime,
   });
 
   const timeout = setTimeout(async () => {
@@ -517,6 +526,9 @@ async function processRound(io: Server, room: any) {
 
   // Increment round counter
   room.currentRound++;
+
+  // Reset consecutive AFK counter since both players actively selected cards
+  room.consecutiveAfkRounds = 0;
 
   logger.info('Processing round', {
     roomId: room.roomId,
