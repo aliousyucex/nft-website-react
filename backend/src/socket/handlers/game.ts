@@ -3,6 +3,7 @@ import roomManager from '../../services/room';
 import gameService from '../../services/game';
 import contractService from '../../services/contract';
 import leaderboardService from '../../services/leaderboard';
+import aiService from '../../services/ai';
 import { db } from '../../db/connection';
 import logger from '../../utils/logger';
 import { SocketErrorCode } from '../../utils/errors';
@@ -18,7 +19,7 @@ export const setupGameHandlers = (io: Server, socket: Socket) => {
    */
   socket.on('player_ready', async (callback) => {
     try {
-      const room = roomManager.setPlayerReady(socket.id, true);
+      let room = roomManager.setPlayerReady(socket.id, true);
 
       if (!room) {
         return callback({
@@ -31,7 +32,34 @@ export const setupGameHandlers = (io: Server, socket: Socket) => {
       // Update room activity
       roomManager.updateRoomActivity(room.roomId);
 
+      // For single player mode, add AI player BEFORE checking player count
+      if (room.isSinglePlayer && room.players.length < 2) {
+        logger.info('🤖 Single player mode: Adding AI player', { roomId: room.roomId });
+        
+        // Add AI player
+        const aiSocketId = `ai-${room.roomId}`;
+        const updatedRoom = roomManager.addAIPlayer(room.roomId, aiSocketId);
+        
+        if (updatedRoom) {
+          room = updatedRoom; // Update room reference with AI player
+          logger.info('✅ AI player added successfully', { 
+            roomId: room.roomId,
+            playerCount: room.players.length 
+          });
+          
+          // Notify player that AI joined
+          io.to(room.roomId).emit('room_updated', {
+            room: formatRoomData(updatedRoom),
+          });
+        }
+      }
+
+      // NOW check if we have 2 players (after potentially adding AI)
       if (room.players.length !== 2) {
+        logger.info('⏳ Waiting for second player', { 
+          roomId: room.roomId,
+          currentPlayers: room.players.length 
+        });
         return callback({
           success: false,
           error: 'Waiting for second player',
@@ -44,23 +72,31 @@ export const setupGameHandlers = (io: Server, socket: Socket) => {
       });
 
       // Check if both ready
-      if (room.players[0].ready && room.players[1].ready) {
-        logger.info('Both players ready, starting game', { roomId: room.roomId });
+      if (room.players[0].ready && room.players[1]?.ready) {
+        logger.info('Both players ready, starting game', { 
+          roomId: room.roomId,
+          isSinglePlayer: room.isSinglePlayer,
+          betAmount: room.betAmount,
+        });
         
         try {
-          // Deduct bets from both players
-          logger.info('Deducting bets from players', {
-            player1: room.players[0].address,
-            player2: room.players[1].address,
-            betAmount: room.betAmount,
-          });
+          // Skip contract calls for free games (betAmount = 0)
+          if (room.betAmount > 0) {
+            logger.info('Deducting bets from players', {
+              player1: room.players[0].address,
+              player2: room.players[1].address,
+              betAmount: room.betAmount,
+            });
 
-          await contractService.updateBalances([
-            { address: room.players[0].address, amount: -room.betAmount },
-            { address: room.players[1].address, amount: -room.betAmount },
-          ]);
+            await contractService.updateBalances([
+              { address: room.players[0].address, amount: -room.betAmount },
+              { address: room.players[1].address, amount: -room.betAmount },
+            ]);
 
-          logger.info('Bets deducted successfully');
+            logger.info('Bets deducted successfully');
+          } else {
+            logger.info('Free game, skipping bet deduction');
+          }
 
           // Start game
           const startedRoom = roomManager.startGame(room.roomId);
@@ -78,13 +114,17 @@ export const setupGameHandlers = (io: Server, socket: Socket) => {
               logger.info('Sending cards to player', {
                 address: player.address,
                 cardCount: player.hand.length,
+                isAI: player.socketId.startsWith('ai-'),
               });
 
-              io.to(player.socketId).emit('cards_dealt', {
-                cards: player.hand,
-                phase: 'initial',
-                message: 'Your initial 5 cards',
-              });
+              // Only send to real player socket (not AI)
+              if (!player.socketId.startsWith('ai-')) {
+                io.to(player.socketId).emit('cards_dealt', {
+                  cards: player.hand,
+                  phase: 'initial',
+                  message: 'Your initial 5 cards',
+                });
+              }
             });
 
             // Start selection timeout for round 1
@@ -236,6 +276,52 @@ export const setupGameHandlers = (io: Server, socket: Socket) => {
         io.to(opponent.socketId).emit('opponent_selected', {
           hasSelected: true,
         });
+      }
+
+      // For single player, trigger AI selection after player selects
+      if (room.isSinglePlayer && !room.players[1].selectedCard) {
+        const aiPlayer = room.players[1];
+        const humanPlayer = room.players[0];
+        
+        logger.info('Triggering AI card selection', {
+          roomId: room.roomId,
+          aiHand: aiPlayer.hand.length,
+        });
+
+        // Get AI selection with delay to simulate thinking
+        const delay = aiService.getSelectionDelay();
+        setTimeout(() => {
+          const room = roomManager.getRoomBySocket(socket.id);
+          if (!room || !room.isSinglePlayer) return;
+
+          const aiPlayer = room.players[1];
+          if (aiPlayer.selectedCard) return; // Already selected
+
+          // AI selects a card
+          const selectedCard = aiService.selectCard(
+            aiPlayer.hand,
+            undefined,
+            { ai: aiPlayer.roundsWon, player: humanPlayer.roundsWon }
+          );
+
+          aiPlayer.selectedCard = selectedCard;
+
+          logger.info('AI selected card', {
+            roomId: room.roomId,
+            card: `${selectedCard.type}_${selectedCard.value}`,
+          });
+
+          // Notify player that opponent (AI) has selected
+          io.to(humanPlayer.socketId).emit('opponent_selected', {
+            hasSelected: true,
+          });
+
+          // Process round if both selected
+          if (room.players[0].selectedCard && room.players[1].selectedCard) {
+            clearSelectionTimeout(room.roomId);
+            processRound(io, room);
+          }
+        }, delay);
       }
 
       // Check if both players selected
@@ -418,6 +504,9 @@ function startSelectionTimeout(io: Server, roomId: string) {
     for (let i = 0; i < room.players.length; i++) {
       const player = room.players[i];
       if (!player.selectedCard && player.hand.length > 0) {
+        // Increment AFK count
+        player.afkCount = (player.afkCount || 0) + 1;
+        
         // Select random card from hand
         const randomIndex = Math.floor(Math.random() * player.hand.length);
         const randomCard = player.hand[randomIndex];
@@ -436,13 +525,32 @@ function startSelectionTimeout(io: Server, roomId: string) {
           roomId: room.roomId,
           playerAddress: player.address,
           card: randomCard,
+          afkCount: player.afkCount,
         });
 
         // Notify player
         io.to(player.socketId).emit('afk_warning', {
           message: 'You took too long! A random card was played for you.',
           autoSelectedCard: randomCard,
+          afkCount: player.afkCount,
         });
+      }
+    }
+
+    // Check if any player should forfeit (afkCount >= 2)
+    for (let i = 0; i < room.players.length; i++) {
+      const player = room.players[i];
+      
+      if (player.afkCount >= 2) {
+        logger.info('Player repeatedly AFK, triggering forfeit', {
+          roomId: room.roomId,
+          address: player.address,
+          afkCount: player.afkCount,
+        });
+        
+        // Trigger forfeit with conditional payout
+        await handleAfkForfeitWithConditionalPayout(io, room, player.address);
+        return; // Exit early - game has ended
       }
     }
 
@@ -644,31 +752,47 @@ async function handleGameEnd(io: Server, room: any) {
 
     if (!winner || !loser) return;
 
-    // Process payout
-    await contractService.processGamePayout(
-      winner.address,
-      loser.address,
-      room.betAmount
-    );
+    const isPaidGame = room.betAmount > 0;
 
-    // Update leaderboard
-    await leaderboardService.updateAfterGame(
-      winner.address,
-      loser.address,
-      {
-        winner: winner.roundsWon,
-        loser: loser.roundsWon,
-      }
-    );
+    // Skip contract payout for free games
+    if (isPaidGame) {
+      await contractService.processGamePayout(
+        winner.address,
+        loser.address,
+        room.betAmount
+      );
+      logger.info('Payout processed for paid game');
+    } else {
+      logger.info('Free game, skipping payout');
+    }
 
-    // Save game history
+    // Skip leaderboard update for free games
+    if (isPaidGame) {
+      await leaderboardService.updateAfterGame(
+        winner.address,
+        loser.address,
+        {
+          winner: winner.roundsWon,
+          loser: loser.roundsWon,
+        }
+      );
+      logger.info('Leaderboard updated for paid game');
+    } else {
+      logger.info('Free game, skipping leaderboard update');
+    }
+
+    // Save game history (including free games for analytics)
     await saveGameHistory(room);
 
     // Notify players with correct format - send personalized data to each player
-    const payout = contractService.calculatePayout(room.betAmount * 2);
+    const payout = isPaidGame ? contractService.calculatePayout(room.betAmount * 2) : { winnerAmount: 0, commission: 0 };
     
     room.players.forEach((player: any, index: number) => {
       const opponent = room.players[1 - index];
+      
+      // Skip AI player notifications
+      if (player.socketId.startsWith('ai-')) return;
+      
       io.to(player.socketId).emit('game_finished', {
         winner: winner.address.toLowerCase(), // Ensure lowercase for address comparison
         myScore: player.roundsWon,
@@ -680,6 +804,7 @@ async function handleGameEnd(io: Server, room: any) {
         finalScore: room.finalScore,
         leaderboardPoints: room.leaderboardPoints,
         prizeAmount: payout.winnerAmount,
+        isPaidGame,
       });
     });
 
@@ -687,6 +812,7 @@ async function handleGameEnd(io: Server, room: any) {
       roomId: room.roomId,
       winner: winner.address,
       score: `${winner.roundsWon}-${loser.roundsWon}`,
+      isPaidGame,
     });
   } catch (error) {
     logger.error('Error handling game end', error);
@@ -704,36 +830,51 @@ async function handleDisconnectForfeit(io: Server, room: any, disconnectedAddres
     if (!remaining || !disconnected) return;
 
     const remainingAhead = remaining.roundsWon > disconnected.roundsWon;
+    const isPaidGame = room.betAmount > 0;
 
-    // Process disconnect payout
-    await contractService.processDisconnectPayout(
-      remaining.address,
-      disconnected.address,
-      room.betAmount,
-      remainingAhead
-    );
+    // Skip contract payout for free games
+    if (isPaidGame) {
+      await contractService.processDisconnectPayout(
+        remaining.address,
+        disconnected.address,
+        room.betAmount,
+        remainingAhead
+      );
+      logger.info('Disconnect payout processed for paid game');
+    } else {
+      logger.info('Free game, skipping disconnect payout');
+    }
 
     // End game
     gameService.endGame(room, remaining.address, 'disconnect_forfeit');
 
-    // Update leaderboard
-    await leaderboardService.updateAfterGame(
-      remaining.address,
-      disconnected.address,
-      {
-        winner: remaining.roundsWon,
-        loser: disconnected.roundsWon,
-      }
-    );
+    // Skip leaderboard update for free games
+    if (isPaidGame) {
+      await leaderboardService.updateAfterGame(
+        remaining.address,
+        disconnected.address,
+        {
+          winner: remaining.roundsWon,
+          loser: disconnected.roundsWon,
+        }
+      );
+      logger.info('Leaderboard updated for paid game');
+    } else {
+      logger.info('Free game, skipping leaderboard update');
+    }
 
     // Save game history
     await saveGameHistory(room);
 
     // Notify with personalized data
-    const payout = contractService.calculatePayout(room.betAmount * 2);
+    const payout = isPaidGame ? contractService.calculatePayout(room.betAmount * 2) : { winnerAmount: 0, commission: 0 };
     
     room.players.forEach((player: any, index: number) => {
       const opponent = room.players[1 - index];
+      
+      // Skip AI player notifications
+      if (player.socketId.startsWith('ai-')) return;
+      
       io.to(player.socketId).emit('game_finished', {
         winner: remaining.address.toLowerCase(), // Ensure lowercase for address comparison
         reason: 'disconnect_forfeit',
@@ -745,12 +886,14 @@ async function handleDisconnectForfeit(io: Server, room: any, disconnectedAddres
         },
         finalScore: room.finalScore,
         prizeAmount: payout.winnerAmount,
+        isPaidGame,
       });
     });
 
     logger.info('Game ended by disconnect forfeit', {
       roomId: room.roomId,
       winner: remaining.address,
+      isPaidGame,
     });
   } catch (error) {
     logger.error('Error handling disconnect forfeit', error);
@@ -767,30 +910,46 @@ async function handleAfkForfeit(io: Server, room: any, afkAddress: string) {
 
     if (!opponent || !afkPlayer) return;
 
-    // Process payout
-    await contractService.processGamePayout(opponent.address, afkAddress, room.betAmount);
+    const isPaidGame = room.betAmount > 0;
+
+    // Skip contract payout for free games
+    if (isPaidGame) {
+      await contractService.processGamePayout(opponent.address, afkAddress, room.betAmount);
+      logger.info('AFK payout processed for paid game');
+    } else {
+      logger.info('Free game, skipping AFK payout');
+    }
 
     // End game
     gameService.endGame(room, opponent.address, 'afk_forfeit');
 
-    // Update leaderboard
-    await leaderboardService.updateAfterGame(
-      opponent.address,
-      afkAddress,
-      {
-        winner: opponent.roundsWon,
-        loser: afkPlayer.roundsWon,
-      }
-    );
+    // Skip leaderboard update for free games
+    if (isPaidGame) {
+      await leaderboardService.updateAfterGame(
+        opponent.address,
+        afkAddress,
+        {
+          winner: opponent.roundsWon,
+          loser: afkPlayer.roundsWon,
+        }
+      );
+      logger.info('Leaderboard updated for paid game');
+    } else {
+      logger.info('Free game, skipping leaderboard update');
+    }
 
     // Save game history
     await saveGameHistory(room);
 
     // Notify with personalized data
-    const payout = contractService.calculatePayout(room.betAmount * 2);
+    const payout = isPaidGame ? contractService.calculatePayout(room.betAmount * 2) : { winnerAmount: 0, commission: 0 };
     
     room.players.forEach((player: any, index: number) => {
       const opp = room.players[1 - index];
+      
+      // Skip AI player notifications
+      if (player.socketId.startsWith('ai-')) return;
+      
       io.to(player.socketId).emit('game_finished', {
         winner: opponent.address.toLowerCase(), // Ensure lowercase for address comparison
         reason: 'afk_forfeit',
@@ -802,15 +961,110 @@ async function handleAfkForfeit(io: Server, room: any, afkAddress: string) {
         },
         finalScore: room.finalScore,
         prizeAmount: payout.winnerAmount,
+        isPaidGame,
       });
     });
 
     logger.info('Game ended by AFK forfeit', {
       roomId: room.roomId,
       winner: opponent.address,
+      isPaidGame,
     });
   } catch (error) {
     logger.error('Error handling AFK forfeit', error);
+  }
+}
+
+/**
+ * Handle AFK forfeit with conditional payout
+ */
+async function handleAfkForfeitWithConditionalPayout(io: Server, room: any, afkAddress: string) {
+  try {
+    const opponent = room.players.find((p: any) => p.address !== afkAddress);
+    const afkPlayer = room.players.find((p: any) => p.address === afkAddress);
+
+    if (!opponent || !afkPlayer) return;
+
+    const isPaidGame = room.betAmount > 0;
+    const opponentIsAhead = opponent.roundsWon > afkPlayer.roundsWon;
+
+    logger.info('Processing AFK forfeit with conditional payout', {
+      roomId: room.roomId,
+      afkPlayer: afkAddress,
+      opponentScore: opponent.roundsWon,
+      afkScore: afkPlayer.roundsWon,
+      opponentIsAhead,
+      isPaidGame,
+    });
+
+    // Handle payouts for paid games
+    if (isPaidGame) {
+      await contractService.processAfkForfeitPayout(
+        opponent.address, 
+        afkAddress, 
+        room.betAmount,
+        opponentIsAhead
+      );
+      
+      // Update leaderboard for paid games
+      await leaderboardService.updateAfterGame(
+        opponent.address,
+        afkAddress,
+        {
+          winner: opponent.roundsWon,
+          loser: afkPlayer.roundsWon,
+        }
+      );
+      logger.info('Leaderboard updated for paid game');
+    } else {
+      logger.info('Free game, skipping payout and leaderboard update');
+    }
+
+    // End game with opponent as winner
+    gameService.endGame(room, opponent.address, 'afk_forfeit');
+
+    // Save game history
+    await saveGameHistory(room);
+
+    // Calculate payout for notification
+    let payout = { winnerAmount: 0, commission: 0 };
+    if (isPaidGame && opponentIsAhead) {
+      const totalPot = room.betAmount * 2;
+      payout.winnerAmount = totalPot * 0.6;
+      payout.commission = totalPot * 0.4;
+    }
+    
+    // Notify players with personalized data
+    room.players.forEach((player: any, index: number) => {
+      const opp = room.players[1 - index];
+      
+      // Skip AI player notifications
+      if (player.socketId.startsWith('ai-')) return;
+      
+      io.to(player.socketId).emit('game_finished', {
+        winner: opponent.address.toLowerCase(),
+        reason: 'afk_forfeit',
+        myScore: player.roundsWon,
+        opponentScore: opp.roundsWon,
+        scores: {
+          player1: room.players[0].roundsWon,
+          player2: room.players[1].roundsWon,
+        },
+        finalScore: room.finalScore,
+        prizeAmount: player.address === opponent.address ? payout.winnerAmount : 0,
+        isRefund: isPaidGame && !opponentIsAhead,
+        isPaidGame,
+      });
+    });
+
+    logger.info('Game ended by AFK forfeit', {
+      roomId: room.roomId,
+      winner: opponent.address,
+      isPaidGame,
+      payoutType: isPaidGame ? (opponentIsAhead ? '60% to winner' : 'refund both') : 'free game',
+    });
+  } catch (error) {
+    logger.error('Error handling AFK forfeit with conditional payout', error);
   }
 }
 
@@ -829,6 +1083,7 @@ async function saveGameHistory(room: any) {
     const payout = contractService.calculatePayout(room.betAmount * 2);
 
     // Insert game history
+    const isPaidGame = room.betAmount > 0;
     const gameResult = await db
       .insertInto('game_history')
       .values({
@@ -842,6 +1097,7 @@ async function saveGameHistory(room: any) {
         bet_amount: room.betAmount.toString(),
         commission: payout.commission.toString(),
         prize_amount: payout.winnerAmount.toString(),
+        is_paid_game: isPaidGame,
         game_duration_seconds: gameDuration,
         end_reason: 'normal',
       })

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
+import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
-import { SocketProvider } from './context/SocketContext';
+import { motion } from 'framer-motion';
+import { SocketProvider, useSocket } from './context/SocketContext';
 import GameLobby from './pages/GameLobby';
 import GameRoom from './pages/GameRoom';
 import GameBoard from './pages/GameBoard';
@@ -10,6 +12,7 @@ import { useSoundEffects } from './hooks/useSoundEffects';
 import { Card } from './types';
 import { message } from 'antd';
 import WalletConnect from '../../wallet/WalletConnect';
+import { GameModeModal } from './components/GameModeModal';
 import logger from './utils/logger';
 
 interface IceWaterFireGameProps {
@@ -20,25 +23,110 @@ type GamePage = 'lobby' | 'room' | 'playing';
 
 const IceWaterFireGame: React.FC<IceWaterFireGameProps> = ({ onDisconnect }) => {
   const { address, isConnected } = useAccount();
+  const [showGameModeModal, setShowGameModeModal] = useState(false);
+  const [guestMode, setGuestMode] = useState(false);
+  const [guestAddress, setGuestAddress] = useState('');
+  const [pendingGameMode, setPendingGameMode] = useState<'single' | 'multi' | null>(null);
 
-  if (!isConnected || !address) {
+  // Generate guest address if playing without wallet
+  useEffect(() => {
+    if (guestMode && !guestAddress) {
+      // Generate temporary guest address in valid Ethereum format (0x + 40 hex chars)
+      // Use timestamp + random hex to create unique address
+      const timestamp = Date.now().toString(16).padStart(12, '0'); // 12 hex chars
+      const random = Math.random().toString(16).substring(2, 30).padEnd(28, '0'); // 28 hex chars
+      const tempAddress = `0x${timestamp}${random}`;
+      console.log('🎮 Generated guest address:', tempAddress);
+      setGuestAddress(tempAddress);
+    }
+  }, [guestMode, guestAddress]);
+
+  // If not connected and not in guest mode, show entry choice
+  if (!isConnected && !guestMode) {
     return (
       <WalletPromptContainer>
-        <WalletPromptContent>
-          <WalletIcon>👛</WalletIcon>
-          <WalletTitle>Connect Your Wallet</WalletTitle>
+        <WalletPromptContent
+          as={motion.div}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <WalletIcon
+            as={motion.div}
+            animate={{ rotate: [0, 10, -10, 0] }}
+            transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+          >
+            🎴
+          </WalletIcon>
+          <WalletTitle>Ice Water Fire</WalletTitle>
           <WalletSubtitle>
-            Connect your wallet to start playing Ice Water Fire
+            Choose how you want to play
           </WalletSubtitle>
-          <WalletConnect />
+          
+          <ChoiceButtons>
+            <ChoiceButton
+              as={motion.button}
+              whileHover={{ scale: 1.05, y: -5 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowGameModeModal(true)}
+              $primary
+            >
+              <ButtonIcon>🎮</ButtonIcon>
+              <ButtonText>
+                <ButtonTitle>Play Right Away</ButtonTitle>
+                <ButtonSubtitle>Free practice games</ButtonSubtitle>
+              </ButtonText>
+            </ChoiceButton>
+
+            <ChoiceButton
+              as={motion.button}
+              whileHover={{ scale: 1.05, y: -5 }}
+              whileTap={{ scale: 0.95 }}
+              $secondary
+            >
+              <ButtonIcon>💰</ButtonIcon>
+              <ButtonText>
+                <ButtonTitle>Connect Wallet</ButtonTitle>
+                <ButtonSubtitle>Play for ETH & leaderboard</ButtonSubtitle>
+              </ButtonText>
+              <WalletConnectWrapper>
+                <WalletConnect />
+              </WalletConnectWrapper>
+            </ChoiceButton>
+          </ChoiceButtons>
         </WalletPromptContent>
+
+        <GameModeModal
+          visible={showGameModeModal}
+          onSinglePlayer={() => {
+            console.log('🎮 Modal: Single Player selected, activating guest mode');
+            setPendingGameMode('single');
+            setGuestMode(true);
+            setShowGameModeModal(false);
+          }}
+          onMultiplayer={() => {
+            console.log('👥 Modal: Multiplayer selected, activating guest mode');
+            setPendingGameMode('multi');
+            setGuestMode(true);
+            setShowGameModeModal(false);
+          }}
+          onCancel={() => setShowGameModeModal(false)}
+        />
       </WalletPromptContainer>
     );
   }
 
+  const userAddress = address || guestAddress;
+
   return (
-    <SocketProvider address={address}>
-      <GameContainer userAddress={address} onDisconnect={onDisconnect} />
+    <SocketProvider address={userAddress}>
+      <GameContainer 
+        userAddress={userAddress} 
+        onDisconnect={onDisconnect}
+        isGuest={guestMode}
+        pendingGameMode={pendingGameMode}
+        onGameModeHandled={() => setPendingGameMode(null)}
+      />
     </SocketProvider>
   );
 };
@@ -46,10 +134,14 @@ const IceWaterFireGame: React.FC<IceWaterFireGameProps> = ({ onDisconnect }) => 
 interface GameContainerProps {
   userAddress: string;
   onDisconnect?: () => void;
+  isGuest?: boolean;
+  pendingGameMode?: 'single' | 'multi' | null;
+  onGameModeHandled?: () => void;
 }
 
-const GameContainer: React.FC<GameContainerProps> = ({ userAddress }) => {
-  const [currentPage, setCurrentPage] = useState<GamePage>('room');
+const GameContainer: React.FC<GameContainerProps> = ({ userAddress, isGuest, pendingGameMode, onGameModeHandled }) => {
+  const { roomId: roomIdFromUrl } = useParams<{ roomId: string }>();
+  const [currentPage, setCurrentPage] = useState<GamePage>('lobby');
   const [timeRemaining, setTimeRemaining] = useState(10);
   const [balance, setBalance] = useState<string>('0');
   const [waitingForAnimations, setWaitingForAnimations] = useState(false);
@@ -72,12 +164,73 @@ const GameContainer: React.FC<GameContainerProps> = ({ userAddress }) => {
     clearAnimations,
   } = useGame(userAddress);
 
+  const { socket } = useSocket();
   const { playSound, soundsEnabled, volume, setVolume, toggleSounds } = useSoundEffects();
 
-  // Fetch balance periodically
+  // Handle pending game mode (auto-create room for guest users)
   useEffect(() => {
-    if (!userAddress) {
-      console.log('⚠️ No userAddress, skipping balance fetch');
+    if (!pendingGameMode || !isGuest) return;
+    
+    console.log('📋 Pending game mode detected:', pendingGameMode);
+    console.log('🔌 Socket status:', socket ? 'connected' : 'not connected');
+    console.log('👤 User address:', userAddress);
+
+    if (!socket || !userAddress) {
+      console.log('⏳ Waiting for socket connection and address...');
+      return;
+    }
+
+    logger.info('✅ All conditions met, handling pending game mode', { 
+      pendingGameMode, 
+      userAddress,
+      socketId: socket.id 
+    });
+    
+    // Wait a bit for socket to be fully initialized
+    const timer = setTimeout(() => {
+      console.log('🚀 Creating/joining room...');
+      
+      if (pendingGameMode === 'single') {
+        // Create single player room
+        logger.info('Creating single player room');
+        createRoom(0, undefined, 'single_player', true);
+      } else if (pendingGameMode === 'multi') {
+        // Quick join free multiplayer room
+        logger.info('Quick joining free multiplayer room');
+        quickJoin(0, false);
+      }
+      
+      // Clear pending mode after handling
+      if (onGameModeHandled) {
+        onGameModeHandled();
+      }
+    }, 1000); // Increased delay to ensure socket is ready
+
+    return () => clearTimeout(timer);
+  }, [pendingGameMode, isGuest, socket, userAddress, createRoom, quickJoin, onGameModeHandled]);
+
+  // Handle auto-join via share link (URL parameter)
+  useEffect(() => {
+    if (!roomIdFromUrl || !socket || !userAddress) return;
+    
+    // Check if we're already in a room or have a pending game mode
+    if (currentRoom || pendingGameMode) return;
+    
+    logger.info('Auto-joining room from URL', { roomId: roomIdFromUrl });
+    
+    // Wait a bit for socket to be fully initialized
+    const timer = setTimeout(() => {
+      console.log('🔗 Joining room from share link:', roomIdFromUrl);
+      joinRoom(roomIdFromUrl);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [roomIdFromUrl, socket, userAddress, currentRoom, pendingGameMode, joinRoom]);
+
+  // Fetch balance periodically (skip for guest users)
+  useEffect(() => {
+    if (!userAddress || isGuest) {
+      console.log('⚠️ Guest mode or no userAddress, skipping balance fetch');
       return;
     }
 
@@ -99,13 +252,14 @@ const GameContainer: React.FC<GameContainerProps> = ({ userAddress }) => {
     const interval = setInterval(fetchBalance, 10000); // Every 10 seconds
 
     return () => clearInterval(interval);
-  }, [userAddress]);
+  }, [userAddress, isGuest]);
 
   // Timer countdown - synced with backend timestamp
   useEffect(() => {
     // Timer continues running even after player selects to show opponent's remaining time
+    // Removed waitingForAnimations check to keep timer running during round result animations
     if (currentPage === 'playing' && gameState &&
-        gameState.myScore < 3 && gameState.opponentScore < 3 && !waitingForAnimations &&
+        gameState.myScore < 3 && gameState.opponentScore < 3 &&
         gameState.roundStartTime && gameState.timeLimit) {
       
       logger.timer('Starting timer sync', {
@@ -157,7 +311,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ userAddress }) => {
       };
     }
   }, [currentPage, gameState?.roundStartTime, gameState?.timeLimit, 
-      gameState?.myScore, gameState?.opponentScore, waitingForAnimations, playSound, gameState?.selectedCard]);
+      gameState?.myScore, gameState?.opponentScore, playSound, gameState?.selectedCard]);
 
   // Handle errors
   useEffect(() => {
@@ -217,9 +371,9 @@ const GameContainer: React.FC<GameContainerProps> = ({ userAddress }) => {
   };
 
   const handleCardSelect = (card: Card) => {
-    // Prevent card selection if game is over OR waiting for animations
-    if (gameState && (gameState.myScore >= 3 || gameState.opponentScore >= 3 || waitingForAnimations)) {
-      logger.warn('Game is over or waiting for animations, cannot select card');
+    // Prevent card selection if game is over
+    if (gameState && (gameState.myScore >= 3 || gameState.opponentScore >= 3)) {
+      logger.warn('Game is over, cannot select card');
       return;
     }
     
@@ -303,6 +457,7 @@ const GameContainer: React.FC<GameContainerProps> = ({ userAddress }) => {
           betAmount={currentRoom.betAmount}
           players={currentRoom.players}
           currentUserAddress={userAddress}
+          isSinglePlayer={currentRoom.isSinglePlayer}
           onReady={() => {
             playSound('ready');
             setReady();
@@ -341,6 +496,8 @@ const GameContainer: React.FC<GameContainerProps> = ({ userAddress }) => {
             else if (result === 'draw') playSound('roundDraw');
           }}
           onReturnToLobby={handleReturnToLobby}
+          isPaidGame={gameState.isPaidGame ?? (currentRoom?.betAmount !== 0)}
+          isSinglePlayer={currentRoom?.isSinglePlayer ?? false}
         />
       )}
     </>
@@ -350,7 +507,6 @@ const GameContainer: React.FC<GameContainerProps> = ({ userAddress }) => {
 export default IceWaterFireGame;
 
 const WalletPromptContainer = styled.div`
-  min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
   align-items: center;
@@ -401,5 +557,85 @@ const WalletSubtitle = styled.p`
   margin: 0;
   text-align: center;
   line-height: 1.6;
+`;
+
+const ChoiceButtons = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  max-width: 400px;
+`;
+
+const ChoiceButton = styled.button<{ $primary?: boolean; $secondary?: boolean }>`
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 24px 32px;
+  background: ${props => 
+    props.$primary 
+      ? 'linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%)'
+      : 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)'
+  };
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 24px ${props =>
+    props.$primary
+      ? 'rgba(78, 205, 196, 0.4)'
+      : 'rgba(255, 215, 0, 0.4)'
+  };
+  overflow: hidden;
+
+  &:hover {
+    box-shadow: 0 12px 32px ${props =>
+      props.$primary
+        ? 'rgba(78, 205, 196, 0.6)'
+        : 'rgba(255, 215, 0, 0.6)'
+    };
+  }
+`;
+
+const ButtonIcon = styled.div`
+  font-size: 48px;
+  flex-shrink: 0;
+`;
+
+const ButtonText = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  flex: 1;
+`;
+
+const ButtonTitle = styled.div`
+  font-size: 20px;
+  font-weight: bold;
+  color: white;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+`;
+
+const ButtonSubtitle = styled.div`
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+`;
+
+const WalletConnectWrapper = styled.div`
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  
+  button {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    pointer-events: all;
+  }
 `;
 

@@ -29,6 +29,8 @@ interface GameBoardProps {
   onCardReveal?: () => void;
   onRoundResult?: (result: 'win' | 'lose' | 'draw') => void;
   onReturnToLobby: () => void;
+  isPaidGame?: boolean;
+  isSinglePlayer?: boolean;
 }
 
 const GameBoard: React.FC<GameBoardProps> = ({
@@ -49,6 +51,8 @@ const GameBoard: React.FC<GameBoardProps> = ({
   onCardReveal,
   onRoundResult,
   onReturnToLobby,
+  isPaidGame = true,
+  isSinglePlayer = false,
 }) => {
   const [showEmojiPanel, setShowEmojiPanel] = useState(false);
   const [showGameResult, setShowGameResult] = useState(false);
@@ -65,7 +69,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
   const [lastProcessedRound, setLastProcessedRound] = useState<number>(0);
   // Track if round result animation is playing
   const [isAnimationPlaying, setIsAnimationPlaying] = useState(false);
-  
+
   // Emoji spam system - array of active emojis
   const [activeEmojis, setActiveEmojis] = useState<Array<{
     id: string;
@@ -81,9 +85,9 @@ const GameBoard: React.FC<GameBoardProps> = ({
         emoji: receivedEmojiProp,
         timestamp: Date.now(),
       };
-      
+
       setActiveEmojis(prev => [...prev, newEmoji]);
-      
+
       // Auto-remove after 2 seconds (animation duration)
       setTimeout(() => {
         setActiveEmojis(prev => prev.filter(e => e.id !== newEmoji.id));
@@ -105,7 +109,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
       // Mark this round as processed
       setLastProcessedRound(lastRoundResult.round);
-      
+
       // Set animation playing flag
       setIsAnimationPlaying(true);
 
@@ -133,7 +137,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
   useEffect(() => {
     if (gameState && gameState.gameState === 'finished' && !showGameResult) {
       console.log('🏁 Game finished in GameBoard, showing modal');
-      
+
       // Case-insensitive address comparison for winner check
       const isWinner = gameState.winner?.toLowerCase() === currentUserAddress.toLowerCase();
       const isDraw = !gameState.winner; // null winner means draw
@@ -147,11 +151,11 @@ const GameBoard: React.FC<GameBoardProps> = ({
         isWinner,
         isDraw,
       });
-      
-      // Wait a moment for animations to complete before showing modal
+
+      // Show modal after a brief delay to let final animations complete naturally
       setTimeout(() => {
         setShowGameResult(true);
-      }, 2500);
+      }, 1000);
     }
   }, [gameState?.gameState, currentUserAddress, showGameResult]);
 
@@ -161,7 +165,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
   };
 
   const isLowTime = timeRemaining <= 2;
-  // Prevent card selection during animations, when card is already selected, or when time is up
+  // Prevent card selection when card is already selected, time is up, or during round result animations
   const canSelectCard = !selectedCard && timeRemaining > 0 && !isAnimationPlaying;
 
   const determineResult = (): 'win' | 'lose' | 'draw' => {
@@ -214,18 +218,19 @@ const GameBoard: React.FC<GameBoardProps> = ({
       <GameContainer>
         {/* Score Board */}
         <Flex vertical justify='center' align='center'>
-          <Row gutter={[16, 0]} justify='center'>
-            <Col><ScoreName>You</ScoreName></Col>
-            <Col><ScoreName>Opponent</ScoreName></Col>
+          <Row gutter={[16, 0]} justify='center' align="middle">
+            <ScoreCol><ScoreName>You</ScoreName></ScoreCol>
+            <ScoreCol> </ScoreCol>
+            <ScoreCol><ScoreName>Opponent</ScoreName></ScoreCol>
           </Row>
-          <Row gutter={[16, 0]} justify='center'>
-            <Col><ScoreValue $isLeading={myPlayer.roundsWon > opponentPlayer.roundsWon}>
+          <Row gutter={[16, 0]} justify='center' align="middle">
+            <ScoreCol><ScoreValue $isLeading={myPlayer.roundsWon > opponentPlayer.roundsWon}>
               {myPlayer.roundsWon}
-            </ScoreValue></Col>
-            <Col><ScoreDivider>-</ScoreDivider></Col>
-            <Col><ScoreValue $isLeading={opponentPlayer.roundsWon > myPlayer.roundsWon}>
+            </ScoreValue></ScoreCol>
+            <ScoreCol><ScoreDivider>-</ScoreDivider></ScoreCol>
+            <ScoreCol><ScoreValue $isLeading={opponentPlayer.roundsWon > myPlayer.roundsWon}>
               {opponentPlayer.roundsWon}
-            </ScoreValue></Col>
+            </ScoreValue></ScoreCol>
           </Row>
         </Flex>
 
@@ -240,22 +245,25 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
           <OpponentCards>
             {lastRoundResult && lastRoundResult.opponentCard ? (
-              <>
-                <OpponentRevealedCard>
+              <Flex vertical justify='center' align='center' gap={16}>
+              <Row gutter={[16, 0]} justify='center' align="middle">
+                <RevealCol>
                   <CardRevealWrapper>
                     <Card card={lastRoundResult.myCard} isRevealed />
                   </CardRevealWrapper>
-                  <RevealLabel>Your Card</RevealLabel>
-                </OpponentRevealedCard>
-                VS
-                <OpponentRevealedCard>
-                  <CardRevealWrapper>
+                </RevealCol>
+                <RevealCol><ScoreDivider>VS</ScoreDivider></RevealCol>
+                <RevealCol><CardRevealWrapper>
                     <Card card={lastRoundResult.opponentCard} isRevealed />
-                  </CardRevealWrapper>
-                  <RevealLabel>Opponent's Card</RevealLabel>
-                </OpponentRevealedCard>
-              </>
-            ) : (
+                  </CardRevealWrapper></RevealCol>
+              </Row>
+              <Row gutter={[16, 0]} justify='center' align="middle">
+                <RevealCol><RevealLabel>Your Card</RevealLabel></RevealCol>
+                <RevealCol> </RevealCol>
+                <RevealCol><RevealLabel>Opponent's Card</RevealLabel></RevealCol>
+              </Row>
+            </Flex>
+                ) : (
               <CardHand
                 cards={Array.from({ length: opponentPlayer.handSize }).map((_, i) => ({
                   id: `opponent-${i}`,
@@ -264,7 +272,6 @@ const GameBoard: React.FC<GameBoardProps> = ({
                   image: ''
                 }))}
                 selectedCard={null}
-                disabled={true}
                 isOpponent={true}
               />
             )}
@@ -285,19 +292,9 @@ const GameBoard: React.FC<GameBoardProps> = ({
             ))}
           </AnimatePresence>
 
-          <TimerContainer $isLowTime={isLowTime}>
+          <TimerContainer $isSelected={!!selectedCard} $isLowTime={isLowTime}>
             <TimerIcon>{isLowTime ? '⚠️' : '⏱️'}</TimerIcon>
             <TimerText>{timeRemaining}s</TimerText>
-            {isLowTime && !selectedCard && (
-              <TimerWarning>
-                Select a card quickly!
-              </TimerWarning>
-            )}
-            {isLowTime && selectedCard && (
-              <TimerWarning style={{ color: '#4ECDC4' }}>
-                Waiting for opponent...
-              </TimerWarning>
-            )}
           </TimerContainer>
         </MiddleArea>
 
@@ -312,16 +309,11 @@ const GameBoard: React.FC<GameBoardProps> = ({
             />
           </MyCards>
 
-          {selectedCard && (
-            <SelectionConfirmation>
-              <ConfirmIcon>✓</ConfirmIcon>
-              Card Selected! Waiting for opponent...
-            </SelectionConfirmation>
+          {!isSinglePlayer && (
+            <EmojiButton onClick={() => setShowEmojiPanel(!showEmojiPanel)}>
+              😊
+            </EmojiButton>
           )}
-
-          <EmojiButton onClick={() => setShowEmojiPanel(!showEmojiPanel)}>
-            😊
-          </EmojiButton>
 
 
           {showEmojiPanel && (
@@ -360,6 +352,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
             setGameResult(null);
             onReturnToLobby();
           }}
+          isPaidGame={isPaidGame}
         />
       )}
     </Container>
@@ -429,13 +422,6 @@ const OpponentCards = styled.div`
   align-items: center;
 `;
 
-const OpponentRevealedCard = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-`;
-
 const CardRevealWrapper = styled.div`
   transform: scale(0.8);
 `;
@@ -493,6 +479,8 @@ const EmojiFloat = styled.div`
 
 const MiddleArea = styled.div`
   display: flex;
+  width: 50%;
+  margin: 0 auto;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
@@ -544,14 +532,14 @@ const ScoreDivider = styled.div`
   margin-top: 10px;
 `;
 
-const TimerContainer = styled.div<{ $isLowTime: boolean }>`
+const TimerContainer = styled.div<{ $isSelected: boolean; $isLowTime: boolean }>`
   max-width: 100px;
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 12px 24px;
-  background: ${(props) => (props.$isLowTime ? 'rgba(231, 76, 60, 0.3)' : 'rgba(255, 255, 255, 0.1)')};
-  border: 2px solid ${(props) => (props.$isLowTime ? '#E74C3C' : 'rgba(255, 255, 255, 0.2)')};
+  background: ${(props) => (props.$isSelected ? 'rgba(46, 204, 113, 0.3)' : props.$isLowTime ? 'rgba(231, 76, 60, 0.3)' : 'rgba(255, 255, 255, 0.1)')};
+  border: 2px solid ${(props) => (props.$isSelected ? '#2ECC71' : props.$isLowTime ? '#E74C3C' : 'rgba(255, 255, 255, 0.2)')};
   border-radius: 12px;
   animation: ${(props) => (props.$isLowTime ? 'urgentPulse 0.5s infinite' : 'none')};
   position: relative;
@@ -594,44 +582,14 @@ const TimerText = styled.div`
   }
 `;
 
-const TimerWarning = styled.div`
-  position: absolute;
-  bottom: -30px;
-  font-size: 12px;
-  color: #FFC107;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  animation: pulse 0.8s infinite;
-  white-space: nowrap;
-
-  @keyframes pulse {
-    0%, 100% {
-      opacity: 1;
-      transform: scale(1);
-    }
-    50% {
-      opacity: 0.7;
-      transform: scale(1.05);
-    }
-  }
-
-  @media (max-height: 900px) {
-    font-size: 11px;
-    bottom: -25px;
-  }
-`;
-
 const PlayerSide = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  position: relative;
   padding: 10px;
   background: linear-gradient(180deg, transparent 0%, rgba(46, 204, 113, 0.1) 100%);
   border-radius: 16px;
-  overflow: hidden;
 
   @media (max-height: 900px) {
     gap: 8px;
@@ -645,38 +603,11 @@ const MyCards = styled.div`
   justify-content: center;
   max-height: 220px;
   overflow: visible;
+  margin-left: -110px;
 
   @media (max-height: 900px) {
     max-height: 180px;
   }
-`;
-
-const SelectionConfirmation = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 24px;
-  background: rgba(46, 204, 113, 0.3);
-  border: 2px solid #2ECC71;
-  border-radius: 12px;
-  color: white;
-  font-size: 16px;
-  font-weight: 600;
-  animation: pulse 1.5s infinite;
-
-  @keyframes pulse {
-    0%,
-    100% {
-      box-shadow: 0 0 20px rgba(46, 204, 113, 0.4);
-    }
-    50% {
-      box-shadow: 0 0 40px rgba(46, 204, 113, 0.8);
-    }
-  }
-`;
-
-const ConfirmIcon = styled.span`
-  font-size: 20px;
 `;
 
 const EmojiButton = styled.button`
@@ -797,4 +728,15 @@ const ResultText = styled.div<{ $result: 'WIN' | 'LOSE' | 'DRAW' }>`
   @media (max-width: 768px) {
     font-size: 80px;
   }
+`;
+
+const ScoreCol = styled(Col)`
+  width: 75px;
+  justify-items: center;
+`;
+
+const RevealCol = styled(Col)`
+  width: 100px;
+  justify-items: center;
+  justify-content: center;
 `;

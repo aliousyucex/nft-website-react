@@ -4,6 +4,7 @@ import { createFullDeck, dealCards, Deck } from '../types/card';
 import logger from '../utils/logger';
 import jwt from 'jsonwebtoken';
 import config from '../config';
+import aiService from './ai';
 
 export class RoomManager {
   private rooms: Map<string, Room> = new Map();
@@ -42,6 +43,10 @@ export class RoomManager {
   createRoom(data: CreateRoomData, socketId: string): Room {
     const roomId = this.generateRoomId();
     
+    // Determine game mode
+    const gameMode = data.gameMode || (data.betAmount === 0 ? 'free' : 'paid');
+    const isSinglePlayer = data.isSinglePlayer || false;
+    
     const player: Player = {
       socketId,
       address: data.address.toLowerCase(),
@@ -76,6 +81,8 @@ export class RoomManager {
       leaderboardPoints: null,
       finishedAt: null,
       isPublic: !data.password,
+      gameMode,
+      isSinglePlayer,
     };
 
     // Generate session token
@@ -86,7 +93,13 @@ export class RoomManager {
     this.socketToRoom.set(socketId, roomId);
     this.addressToRoom.set(data.address.toLowerCase(), roomId);
 
-    logger.info('Room created', { roomId, address: data.address, betAmount: data.betAmount });
+    logger.info('Room created', { 
+      roomId, 
+      address: data.address, 
+      betAmount: data.betAmount,
+      gameMode,
+      isSinglePlayer,
+    });
 
     return room;
   }
@@ -143,14 +156,25 @@ export class RoomManager {
   /**
    * Quick join - find or create room
    */
-  quickJoin(betAmount: number, address: string, socketId: string): Room {
-    // Find available room with same bet amount
+  quickJoin(betAmount: number, address: string, socketId: string, isSinglePlayer?: boolean): Room {
+    // For single player, always create new room
+    if (isSinglePlayer) {
+      return this.createRoom({
+        betAmount,
+        address,
+        isSinglePlayer: true,
+        gameMode: 'single_player',
+      }, socketId);
+    }
+
+    // Find available room with same bet amount (not single player rooms)
     const availableRoom = Array.from(this.rooms.values()).find(
       (room) =>
         room.betAmount === betAmount &&
         room.players.length === 1 &&
         room.isPublic &&
-        room.gameState === 'waiting'
+        room.gameState === 'waiting' &&
+        !room.isSinglePlayer
     );
 
     if (availableRoom) {
@@ -164,6 +188,7 @@ export class RoomManager {
     return this.createRoom({
       betAmount,
       address,
+      gameMode: betAmount === 0 ? 'free' : 'paid',
     }, socketId);
   }
 
@@ -211,7 +236,7 @@ export class RoomManager {
    */
   getAvailableRooms(): Room[] {
     return Array.from(this.rooms.values()).filter(
-      (room) => room.players.length === 1 && room.gameState === 'waiting'
+      (room) => room.players.length === 1 && room.gameState === 'waiting' && !room.isSinglePlayer
     );
   }
 
@@ -270,6 +295,43 @@ export class RoomManager {
   }
 
   /**
+   * Add AI player to single player room
+   */
+  addAIPlayer(roomId: string, aiSocketId: string): Room | null {
+    const room = this.rooms.get(roomId);
+    
+    if (!room || !room.isSinglePlayer) {
+      return null;
+    }
+
+    const aiName = aiService.getRandomAIName();
+    const aiAddress = aiService.generateAIAddress(aiName);
+
+    const aiPlayer: Player = {
+      socketId: aiSocketId,
+      address: aiAddress,
+      ready: true, // AI is always ready
+      roundsWon: 0,
+      hand: [],
+      selectedCard: null,
+      isConnected: true,
+      lastPing: new Date(),
+      disconnectedAt: null,
+      afkCount: 0,
+    };
+
+    room.players.push(aiPlayer);
+
+    logger.info('AI player added to room', { 
+      roomId, 
+      aiName,
+      aiAddress,
+    });
+
+    return room;
+  }
+
+  /**
    * Start game
    */
   startGame(roomId: string): Room | null {
@@ -302,7 +364,7 @@ export class RoomManager {
     room.gameState = 'playing';
     room.currentRound = 0; // Will be incremented to 1 in processRound
 
-    logger.info('Game started', { roomId });
+    logger.info('Game started', { roomId, isSinglePlayer: room.isSinglePlayer });
 
     return room;
   }

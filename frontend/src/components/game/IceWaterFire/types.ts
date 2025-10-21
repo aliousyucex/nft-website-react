@@ -24,6 +24,9 @@ export interface Room {
   players: Player[];
   gameState: 'waiting' | 'ready' | 'playing' | 'finished';
   createdAt: string;
+  gameMode?: 'free' | 'paid' | 'single_player';
+  isSinglePlayer?: boolean;
+  displayLabel?: string;
 }
 
 export interface GameState {
@@ -44,12 +47,15 @@ export interface GameState {
     player2: number;
   };
   prizeAmount?: number;
+  isPaidGame?: boolean;
   // Added for round result display
   lastRoundResult?: RoundResult;
   roundHistory?: RoundHistoryItem[];
   // Added for backend timer sync
   roundStartTime?: number; // Server timestamp when round started
   timeLimit?: number; // Time limit in seconds
+  isSinglePlayer?: boolean;
+  gameMode?: 'free' | 'paid' | 'single_player';
 }
 
 export interface RoundResult {

@@ -75,6 +75,7 @@ interface GameResultProps {
   betAmount: number;
   onClose: () => void;
   onReturnToLobby: () => void;
+  isPaidGame?: boolean;
 }
 
 export const GameResultModal: React.FC<GameResultProps> = ({
@@ -85,7 +86,10 @@ export const GameResultModal: React.FC<GameResultProps> = ({
   betAmount,
   onClose,
   onReturnToLobby,
+  isPaidGame = true,
 }) => {
+  const isFreeGame = betAmount === 0 || !isPaidGame;
+
   return (
     <Modal
       open={visible}
@@ -100,16 +104,28 @@ export const GameResultModal: React.FC<GameResultProps> = ({
           {result === 'win' ? 'Victory!' : result === 'draw' ? 'Draw!' : 'Defeat'}
         </GameResultTitle>
 
+        {isFreeGame && (
+          <PracticeGameBadge>
+            ⚡ Practice Game
+          </PracticeGameBadge>
+        )}
+
         <GameResultSubtitle>
-          {result === 'win' 
-            ? 'Congratulations! You won the game!' 
-            : result === 'draw'
-            ? 'The game ended in a draw!'
-            : 'Better luck next time!'}
+          {isFreeGame 
+            ? result === 'win'
+              ? 'Great job! Keep practicing!'
+              : result === 'draw'
+              ? 'Nice effort! Try again!'
+              : 'Keep practicing, you\'ll improve!'
+            : result === 'win' 
+              ? 'Congratulations! You won the game!' 
+              : result === 'draw'
+              ? 'The game ended in a draw!'
+              : 'Better luck next time!'}
         </GameResultSubtitle>
 
-        {result === 'win' && prizeAmount !== undefined && <PrizeAmount>{prizeAmount} ETH</PrizeAmount>}
-        {result !== 'win' && prizeAmount !== undefined && <LoseAmount>{betAmount} ETH</LoseAmount>}
+        {!isFreeGame && result === 'win' && prizeAmount !== undefined && <PrizeAmount>+{prizeAmount} ETH</PrizeAmount>}
+        {!isFreeGame && result !== 'win' && betAmount > 0 && <LoseAmount>-{betAmount} ETH</LoseAmount>}
 
         <FinalScoreDisplay>
           <FinalScoreLabel>Final Score</FinalScoreLabel>
@@ -117,6 +133,12 @@ export const GameResultModal: React.FC<GameResultProps> = ({
             {finalScore.my} - {finalScore.opponent}
           </FinalScoreValue>
         </FinalScoreDisplay>
+
+        {isFreeGame && (
+          <ConnectWalletHint>
+            💡 Connect wallet to play for ETH and rank on leaderboard
+          </ConnectWalletHint>
+        )}
 
         <ButtonGroup>
           <ActionButton type="default" size="large" onClick={onReturnToLobby}>
@@ -204,25 +226,6 @@ const GameResultContainer = styled.div`
   gap: 16px;
 `;
 
-const GameResultIcon = styled.div`
-  font-size: 64px;
-  animation: bounceIn 0.6s ease-out;
-
-  @keyframes bounceIn {
-    0% {
-      opacity: 0;
-      transform: scale(0.3);
-    }
-    50% {
-      transform: scale(1.1);
-    }
-    100% {
-      opacity: 1;
-      transform: scale(1);
-    }
-  }
-`;
-
 const GameResultTitle = styled.h1<{ result: 'win' | 'lose' | 'draw' }>`
   font-size: 32px;
   margin: 0;
@@ -288,5 +291,27 @@ const ActionButton = styled(Button)`
   height: 40px;
   font-size: 14px;
   font-weight: 600;
+`;
+
+const PracticeGameBadge = styled.div`
+  display: inline-block;
+  padding: 6px 16px;
+  background: linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%);
+  color: white;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(78, 205, 196, 0.3);
+`;
+
+const ConnectWalletHint = styled.div`
+  padding: 12px 20px;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 165, 0, 0.1) 100%);
+  border: 2px solid rgba(255, 215, 0, 0.3);
+  border-radius: 12px;
+  color: rgba(0, 0, 0, 0.75);
+  font-size: 14px;
+  text-align: center;
+  line-height: 1.4;
 `;
 

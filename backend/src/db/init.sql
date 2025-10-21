@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS leaderboard (
   losses INT DEFAULT 0 NOT NULL,
   draws INT DEFAULT 0 NOT NULL,
   total_games INT DEFAULT 0 NOT NULL,
+  paid_games INT DEFAULT 0 NOT NULL,
   last_game_at TIMESTAMP,
   created_at TIMESTAMP DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMP DEFAULT NOW() NOT NULL
@@ -35,7 +36,8 @@ CREATE TABLE IF NOT EXISTS game_history (
   total_rounds INT NOT NULL,
   bet_amount DECIMAL(18, 8) NOT NULL,
   commission DECIMAL(18, 8) NOT NULL,
-  prize_amount DECIMAL(18, 8) NOT NULL,
+  prize_amount DECIMAL(18, 8) NOT NULL, 
+  is_paid_game BOOLEAN DEFAULT true NOT NULL,
   game_duration_seconds INT,
   end_reason VARCHAR(50), -- 'normal', 'disconnect_forfeit', 'afk_forfeit', 'overtime_rule'
   created_at TIMESTAMP DEFAULT NOW() NOT NULL,
@@ -47,6 +49,7 @@ CREATE INDEX IF NOT EXISTS idx_game_history_player1 ON game_history(player1_addr
 CREATE INDEX IF NOT EXISTS idx_game_history_player2 ON game_history(player2_address);
 CREATE INDEX IF NOT EXISTS idx_game_history_winner ON game_history(winner_address);
 CREATE INDEX IF NOT EXISTS idx_game_history_created_at ON game_history(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_game_history_paid_game ON game_history(is_paid_game);
 
 -- Round History Table (optional - for detailed analytics)
 CREATE TABLE IF NOT EXISTS round_history (

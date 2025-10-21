@@ -40,6 +40,13 @@ const router = createBrowserRouter([
         ),
       },
       {
+        path: "game/:roomId",
+        element: (
+          
+            <IceWaterFireGame />
+        ),
+      },
+      {
         path: 'story',
         element: (
           <S.StoryContainer justify="center" align="center">

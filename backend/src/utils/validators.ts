@@ -14,8 +14,12 @@ export const validateBetAmount = (amount: number): void => {
   if (typeof amount !== 'number' || isNaN(amount)) {
     throw new ValidationError('Bet amount must be a number');
   }
-  if (amount < 0.001) {
-    throw new ValidationError('Minimum bet amount is 0.001 ETH');
+  if (amount < 0) {
+    throw new ValidationError('Bet amount cannot be negative');
+  }
+  // Allow 0 for free/practice games
+  if (amount > 0 && amount < 0.001) {
+    throw new ValidationError('Minimum bet amount is 0.001 ETH (or 0 for free games)');
   }
   if (amount > 1000) {
     throw new ValidationError('Maximum bet amount is 1000 ETH');

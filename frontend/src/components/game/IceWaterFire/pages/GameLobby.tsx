@@ -13,9 +13,9 @@ interface GameLobbyProps {
   availableRooms: any[];
   loading: boolean;
   balance: string;
-  createRoom: (betAmount: number, password?: string) => void;
+  createRoom: (betAmount: number, password?: string, gameMode?: 'free' | 'paid' | 'single_player', isSinglePlayer?: boolean) => void;
   joinRoom: (roomId: string, password?: string) => void;
-  quickJoin: (betAmount: number) => void;
+  quickJoin: (betAmount: number, isSinglePlayer?: boolean) => void;
   soundsEnabled: boolean;
   volume: number;
   onToggleSounds: () => void;
@@ -49,6 +49,8 @@ const GameLobby: React.FC<GameLobbyProps> = ({
   const [roomPasswordToJoin, setRoomPasswordToJoin] = useState('');
   const [selectedRoomId, setSelectedRoomId] = useState('');
   const [quickBetAmount, setQuickBetAmount] = useState(0.001);
+  const [gameMode, setGameMode] = useState<'multiplayer' | 'single_player'>('multiplayer');
+  const [quickGameMode, setQuickGameMode] = useState<'multiplayer' | 'single_player'>('multiplayer');
 
   // Check if tutorial should be shown on first visit
   useEffect(() => {
@@ -59,13 +61,22 @@ const GameLobby: React.FC<GameLobbyProps> = ({
   }, []);
 
   const handleCreateRoom = () => {
-    if (betAmount < 0.001) {
-      message.error('Minimum bet amount is 0.001 ETH');
+    // Allow 0 for free/single player games
+    if (betAmount > 0 && betAmount < 0.001) {
+      message.error('Minimum bet amount is 0.001 ETH (or 0 for free games)');
       return;
     }
 
-    createRoom(betAmount, password || undefined);
+    const isSinglePlayer = gameMode === 'single_player';
+    const mode = isSinglePlayer ? 'single_player' : (betAmount === 0 ? 'free' : 'paid');
+    
+    createRoom(betAmount, password || undefined, mode, isSinglePlayer);
     setCreateModalVisible(false);
+    
+    // Reset to defaults
+    setGameMode('multiplayer');
+    setBetAmount(0.001);
+    setPassword('');
   };
 
   const handleJoinRoom = (roomId: string, hasPassword: boolean) => {
@@ -100,12 +111,19 @@ const GameLobby: React.FC<GameLobbyProps> = ({
   };
 
   const handleQuickJoin = () => {
-    if (quickBetAmount < 0.001) {
-      message.error('Minimum bet amount is 0.001 ETH');
+    // Allow 0 for free/single player games
+    if (quickBetAmount > 0 && quickBetAmount < 0.001) {
+      message.error('Minimum bet amount is 0.001 ETH (or 0 for free games)');
       return;
     }
-    quickJoin(quickBetAmount);
+    
+    const isSinglePlayer = quickGameMode === 'single_player';
+    quickJoin(quickBetAmount, isSinglePlayer);
     setQuickJoinModalVisible(false);
+    
+    // Reset to defaults
+    setQuickGameMode('multiplayer');
+    setQuickBetAmount(0.001);
   };
 
   const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS || '';
@@ -212,22 +230,65 @@ const GameLobby: React.FC<GameLobbyProps> = ({
       >
         <ModalContent>
           <FormGroup>
-            <Label>Bet Amount (ETH)</Label>
+            <Label>Bet Amount</Label>
+            <PresetButtons>
+              <PresetButton 
+                active={betAmount === 0 ? `true` : undefined} 
+                onClick={() => setBetAmount(0)}
+                $practice
+              >
+                ⚡ Practice Game (Free)
+              </PresetButton>
+            </PresetButtons>
             <InputNumber
-              min={0.001}
+              min={0}
               max={10}
               step={0.001}
               value={betAmount}
-              onChange={(val) => setBetAmount(val || 0.01)}
-              addonAfter="ETH"
-              style={{ width: '100%' }}
+              onChange={(val) => setBetAmount(val || 0)}
+              addonAfter={betAmount === 0 ? "FREE" : "ETH"}
+              style={{ width: '100%', marginTop: '12px' }}
             />
-            <PresetButtons>
+            <PresetButtons style={{ marginTop: '8px' }}>
               <PresetButton active={betAmount === 0.001 ? `true` : undefined} onClick={() => setBetAmount(0.001)}>0.001</PresetButton>
               <PresetButton active={betAmount === 0.01 ? `true` : undefined} onClick={() => setBetAmount(0.01)}>0.01</PresetButton>
               <PresetButton active={betAmount === 0.1 ? `true` : undefined} onClick={() => setBetAmount(0.1)}>0.1</PresetButton>
               <PresetButton active={betAmount === 1 ? `true` : undefined} onClick={() => setBetAmount(1)}>1</PresetButton>
             </PresetButtons>
+          </FormGroup>
+
+          <FormGroup>
+            <Label>Game Mode</Label>
+            <GameModeButtons>
+              <GameModeButton
+                active={gameMode === 'multiplayer' ? 'true' : undefined}
+                onClick={() => setGameMode('multiplayer')}
+              >
+                <GameModeIcon>👥</GameModeIcon>
+                <GameModeText>
+                  <GameModeTitle>Multiplayer</GameModeTitle>
+                  <GameModeSubtitle>Play with real players</GameModeSubtitle>
+                </GameModeText>
+              </GameModeButton>
+              <GameModeButton
+                active={gameMode === 'single_player' ? 'true' : undefined}
+                onClick={() => {
+                  setGameMode('single_player');
+                  setBetAmount(0); // Force free for single player
+                }}
+              >
+                <GameModeIcon>🤖</GameModeIcon>
+                <GameModeText>
+                  <GameModeTitle>Single Player</GameModeTitle>
+                  <GameModeSubtitle>Practice with AI</GameModeSubtitle>
+                </GameModeText>
+              </GameModeButton>
+            </GameModeButtons>
+            {gameMode === 'single_player' && (
+              <GameModeHint>
+                💡 Single player mode is always free
+              </GameModeHint>
+            )}
           </FormGroup>
 
           <FormGroup>
@@ -238,8 +299,13 @@ const GameLobby: React.FC<GameLobbyProps> = ({
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               maxLength={8}
+              disabled={gameMode === 'single_player'}
             />
-            <Hint>Max 8 characters</Hint>
+            {gameMode === 'single_player' ? (
+              <Hint>🔒 Single player rooms don't need passwords</Hint>
+            ) : (
+              <Hint>Max 8 characters</Hint>
+            )}
           </FormGroup>
         </ModalContent>
       </Modal>
@@ -313,26 +379,69 @@ const GameLobby: React.FC<GameLobbyProps> = ({
       >
         <ModalContent>
           <FormGroup>
-            <Label>Bet Amount (ETH)</Label>
+            <Label>Bet Amount</Label>
+            <PresetButtons>
+              <PresetButton 
+                active={quickBetAmount === 0 ? `true` : undefined} 
+                onClick={() => setQuickBetAmount(0)}
+                $practice
+              >
+                ⚡ Practice Game (Free)
+              </PresetButton>
+            </PresetButtons>
             <InputNumber
-              min={0.001}
+              min={0}
               max={10}
               step={0.001}
               value={quickBetAmount}
               onChange={(value) => {
-                if (value) {
+                if (value !== null && value !== undefined) {
                   setQuickBetAmount(value);
                 }
               }}
-              addonAfter="ETH"
-              style={{ width: '100%' }}
+              addonAfter={quickBetAmount === 0 ? "FREE" : "ETH"}
+              style={{ width: '100%', marginTop: '12px' }}
             />
-            <PresetButtons>
+            <PresetButtons style={{ marginTop: '8px' }}>
               <PresetButton active={quickBetAmount === 0.001 ? `true` : undefined} onClick={() => setQuickBetAmount(0.001)}>0.001</PresetButton>
               <PresetButton active={quickBetAmount === 0.01 ? `true` : undefined} onClick={() => setQuickBetAmount(0.01)}>0.01</PresetButton>
               <PresetButton active={quickBetAmount === 0.1 ? `true` : undefined} onClick={() => setQuickBetAmount(0.1)}>0.1</PresetButton>
               <PresetButton active={quickBetAmount === 1 ? `true` : undefined} onClick={() => setQuickBetAmount(1)}>1</PresetButton>
             </PresetButtons>
+          </FormGroup>
+
+          <FormGroup>
+            <Label>Game Mode</Label>
+            <GameModeButtons>
+              <GameModeButton
+                active={quickGameMode === 'multiplayer' ? 'true' : undefined}
+                onClick={() => setQuickGameMode('multiplayer')}
+              >
+                <GameModeIcon>👥</GameModeIcon>
+                <GameModeText>
+                  <GameModeTitle>Multiplayer</GameModeTitle>
+                  <GameModeSubtitle>Join or create free room</GameModeSubtitle>
+                </GameModeText>
+              </GameModeButton>
+              <GameModeButton
+                active={quickGameMode === 'single_player' ? 'true' : undefined}
+                onClick={() => {
+                  setQuickGameMode('single_player');
+                  setQuickBetAmount(0); // Force free for single player
+                }}
+              >
+                <GameModeIcon>🤖</GameModeIcon>
+                <GameModeText>
+                  <GameModeTitle>Single Player</GameModeTitle>
+                  <GameModeSubtitle>Play with AI instantly</GameModeSubtitle>
+                </GameModeText>
+              </GameModeButton>
+            </GameModeButtons>
+            {quickGameMode === 'single_player' && (
+              <GameModeHint>
+                💡 Single player mode is always free
+              </GameModeHint>
+            )}
           </FormGroup>
         </ModalContent>
       </Modal>
@@ -379,7 +488,6 @@ export default GameLobby;
 
 const Container = styled.div`
   min-height: 100vh;
-  max-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 20px;
   position: relative;
@@ -440,14 +548,15 @@ const WalletActions = styled.div`
 
   @media (max-width: 768px) {
     width: 100%;
-    flex-direction: column;
+    flex-direction: row;
   }
 `;
 
 const BalanceDisplay = styled.div`
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  flex-direction: row;
+  gap: 12px;
+  align-items: center;
   padding: 8px 16px;
   background: rgba(255, 255, 255, 0.1);
   border-radius: 10px;
@@ -544,25 +653,20 @@ const Content = styled.div`
   max-width: 1400px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 350px 1fr;
-  gap: 24px;
-  max-height: calc(100vh - 140px);
-
-  @media (max-width: 1024px) {
-    grid-template-columns: 1fr;
-    gap: 16px;
-    max-height: none;
-  }
+  grid-template-columns: 1fr;
+  gap: 16px;
 `;
 
 const ActionsPanel = styled.div`
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 14px;
 
-  @media (max-width: 1024px) {
-    flex-direction: row;
-    justify-content: space-between;
+  @media (max-width: 768px) {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 12px;
   }
 `;
 
@@ -575,6 +679,11 @@ const ActionCard = styled.div`
   cursor: pointer;
   transition: all 0.3s ease;
   text-align: center;
+  
+
+  @media (min-width: 768px) {
+    width: 100%;;
+  }
 
   &:hover {
     transform: translateY(-4px);
@@ -666,20 +775,102 @@ const PresetButtons = styled.div`
   gap: 8px;
 `;
 
-const PresetButton = styled.button<{ active?: string | undefined }>`
-  padding: 8px;
-  border: 2px solid ${(props) => (props.active ? '#667eea' : '#e0e0e0')};
-  background: ${(props) => (props.active ? '#667eea' : 'white')};
-  color: ${(props) => (props.active ? 'white' : '#666')};
+const PresetButton = styled.button<{ active?: string | undefined; $practice?: boolean }>`
+  padding: ${(props) => (props.$practice ? '12px 16px' : '8px')};
+  border: 2px solid ${(props) => {
+    if (props.$practice) return props.active ? '#4ECDC4' : '#4ECDC4';
+    return props.active ? '#667eea' : '#e0e0e0';
+  }};
+  background: ${(props) => {
+    if (props.$practice) {
+      return props.active 
+        ? 'linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%)'
+        : 'linear-gradient(135deg, rgba(78, 205, 196, 0.1) 0%, rgba(68, 160, 141, 0.1) 100%)';
+    }
+    return props.active ? '#667eea' : 'white';
+  }};
+  color: ${(props) => {
+    if (props.$practice) return props.active ? 'white' : '#4ECDC4';
+    return props.active ? 'white' : '#666';
+  }};
   border-radius: 8px;
   cursor: pointer;
-  font-size: 16px;
-  font-weight: 500;
+  font-size: ${(props) => (props.$practice ? '16px' : '16px')};
+  font-weight: ${(props) => (props.$practice ? '600' : '500')};
+  transition: all 0.2s;
+  ${(props) => props.$practice && 'grid-column: 1 / -1;'}
+
+  &:hover {
+    border-color: ${(props) => (props.$practice ? '#4ECDC4' : '#667eea')};
+    background: ${(props) => {
+      if (props.$practice) {
+        return 'linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%)';
+      }
+      return props.active ? '#5568d3' : '#f0f0f0';
+    }};
+    color: ${(props) => (props.$practice ? 'white' : props.active ? 'white' : '#666')};
+    transform: translateY(-2px);
+    box-shadow: ${(props) => props.$practice ? '0 4px 12px rgba(78, 205, 196, 0.3)' : 'none'};
+  }
+`;
+
+const GameModeButtons = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+`;
+
+const GameModeButton = styled.button<{ active?: string }>`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 2px solid ${(props) => (props.active ? '#667eea' : '#e0e0e0')};
+  background: ${(props) => (props.active ? 'rgba(102, 126, 234, 0.1)' : 'white')};
+  border-radius: 12px;
+  cursor: pointer;
   transition: all 0.2s;
 
   &:hover {
     border-color: #667eea;
-    background: ${(props) => (props.active ? '#5568d3' : '#f0f0f0')};
+    background: rgba(102, 126, 234, 0.05);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
   }
+`;
+
+const GameModeIcon = styled.div`
+  font-size: 28px;
+  flex-shrink: 0;
+`;
+
+const GameModeText = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex: 1;
+`;
+
+const GameModeTitle = styled.div`
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.85);
+`;
+
+const GameModeSubtitle = styled.div`
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.55);
+  margin-top: 2px;
+`;
+
+const GameModeHint = styled.div`
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: rgba(78, 205, 196, 0.1);
+  border: 1px solid rgba(78, 205, 196, 0.3);
+  border-radius: 8px;
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.65);
 `;
 

@@ -9,6 +9,7 @@ export interface LeaderboardTable {
   losses: number;
   draws: number;
   total_games: number;
+  paid_games: number;
   last_game_at: ColumnType<Date, Date | string, Date | string> | null;
   created_at: ColumnType<Date, Date | string | undefined, Date | string>;
   updated_at: ColumnType<Date, Date | string | undefined, Date | string>;
@@ -27,6 +28,7 @@ export interface GameHistoryTable {
   bet_amount: string; // DECIMAL stored as string
   commission: string;
   prize_amount: string;
+  is_paid_game: boolean;
   game_duration_seconds: number | null;
   end_reason: string | null;
   created_at: ColumnType<Date, Date | string | undefined, Date | string>;

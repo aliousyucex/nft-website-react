@@ -35,7 +35,12 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children, addres
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!address) return;
+    if (!address) {
+      console.log('⏳ Waiting for address to initialize socket connection...');
+      return;
+    }
+
+    console.log('🔌 Initializing socket connection for address:', address);
 
     // Create socket connection
     const newSocket = io(SOCKET_URL, {
@@ -47,7 +52,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children, addres
 
     // Connection handlers
     newSocket.on('connect', () => {
-      console.log('Socket connected:', newSocket.id);
+      console.log('✅ Socket connected:', newSocket.id, 'for address:', address);
       setIsConnected(true);
       setError(null);
 
@@ -96,9 +101,6 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children, addres
         newSocket.emit('ping');
       }
     }, 25000);
-
-    newSocket.on('pong', ({ timestamp }: { timestamp: number }) => {
-    });
 
     setSocket(newSocket);
 

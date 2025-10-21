@@ -104,6 +104,7 @@ export class LeaderboardService {
           losses: 0,
           draws: 0,
           total_games: 1,
+          paid_games: 1,
           last_game_at: new Date(),
         })
         .onConflict((oc) =>
@@ -111,6 +112,7 @@ export class LeaderboardService {
             total_points: eb('leaderboard.total_points', '+', points),
             wins: eb('leaderboard.wins', '+', 1),
             total_games: eb('leaderboard.total_games', '+', 1),
+            paid_games: eb('leaderboard.paid_games', '+', 1),
             last_game_at: new Date(),
           }))
         )
@@ -126,12 +128,14 @@ export class LeaderboardService {
           losses: 1,
           draws: 0,
           total_games: 1,
+          paid_games: 1,
           last_game_at: new Date(),
         })
         .onConflict((oc) =>
           oc.column('address').doUpdateSet((eb) => ({
             losses: eb('leaderboard.losses', '+', 1),
             total_games: eb('leaderboard.total_games', '+', 1),
+            paid_games: eb('leaderboard.paid_games', '+', 1),
             last_game_at: new Date(),
           }))
         )

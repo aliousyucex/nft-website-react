@@ -202,6 +202,77 @@ export class ContractService {
   }
 
   /**
+   * Process AFK forfeit payout with conditional logic
+   * @param opponentAddress Active player's address
+   * @param afkAddress AFK player's address
+   * @param betAmount Bet amount per player
+   * @param opponentIsAhead Whether opponent has higher score
+   */
+  async processAfkForfeitPayout(
+    opponentAddress: string,
+    afkAddress: string,
+    betAmount: number,
+    opponentIsAhead: boolean
+  ): Promise<void> {
+    try {
+      if (opponentIsAhead) {
+        // Opponent was ahead: gets 60% of pot, 40% stays in contract
+        const totalPot = betAmount * 2;
+        const prize = totalPot * 0.6;
+
+        await this.updateBalance(opponentAddress, prize);
+
+        logger.info('AFK forfeit payout - opponent ahead, 60% payout', {
+          opponent: opponentAddress,
+          afkPlayer: afkAddress,
+          prize,
+          betAmount,
+        });
+      } else {
+        // Opponent not ahead: Just refund the not afk player
+        await this.updateBalances([
+          { address: opponentAddress, amount: betAmount },
+          { address: afkAddress, amount: -betAmount },
+        ]);
+
+        logger.info('AFK forfeit - opponent not ahead, bets refunded', {
+          opponent: opponentAddress,
+          afkPlayer: afkAddress,
+          refundAmount: betAmount,
+        });
+      }
+    } catch (error) {
+      logger.error('Error processing AFK forfeit payout:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Refund both players their bets
+   */
+  async refundBothPlayers(
+    player1Address: string,
+    player2Address: string,
+    betAmount: number
+  ): Promise<void> {
+    try {
+      await this.updateBalances([
+        { address: player1Address, amount: betAmount },
+        { address: player2Address, amount: betAmount },
+      ]);
+
+      logger.info('Both players refunded', {
+        player1: player1Address,
+        player2: player2Address,
+        refundAmount: betAmount,
+      });
+    } catch (error) {
+      logger.error('Error refunding both players:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Verify contract is accessible
    */
   async verifyContract(): Promise<boolean> {

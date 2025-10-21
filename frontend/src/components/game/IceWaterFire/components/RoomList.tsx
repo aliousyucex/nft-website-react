@@ -58,7 +58,9 @@ const RoomList: React.FC<RoomListProps> = ({ rooms, onJoinRoom, loading = false 
             <RoomInfo>
               <InfoRow>
                 <Label>Bet Amount:</Label>
-                <Value>{room.betAmount} ETH</Value>
+                <Value>
+                  {room.displayLabel || (room.betAmount === 0 ? 'Practice Game' : `${room.betAmount} ETH`)}
+                </Value>
               </InfoRow>
               <InfoRow>
                 <Label>Players:</Label>
@@ -217,7 +219,7 @@ const Label = styled.span`
 const Value = styled.span`
   font-size: 16px;
   font-weight: 600;
-  color: white;
+  color: 'white';
 `;
 
 const TimeValue = styled(Value)`

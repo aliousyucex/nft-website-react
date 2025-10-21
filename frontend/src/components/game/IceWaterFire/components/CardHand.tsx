@@ -113,7 +113,7 @@ const CardsWrapper = styled.div<{ $cardCount: number }>`
   height: 180px;
 
   @media (max-height: 900px) {
-    width: ${(props) => Math.min(props.$cardCount * 105, 525)}px;
+    width: ${(props) => Math.min(props.$cardCount * 120, 525)}px;
     height: 150px;
   }
 `;
@@ -125,7 +125,7 @@ const CardSlot = styled.div<{
   $totalCards: number;
 }>`
   position: absolute;
-  left: ${(props) => (props.$index / (props.$totalCards - 1 || 1)) * 100}%;
+  left: ${(props) => (props.$index / (props.$totalCards - 1 || 1)) * 110}%;
   transform: translateX(-50%) rotate(${(props) => props.$rotation}deg)
     translateY(${(props) => props.$translateY}px);
   transform-origin: center bottom;

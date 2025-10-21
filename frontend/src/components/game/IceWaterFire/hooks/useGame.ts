@@ -33,7 +33,7 @@ export const useGame = (userAddress: string) => {
 
   // Create room
   const createRoom = useCallback(
-    (betAmount: number, password?: string) => {
+    (betAmount: number, password?: string, gameMode?: 'free' | 'paid' | 'single_player', isSinglePlayer?: boolean) => {
       if (!socket) return;
 
       setLoading(true);
@@ -45,6 +45,8 @@ export const useGame = (userAddress: string) => {
           betAmount,
           password,
           address: userAddress,
+          gameMode,
+          isSinglePlayer,
         },
         (response: any) => {
           logger.socket('Create room response', response);
@@ -101,7 +103,7 @@ export const useGame = (userAddress: string) => {
 
   // Quick join
   const quickJoin = useCallback(
-    (betAmount: number) => {
+    (betAmount: number, isSinglePlayer?: boolean) => {
       if (!socket) return;
 
       setLoading(true);
@@ -112,6 +114,7 @@ export const useGame = (userAddress: string) => {
         {
           betAmount,
           address: userAddress,
+          isSinglePlayer,
         },
         (response: any) => {
           setLoading(false);

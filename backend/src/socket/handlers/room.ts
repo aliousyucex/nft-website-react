@@ -12,7 +12,7 @@ export const setupRoomHandlers = (io: Server, socket: Socket) => {
    */
   socket.on('create_room', async (data, callback) => {
     try {
-      const { betAmount, password, address, signature } = data;
+      const { betAmount, password, address, signature, gameMode, isSinglePlayer } = data;
 
       // Validate
       validateAddress(address);
@@ -28,14 +28,16 @@ export const setupRoomHandlers = (io: Server, socket: Socket) => {
         });
       }
 
-      // Verify user has sufficient balance
-      const userBalance = await contractService.getUserBalance(address);
-      if (parseFloat(userBalance) < betAmount) {
-        return callback({
-          success: false,
-          error: 'Insufficient balance',
-          code: SocketErrorCode.INSUFFICIENT_BALANCE,
-        });
+      // Skip balance check for free games (betAmount = 0)
+      if (betAmount > 0) {
+        const userBalance = await contractService.getUserBalance(address);
+        if (parseFloat(userBalance) < betAmount) {
+          return callback({
+            success: false,
+            error: 'Insufficient balance',
+            code: SocketErrorCode.INSUFFICIENT_BALANCE,
+          });
+        }
       }
 
       // Create room
@@ -44,6 +46,8 @@ export const setupRoomHandlers = (io: Server, socket: Socket) => {
           betAmount,
           password,
           address,
+          gameMode,
+          isSinglePlayer,
         },
         socket.id
       );
@@ -51,7 +55,12 @@ export const setupRoomHandlers = (io: Server, socket: Socket) => {
       // Join socket room
       socket.join(room.roomId);
 
-      logger.info('Room created', { roomId: room.roomId, address });
+      logger.info('Room created', { 
+        roomId: room.roomId, 
+        address,
+        gameMode: room.gameMode,
+        isSinglePlayer: room.isSinglePlayer,
+      });
 
       callback({
         success: true,
@@ -59,8 +68,10 @@ export const setupRoomHandlers = (io: Server, socket: Socket) => {
         sessionToken: room.sessionTokens[address.toLowerCase()],
       });
 
-      // Broadcast updated room list
-      io.emit('room_list', roomManager.getAvailableRooms().map(formatRoomForList));
+      // Broadcast updated room list (only non-single-player rooms)
+      if (!room.isSinglePlayer) {
+        io.emit('room_list', roomManager.getAvailableRooms().map(formatRoomForList));
+      }
     } catch (error) {
       logger.error('Error creating room', error);
       callback({
@@ -93,7 +104,7 @@ export const setupRoomHandlers = (io: Server, socket: Socket) => {
         });
       }
 
-      // Verify user has sufficient balance
+      // Get room first
       const room = roomManager.getRoom(roomId);
       if (!room) {
         return callback({
@@ -103,13 +114,16 @@ export const setupRoomHandlers = (io: Server, socket: Socket) => {
         });
       }
 
-      const userBalance = await contractService.getUserBalance(address);
-      if (parseFloat(userBalance) < room.betAmount) {
-        return callback({
-          success: false,
-          error: 'Insufficient balance',
-          code: SocketErrorCode.INSUFFICIENT_BALANCE,
-        });
+      // Skip balance check for free games (betAmount = 0)
+      if (room.betAmount > 0) {
+        const userBalance = await contractService.getUserBalance(address);
+        if (parseFloat(userBalance) < room.betAmount) {
+          return callback({
+            success: false,
+            error: 'Insufficient balance',
+            code: SocketErrorCode.INSUFFICIENT_BALANCE,
+          });
+        }
       }
 
       // Join room
@@ -156,7 +170,7 @@ export const setupRoomHandlers = (io: Server, socket: Socket) => {
    */
   socket.on('quick_join', async (data, callback) => {
     try {
-      const { betAmount, address } = data;
+      const { betAmount, address, isSinglePlayer } = data;
 
       // Validate
       validateAddress(address);
@@ -171,18 +185,20 @@ export const setupRoomHandlers = (io: Server, socket: Socket) => {
         });
       }
 
-      // Verify user has sufficient balance
-      const userBalance = await contractService.getUserBalance(address);
-      if (parseFloat(userBalance) < betAmount) {
-        return callback({
-          success: false,
-          error: 'Insufficient balance',
-          code: SocketErrorCode.INSUFFICIENT_BALANCE,
-        });
+      // Skip balance check for free games (betAmount = 0)
+      if (betAmount > 0) {
+        const userBalance = await contractService.getUserBalance(address);
+        if (parseFloat(userBalance) < betAmount) {
+          return callback({
+            success: false,
+            error: 'Insufficient balance',
+            code: SocketErrorCode.INSUFFICIENT_BALANCE,
+          });
+        }
       }
 
       // Quick join
-      const room = roomManager.quickJoin(betAmount, address, socket.id);
+      const room = roomManager.quickJoin(betAmount, address, socket.id, isSinglePlayer);
 
       // Update room activity
       roomManager.updateRoomActivity(room.roomId);
@@ -190,7 +206,11 @@ export const setupRoomHandlers = (io: Server, socket: Socket) => {
       // Join socket room
       socket.join(room.roomId);
 
-      logger.info('Quick join', { roomId: room.roomId, address });
+      logger.info('Quick join', { 
+        roomId: room.roomId, 
+        address,
+        isSinglePlayer: room.isSinglePlayer,
+      });
 
       callback({
         success: true,
@@ -199,7 +219,7 @@ export const setupRoomHandlers = (io: Server, socket: Socket) => {
       });
 
       // If room now has 2 players, notify
-      if (room.players.length === 2) {
+      if (room.players.length === 2 && !room.isSinglePlayer) {
         socket.to(room.roomId).emit('player_joined', {
           address,
           playerCount: room.players.length,
@@ -207,8 +227,10 @@ export const setupRoomHandlers = (io: Server, socket: Socket) => {
         });
       }
 
-      // Broadcast updated room list
-      io.emit('room_list', roomManager.getAvailableRooms().map(formatRoomForList));
+      // Broadcast updated room list (only non-single-player rooms)
+      if (!room.isSinglePlayer) {
+        io.emit('room_list', roomManager.getAvailableRooms().map(formatRoomForList));
+      }
     } catch (error) {
       logger.error('Error quick joining', error);
       callback({
@@ -406,6 +428,9 @@ export function formatRoomForList(room: any) {
     hasPassword: !!room.password,
     playerCount: room.players.length,
     createdAt: room.createdAt,
+    gameMode: room.gameMode || (room.betAmount === 0 ? 'free' : 'paid'),
+    isSinglePlayer: room.isSinglePlayer || false,
+    displayLabel: room.betAmount === 0 ? 'Practice Game' : `${room.betAmount} ETH`,
   };
 }
 
@@ -435,6 +460,9 @@ export function formatRoomData(room: any) {
     players: room.players.map(formatPlayer),
     gameState: room.gameState,
     createdAt: room.createdAt.toISOString(),
+    gameMode: room.gameMode || (room.betAmount === 0 ? 'free' : 'paid'),
+    isSinglePlayer: room.isSinglePlayer || false,
+    displayLabel: room.betAmount === 0 ? 'Practice Game' : `${room.betAmount} ETH`,
   };
 }
 

@@ -10,6 +10,7 @@ interface GameRoomProps {
   betAmount: number;
   players: Player[];
   currentUserAddress: string;
+  isSinglePlayer?: boolean; // Single player mode with AI opponent
   onReady: () => void;
   onNotReady: () => void;
   onLeave: () => void;
@@ -20,11 +21,13 @@ const GameRoom: React.FC<GameRoomProps> = ({
   betAmount,
   players,
   currentUserAddress,
+  isSinglePlayer = false,
   onReady,
   onNotReady,
   onLeave,
 }) => {
   const [copied, setCopied] = useState(false);
+  const [aiName, setAiName] = useState('');
 
   // Defensive check for players
   const playersList = players || [];
@@ -37,7 +40,12 @@ const GameRoom: React.FC<GameRoomProps> = ({
     (p) => p.address.toLowerCase() !== currentUserAddress.toLowerCase()
   );
   const bothReady = playersList.every((p) => p.ready);
-  const waitingForOpponent = playersList.length < 2;
+
+  // For single player: Don't wait for opponent (AI will be added automatically)
+  const waitingForOpponent = isSinglePlayer ? false : playersList.length < 2;
+
+  // In single player mode, we always have an AI opponent
+  const isAIOpponent = isSinglePlayer;
 
   // Use backend ready state instead of local state
   const isReady = currentPlayer?.ready || false;
@@ -45,6 +53,7 @@ const GameRoom: React.FC<GameRoomProps> = ({
   // Debug logs - Log whenever players prop changes
   useEffect(() => {
     console.log('🎮 GameRoom Players Updated:', {
+      isSinglePlayer,
       rawPlayersCount: players?.length,
       playersList,
       currentUserAddress,
@@ -52,8 +61,9 @@ const GameRoom: React.FC<GameRoomProps> = ({
       opponent,
       isReady,
       waitingForOpponent,
+      isAIOpponent,
     });
-  }, [players]);
+  }, [players, isSinglePlayer]);
 
   const copyRoomId = () => {
     navigator.clipboard.writeText(roomId);
@@ -75,6 +85,26 @@ const GameRoom: React.FC<GameRoomProps> = ({
     }
     onReady();
   };
+
+  const getRandomAIName = (): string => {
+    const AI_NAMES = [
+      'Satoshi',
+      'Vitalik', 
+      'CZ',
+      'Hayden',
+      'Brian',
+      'Andre',
+      'Do Kwon',
+      'SBF'
+    ];
+
+    return AI_NAMES[Math.floor(Math.random() * AI_NAMES.length)];
+  }
+
+  useEffect(() => {
+    setAiName(getRandomAIName());
+  }, []);
+  
 
   return (
     <Container>
@@ -98,9 +128,9 @@ const GameRoom: React.FC<GameRoomProps> = ({
               </RoomId>
             </RoomIdContainer>
             <BetInfo>
-              <BetLabel>Bet:</BetLabel>
+              <BetLabel>Mode:</BetLabel>
               <BetAmount>
-                {betAmount} ETH
+                {betAmount === 0 ? '⚡ Practice Game' : `${betAmount} ETH`}
               </BetAmount>
             </BetInfo>
           </RoomInfo>
@@ -116,7 +146,7 @@ const GameRoom: React.FC<GameRoomProps> = ({
         <GameArea>
           <AnimatePresence mode="wait">
             {waitingForOpponent ? (
-              <WaitingState             
+              <WaitingState
                 key="waiting"
               >
                 <WaitingIcon>
@@ -227,11 +257,30 @@ const GameRoom: React.FC<GameRoomProps> = ({
                   {/* Opponent */}
                   <PlayerSection>
                     <PlayerLabel>Opponent</PlayerLabel>
-                    {opponent && <PlayerInfo player={opponent} />}
+                    {isAIOpponent ?
+                      <PlayerInfo player={{
+                        address: `${aiName}`,
+                        ready: true,
+                        roundsWon: 0,
+                        handSize: 0,
+                        isConnected: true,
+                        selectedCard: false
+                      }} /> :
+                      opponent && <PlayerInfo player={opponent} />
+                    }
                   </PlayerSection>
                 </PlayersContainer>
                 <AnimatePresence mode="wait">
-                  {!isReady ? (
+                  {isAIOpponent ? (
+                    // Single Player - Show "Start" button
+                    <StartButton
+                      key="start-button"
+                      onClick={handleReady}
+                    >
+                      🎮 Start Game
+                    </StartButton>
+                  ) : !isReady ? (
+                    // Multiplayer - Show "Ready" button
                     <ReadyButton
                       key="ready-button"
                       onClick={handleReady}
@@ -239,6 +288,7 @@ const GameRoom: React.FC<GameRoomProps> = ({
                       Ready!
                     </ReadyButton>
                   ) : (
+                    // Multiplayer - Show "Not Ready" button
                     <NotReadyButton
                       key="not-ready-button"
                       onClick={handleReady}
@@ -563,6 +613,32 @@ const ReadyButton = styled.button`
 
   &:hover {
     box-shadow: 0 8px 24px rgba(46, 204, 113, 0.6);
+  }
+`;
+
+const StartButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px 40px;
+  background: linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(78, 205, 196, 0.4);
+
+  &:hover {
+    box-shadow: 0 8px 24px rgba(78, 205, 196, 0.6);
+    transform: scale(1.05);
+  }
+
+  &:active {
+    transform: scale(0.95);
   }
 `;
 

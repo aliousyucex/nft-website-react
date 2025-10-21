@@ -48,6 +48,8 @@ export interface Room {
   
   // Metadata
   isPublic: boolean;
+  gameMode?: 'free' | 'paid' | 'single_player';
+  isSinglePlayer?: boolean;
 }
 
 export interface CreateRoomData {
@@ -55,6 +57,8 @@ export interface CreateRoomData {
   password?: string;
   winningScore?: number;
   address: string;
+  gameMode?: 'free' | 'paid' | 'single_player';
+  isSinglePlayer?: boolean;
 }
 
 export interface JoinRoomData {

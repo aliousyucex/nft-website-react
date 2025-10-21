@@ -123,7 +123,7 @@ const Card: React.FC<CardProps> = ({
         >
           {!imageError && (
             <CardFrontImage
-              src={`/cards/${card.type}_${card.value}.jpg`}
+              src={`/cards/${card.type}_${card.value}.png`}
               alt={`${card.type} ${card.value}`}
               onError={() => setImageError(true)}
             />
@@ -135,12 +135,6 @@ const Card: React.FC<CardProps> = ({
                 {getCardIcon(card.type)}
               </CardIcon>
             )}
-            <CardValue>
-              {card.value}
-            </CardValue>
-            <CardTypea>
-              {card.type.toUpperCase()}
-            </CardTypea>
           </CardContent>
         </CardFront>
       )}
@@ -172,8 +166,8 @@ const CardWrapper = styled.div<{
   transform-style: preserve-3d;
 
   @media (max-height: 900px) {
-    width: 85px;
-    height: 128px;
+    width: 100px;
+    height: 150px;
   }
 
   ${(props) =>
@@ -227,28 +221,6 @@ const CardIcon = styled.div`
   @media (max-height: 900px) {
     font-size: 40px;
     margin-bottom: 4px;
-  }
-`;
-
-const CardValue = styled.div`
-  font-size: 28px;
-  font-weight: bold;
-  margin-bottom: 4px;
-
-  @media (max-height: 900px) {
-    font-size: 24px;
-    margin-bottom: 2px;
-  }
-`;
-
-const CardTypea = styled.div`
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  opacity: 0.9;
-
-  @media (max-height: 900px) {
-    font-size: 10px;
   }
 `;
 
