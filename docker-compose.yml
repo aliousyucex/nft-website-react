@@ -4,7 +4,7 @@ services:
   # Backend API & WebSocket Server
   backend:
     build:
-      context: ./backend
+      context: ./apps/backend
       dockerfile: Dockerfile
     container_name: iwf_backend
     environment:
@@ -22,14 +22,14 @@ services:
       - iwf_network
     restart: unless-stopped
     volumes:
-      - ./backend:/app
+      - ./apps/backend:/app
       - /app/node_modules
     command: npm run start
 
   # Frontend
   frontend:
     build:
-      context: ./frontend
+      context: ./apps/frontend
       dockerfile: Dockerfile
     container_name: iwf_frontend
     environment:

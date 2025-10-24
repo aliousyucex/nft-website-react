@@ -3,21 +3,21 @@
   "version": "1.0.0",
   "description": "Ice Water Fire - Blockchain Card Game Monorepo",
   "private": true,
+  "packageManager": "npm@10.9.0",
   "workspaces": [
-    "frontend",
-    "backend",
-    "contract"
+    "apps/*",
+    "packages/*"
   ],
   "scripts": {
-    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install && cd ../contract && npm install",
-    "dev:frontend": "cd frontend && npm run dev",
-    "dev:backend": "cd backend && npm run dev",
-    "build:frontend": "cd frontend && npm run build",
-    "build:backend": "cd backend && npm run build",
-    "compile:contracts": "cd contract && npx hardhat compile",
-    "test:contracts": "cd contract && npx hardhat test",
-    "deploy:testnet": "cd contract && npx hardhat run scripts/deploy.ts --network abstractTestnet",
-    "deploy:mainnet": "cd contract && npx hardhat run scripts/deploy.ts --network abstractMainnet",
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "format": "turbo run format",
+    "clean": "turbo run clean",
+    "compile:contracts": "npm run build --workspace=@packages/contract",
+    "test:contracts": "npm run test --workspace=@packages/contract",
+    "deploy:testnet": "npm run deploy:testnet --workspace=@packages/contract",
+    "deploy:mainnet": "npm run deploy:mainnet --workspace=@packages/contract",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
     "docker:logs": "docker-compose logs -f"
@@ -35,6 +35,10 @@
   "engines": {
     "node": ">=22.0.0",
     "npm": ">=10.0.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "turbo": "^2.2.3"
   }
 }
 
