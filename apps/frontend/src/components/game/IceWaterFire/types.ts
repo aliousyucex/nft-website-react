@@ -48,6 +48,7 @@ export interface GameState {
   };
   prizeAmount?: number;
   isPaidGame?: boolean;
+  reason?: string; // Reason for game end (e.g. 'both_afk', 'afk_forfeit', 'disconnect_forfeit', 'normal')
   // Added for round result display
   lastRoundResult?: RoundResult;
   roundHistory?: RoundHistoryItem[];

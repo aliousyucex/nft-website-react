@@ -544,6 +544,24 @@ function startSelectionTimeout(io: Server, roomId: string) {
     }
 
     // Check if any player should forfeit (afkCount >= 2)
+    // First, check if BOTH players are AFK
+    const bothPlayersAfk = room.players.every((p) => p.afkCount >= 2);
+
+    if (bothPlayersAfk) {
+      logger.info('Both players repeatedly AFK, triggering forfeit for both', {
+        roomId: room.roomId,
+        player1: room.players[0].address,
+        player2: room.players[1].address,
+        afkCount1: room.players[0].afkCount,
+        afkCount2: room.players[1].afkCount,
+      });
+
+      // Trigger forfeit for both players (no refunds, both lose)
+      await handleBothPlayersAfkForfeit(io, room);
+      return; // Exit early - game has ended
+    }
+
+    // If only one player is AFK, handle normally
     for (let i = 0; i < room.players.length; i++) {
       const player = room.players[i];
 
@@ -897,6 +915,7 @@ async function handleDisconnectForfeit(io: Server, room: Room, disconnectedAddre
         finalScore: room.finalScore,
         prizeAmount: payout.winnerAmount,
         isPaidGame,
+        afkPlayerAddresses: [disconnected.address],
       });
     });
 
@@ -985,6 +1004,67 @@ async function handleAfkForfeit(io: Server, room: Room, afkAddress: string) {
 }
 
 /**
+ * Handle both players AFK forfeit (no refunds, both lose)
+ */
+async function handleBothPlayersAfkForfeit(io: Server, room: Room) {
+  try {
+    const player1 = room.players[0];
+    const player2 = room.players[1];
+    const isPaidGame = room.betAmount > 0;
+
+    logger.info('Processing both players AFK forfeit - no refunds', {
+      roomId: room.roomId,
+      player1: player1.address,
+      player2: player2.address,
+      player1AfkCount: player1.afkCount,
+      player2AfkCount: player2.afkCount,
+      isPaidGame,
+    });
+
+    // No refunds - bets stay in contract as penalty
+    // No payout needed, both players lose their bets
+
+    // End game without winner (both forfeit)
+    gameService.endGame(room, null, 'both_afk');
+
+    // Save game history
+    await saveGameHistory(room);
+
+    // Notify both players - each sees they lost
+    room.players.forEach((player: Player, index: number) => {
+      const opponent = room.players[1 - index];
+
+      // Skip AI player notifications
+      if (player.socketId.startsWith('ai-')) return;
+
+      io.to(player.socketId).emit('game_finished', {
+        winner: null, // No winner - both lost
+        reason: 'both_afk',
+        myScore: player.roundsWon,
+        opponentScore: opponent.roundsWon,
+        scores: {
+          player1: room.players[0].roundsWon,
+          player2: room.players[1].roundsWon,
+        },
+        finalScore: room.finalScore,
+        prizeAmount: 0, // No prize for anyone
+        isRefund: false, // No refund
+        isPaidGame,
+        afkPlayerAddresses: [player1.address, player2.address],
+      });
+    });
+
+    logger.info('Game ended - both players AFK', {
+      roomId: room.roomId,
+      isPaidGame,
+      penalty: isPaidGame ? `${room.betAmount * 2} ETH forfeited` : 'none',
+    });
+  } catch (error) {
+    logger.error('Error handling both players AFK forfeit', error);
+  }
+}
+
+/**
  * Handle AFK forfeit with conditional payout
  */
 async function handleAfkForfeitWithConditionalPayout(io: Server, room: Room, afkAddress: string) {
@@ -1059,6 +1139,7 @@ async function handleAfkForfeitWithConditionalPayout(io: Server, room: Room, afk
         prizeAmount: player.address === opponent.address ? payout.winnerAmount : 0,
         isRefund: isPaidGame && !opponentIsAhead,
         isPaidGame,
+        afkPlayerAddresses: [afkPlayer.address],
       });
     });
 

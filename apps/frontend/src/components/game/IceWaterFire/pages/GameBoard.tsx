@@ -64,6 +64,8 @@ const GameBoard: React.FC<GameBoardProps> = ({
     prizeAmount: number;
     isWinner: boolean;
     isDraw: boolean;
+    reason?: string;
+    afkPlayerAddresses?: string[];
   } | null>(null);
 
   // Track the last processed round to avoid duplicate animations
@@ -154,6 +156,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
         prizeAmount: gameState.prizeAmount || 0,
         isWinner,
         isDraw,
+        reason: gameState.reason,
       });
 
       // Show modal after a brief delay to let final animations complete naturally
@@ -369,6 +372,8 @@ const GameBoard: React.FC<GameBoardProps> = ({
             onReturnToLobby();
           }}
           isPaidGame={isPaidGame}
+          reason={gameResult.reason}
+          afkPlayerAddresses={gameResult.afkPlayerAddresses}
         />
       )}
     </Container>
@@ -415,7 +420,6 @@ const GameContainer = styled.div`
   width: 100%;
   max-width: 1920px;
   height: 100%;
-  max-height: calc(100vh - 20px);
   display: grid;
   gap: 10px;
   position: relative;

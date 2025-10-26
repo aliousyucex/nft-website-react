@@ -10,6 +10,7 @@ import SoundSettings from '../components/SoundSettings';
 import TutorialModal from '../components/TutorialModal';
 import WithdrawModal from '../components/WithdrawModal';
 import type {Room} from '../types';
+import WalletConnect from '../../../wallet/WalletConnect';
 
 interface GameLobbyProps {
   availableRooms: Room[];
@@ -27,6 +28,7 @@ interface GameLobbyProps {
   volume: number;
   onToggleSounds: () => void;
   onVolumeChange: (volume: number) => void;
+  walletConnected: boolean;
 }
 
 const GameLobby: React.FC<GameLobbyProps> = ({
@@ -40,6 +42,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({
   volume,
   onToggleSounds,
   onVolumeChange,
+  walletConnected,
 }) => {
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [joinModalVisible, setJoinModalVisible] = useState(false);
@@ -148,7 +151,8 @@ const GameLobby: React.FC<GameLobbyProps> = ({
           <HeaderText>
             <Title>🎴 Ice Water Fire</Title>
           </HeaderText>
-          <WalletActions>
+          {walletConnected ? (
+            <WalletActions>
             <BalanceDisplay>
               <BalanceLabel>Balance:</BalanceLabel>
               <BalanceValue>{parseFloat(balance).toFixed(4)} ETH</BalanceValue>
@@ -157,7 +161,10 @@ const GameLobby: React.FC<GameLobbyProps> = ({
             <WithdrawButton onClick={() => setWithdrawModalVisible(true)}>
               💸 Withdraw
             </WithdrawButton>
-          </WalletActions>
+          </WalletActions>) :
+          <WalletConnect />
+          }
+          
         </HeaderContent>
       </Header>
 

@@ -228,10 +228,7 @@ export class ContractService {
         });
       } else {
         // Opponent not ahead: Just refund the not afk player
-        await this.updateBalances([
-          {address: opponentAddress, amount: betAmount},
-          {address: afkAddress, amount: -betAmount},
-        ]);
+        await this.updateBalance(opponentAddress, betAmount);
 
         logger.info('AFK forfeit - opponent not ahead, bets refunded', {
           opponent: opponentAddress,

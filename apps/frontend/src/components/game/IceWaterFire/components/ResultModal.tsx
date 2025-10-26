@@ -1,8 +1,9 @@
-import {Button, Modal } from 'antd';
+import {Button, Modal} from 'antd';
 import type React from 'react';
 import styled from 'styled-components';
 import type {Card as CardType} from '../types';
 import Card from './Card';
+import { useAccount } from 'wagmi';
 
 interface RoundResultProps {
   visible: boolean;
@@ -69,6 +70,9 @@ interface GameResultProps {
   onClose: () => void;
   onReturnToLobby: () => void;
   isPaidGame?: boolean;
+  reason?: string; // Reason for game end (e.g. 'both_afk', 'afk_forfeit', etc.)
+  isSinglePlayer?: boolean;
+  afkPlayerAddresses?: string[];
 }
 
 export const GameResultModal: React.FC<GameResultProps> = ({
@@ -80,36 +84,43 @@ export const GameResultModal: React.FC<GameResultProps> = ({
   onClose,
   onReturnToLobby,
   isPaidGame = true,
+  reason,
+  isSinglePlayer = false,
 }) => {
   const isFreeGame = betAmount === 0 || !isPaidGame;
+  const isBothAfk = reason === 'both_afk';
+  const isAfk = reason === 'afk_forfeit';
+  const {isConnected} = useAccount();
+  
+  // TITLE
+  const titleWinConditionText = result === 'win' ? 'Victory!' : 'Defeat';
+  const titleAfkConditionText = isAfk ? 'AFK Forfeit' : isBothAfk && isSinglePlayer ? 'AFK Forfeit' : 'Both Players AFK';
+  const titleText = isBothAfk || isAfk ? titleAfkConditionText : titleWinConditionText;
+
+  // SUBTITLE
+  const subTitlePracticeGameText = result === 'win' ? 'Great job! Keep practicing!' : 'Better luck next time!';
+  const subTitlePaidGameText = result === 'win' ? 'Congratulations! You won the game!' : 'Better luck next time!';
+  const subTitleWinConditionText = isSinglePlayer ? subTitlePracticeGameText : subTitlePaidGameText;
+  const subTitleAfkConditionText = isSinglePlayer ? 'You were AFK. Game ended with no winner.' : 'Both players were repeatedly AFK. Game ended with no winner.';
+  const subTitleText = isBothAfk ? subTitleAfkConditionText : subTitleWinConditionText;
 
   return (
     <Modal open={visible} onCancel={onClose} footer={null} centered width={500} closable={false}>
       <GameResultContainer>
-        <GameResultTitle result={result}>
-          {result === 'win' ? 'Victory!' : result === 'draw' ? 'Draw!' : 'Defeat'}
+        <GameResultTitle result={isBothAfk ? 'lose' : result}>
+          {titleText}
         </GameResultTitle>
 
         {isFreeGame && <PracticeGameBadge>⚡ Practice Game</PracticeGameBadge>}
 
         <GameResultSubtitle>
-          {isFreeGame
-            ? result === 'win'
-              ? 'Great job! Keep practicing!'
-              : result === 'draw'
-                ? 'Nice effort! Try again!'
-                : "Keep practicing, you'll improve!"
-            : result === 'win'
-              ? 'Congratulations! You won the game!'
-              : result === 'draw'
-                ? 'The game ended in a draw!'
-                : 'Better luck next time!'}
+          {subTitleText}
         </GameResultSubtitle>
 
-        {!isFreeGame && result === 'win' && prizeAmount !== undefined && (
+        {!isFreeGame && !isBothAfk && result === 'win' && prizeAmount !== undefined && (
           <PrizeAmount>+{prizeAmount} ETH</PrizeAmount>
         )}
-        {!isFreeGame && result !== 'win' && betAmount > 0 && (
+        {!isFreeGame && (isBothAfk || result !== 'win') && betAmount > 0 && (
           <LoseAmount>-{betAmount} ETH</LoseAmount>
         )}
 
@@ -120,7 +131,7 @@ export const GameResultModal: React.FC<GameResultProps> = ({
           </FinalScoreValue>
         </FinalScoreDisplay>
 
-        {isFreeGame && (
+        {isFreeGame && !isConnected && (
           <ConnectWalletHint>
             💡 Connect wallet to play for ETH and rank on leaderboard
           </ConnectWalletHint>

@@ -391,7 +391,7 @@ export const useGame = (userAddress: string) => {
           winner: data.winner ? 'determined' : 'draw',
           myScore: data.myScore,
           opponentScore: data.opponentScore,
-          historyCount: data.cardsRemaining.player1 + data.cardsRemaining.player2,
+          historyCount: data.roundHistory?.length || 0,
           myCard: data.myCard ? `${data.myCard.type}_${data.myCard.value}` : 'none',
           opponentCard: data.opponentCard
             ? `${data.opponentCard.type} ${data.opponentCard.value}`
@@ -493,6 +493,8 @@ export const useGame = (userAddress: string) => {
         myScore: data.myScore,
         opponentScore: data.opponentScore,
         scores: data.scores,
+        reason: data.reason,
+        afkPlayerAddresses: data.afkPlayerAddresses,
       });
       setGameState((prev) =>
         prev
@@ -504,6 +506,8 @@ export const useGame = (userAddress: string) => {
               opponentScore: data.opponentScore,
               finalScores: data.scores,
               prizeAmount: data.prizeAmount,
+              reason: data.reason, // Add reason for end game (e.g. 'both_afk', 'afk_forfeit', etc.)
+              afkPlayerAddresses: data.afkPlayerAddresses,
             }
           : null
       );

@@ -21,7 +21,6 @@ interface IceWaterFireGameProps {
 }
 
 type GamePage = 'lobby' | 'room' | 'playing';
-
 const IceWaterFireGame: React.FC<IceWaterFireGameProps> = ({onDisconnect}) => {
   const {address, isConnected} = useAccount();
   const [showGameModeModal, setShowGameModeModal] = useState(false);
@@ -52,13 +51,6 @@ const IceWaterFireGame: React.FC<IceWaterFireGameProps> = ({onDisconnect}) => {
           animate={{opacity: 1, y: 0}}
           transition={{duration: 0.5}}
         >
-          <WalletIcon
-            as={motion.div}
-            animate={{rotate: [0, 10, -10, 0]}}
-            transition={{duration: 2, repeat: Infinity, repeatDelay: 3}}
-          >
-            🎴
-          </WalletIcon>
           <WalletTitle>Ice Water Fire</WalletTitle>
           <WalletSubtitle>Choose how you want to play</WalletSubtitle>
 
@@ -168,6 +160,7 @@ const GameContainer: React.FC<GameContainerProps> = ({
   } = useGame(userAddress);
 
   const {socket} = useSocket();
+  const {isConnected} = useAccount();
   const {playSound, soundsEnabled, volume, setVolume, toggleSounds} = useSoundEffects();
 
   // Handle pending game mode (auto-create room for guest users)
@@ -470,6 +463,7 @@ const GameContainer: React.FC<GameContainerProps> = ({
           volume={volume}
           onToggleSounds={toggleSounds}
           onVolumeChange={setVolume}
+          walletConnected={isConnected}
         />
       )}
 
@@ -534,6 +528,9 @@ const WalletPromptContainer = styled.div`
   align-items: center;
   justify-content: center;
   padding: 20px;
+
+  height: 100vh;
+  overflow: hidden;
 `;
 
 const WalletPromptContent = styled.div`
