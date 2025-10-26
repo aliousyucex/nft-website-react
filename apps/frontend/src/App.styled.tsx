@@ -95,6 +95,9 @@ export namespace S {
 
   export const Peanut = styled.img`
     max-width: 65px;
+    background-color: transparent;
+    border-radius: 50%;
+    padding: 4px;
   `;
 
   export const Roadmap = styled(Flex)`

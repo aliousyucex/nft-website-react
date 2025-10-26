@@ -1,4 +1,4 @@
-import {AnimatePresence, motion } from 'framer-motion';
+import {AnimatePresence, motion} from 'framer-motion';
 import type React from 'react';
 import {useState} from 'react';
 import styled from 'styled-components';
@@ -14,25 +14,14 @@ const TutorialModal: React.FC<TutorialModalProps> = ({visible, onClose}) => {
 
   const steps = [
     {
-      title: '🎴 Welcome to Ice Water Fire!',
-      description: 'A strategic card game where you battle with 9 unique cards.',
+      title: '🎴 Ice Water Fire - Game Rules',
+      description: 'Learn the basics and win 3 rounds!',
       content: (
         <ContentWrapper>
           <HighlightBox>
             <HighlightTitle>🎯 Goal</HighlightTitle>
             <HighlightText>Be the first to win 3 rounds!</HighlightText>
           </HighlightBox>
-          <InfoText>
-            Each player has their own deck of 9 cards with different types and values.
-          </InfoText>
-        </ContentWrapper>
-      ),
-    },
-    {
-      title: '⚔️ Card Types & Rules',
-      description: 'Learn the type advantages',
-      content: (
-        <ContentWrapper>
           <RulesGrid>
             <RuleCard $color='#FF6B6B'>
               <RuleIcon>🔥</RuleIcon>
@@ -47,77 +36,45 @@ const TutorialModal: React.FC<TutorialModalProps> = ({visible, onClose}) => {
               <RuleText>Ice beats Water</RuleText>
             </RuleCard>
           </RulesGrid>
-          <InfoText>If both players choose the same type, the higher value wins!</InfoText>
           <ExampleBox>
-            <ExampleTitle>Example:</ExampleTitle>
-            <ExampleText>🔥 Fire 7 beats 🔥 Fire 3</ExampleText>
+            <ExampleTitle>Same Type?</ExampleTitle>
+            <ExampleText>Higher value card always wins!</ExampleText>
           </ExampleBox>
         </ContentWrapper>
       ),
     },
     {
-      title: '🎲 How Cards Work',
-      description: 'Card distribution and usage',
+      title: '⏱️ Cards, Timer & Penalties',
+      description: 'How the game flows',
       content: (
         <ContentWrapper>
           <StepList>
             <StepItem>
-              <StepNumber>1</StepNumber>
-              <StepText>Start with 5 random cards from your 9-card deck</StepText>
+              <StepNumber>📋</StepNumber>
+              <StepText>You have 9 cards total - start with 5 random cards</StepText>
             </StepItem>
             <StepItem>
-              <StepNumber>2</StepNumber>
-              <StepText>Select one card each round (10 seconds timer)</StepText>
+              <StepNumber>⏰</StepNumber>
+              <StepText>10 seconds to pick a card each round</StepText>
             </StepItem>
             <StepItem>
-              <StepNumber>3</StepNumber>
-              <StepText>Used cards are removed from your deck</StepText>
-            </StepItem>
-            <StepItem>
-              <StepNumber>4</StepNumber>
-              <StepText>After using 5 cards, you receive your remaining 4 cards</StepText>
-            </StepItem>
-            <StepItem>
-              <StepNumber>5</StepNumber>
-              <StepText>After all 9 cards are used, the deck reshuffles</StepText>
+              <StepNumber>🔄</StepNumber>
+              <StepText>
+                After using 5 cards, receive your remaining 4. Then deck reshuffles
+              </StepText>
             </StepItem>
           </StepList>
-          <WarningBox>
-            <WarningIcon>⚠️</WarningIcon>
-            <WarningText>
-              In case of a draw, cards are still consumed but no points are awarded!
-            </WarningText>
-          </WarningBox>
-        </ContentWrapper>
-      ),
-    },
-    {
-      title: '⏱️ Time & Penalties',
-      description: 'Stay active and strategic',
-      content: (
-        <ContentWrapper>
-          <TimerBox>
-            <TimerIcon>⏰</TimerIcon>
-            <TimerText>10 seconds per round</TimerText>
-          </TimerBox>
           <PenaltyList>
             <PenaltyItem>
               <PenaltyIcon>🔴</PenaltyIcon>
               <PenaltyText>
-                <strong>AFK Penalty:</strong> 3 consecutive timeouts = automatic forfeit
+                <strong>AFK:</strong> 2 consecutive timeouts = forfeit
               </PenaltyText>
             </PenaltyItem>
             <PenaltyItem>
               <PenaltyIcon>⏳</PenaltyIcon>
               <PenaltyText>
-                <strong>Disconnect:</strong> 10 seconds to reconnect, or you forfeit and lose your
-                bet
-              </PenaltyText>
-            </PenaltyItem>
-            <PenaltyItem>
-              <PenaltyIcon>🎯</PenaltyIcon>
-              <PenaltyText>
-                <strong>Round Limit:</strong> Game ends after 15 rounds - highest score wins
+                <strong>Disconnect:</strong> 10 seconds to reconnect or lose
               </PenaltyText>
             </PenaltyItem>
           </PenaltyList>
@@ -125,50 +82,21 @@ const TutorialModal: React.FC<TutorialModalProps> = ({visible, onClose}) => {
       ),
     },
     {
-      title: '💰 Betting & Rewards',
-      description: 'Stakes and winnings',
+      title: '🎮 Ready to Play!',
+      description: 'Betting & Quick Tips',
       content: (
         <ContentWrapper>
           <BetBox>
             <BetIcon>💎</BetIcon>
-            <BetTitle>Minimum Bet: 0.001 ETH</BetTitle>
-            <BetText>No maximum limit - bet what you want!</BetText>
+            <BetTitle>Min Bet: 0.001 ETH | 3% Commission</BetTitle>
+            <BetText>Winner takes the pot (minus commission). Earn leaderboard points!</BetText>
           </BetBox>
-          <CommissionBox>
-            <CommissionIcon>📊</CommissionIcon>
-            <CommissionText>3% commission is deducted from winnings</CommissionText>
-          </CommissionBox>
-          <RewardList>
-            <RewardItem>
-              <RewardIcon>🏆</RewardIcon>
-              <RewardText>Winner takes the pot (minus 3% commission)</RewardText>
-            </RewardItem>
-            <RewardItem>
-              <RewardIcon>💪</RewardIcon>
-              <RewardText>Earn leaderboard points: 7 (3-0), 5 (3-1), 3 (3-2)</RewardText>
-            </RewardItem>
-          </RewardList>
-        </ContentWrapper>
-      ),
-    },
-    {
-      title: '🎮 Ready to Play!',
-      description: 'Good luck and have fun!',
-      content: (
-        <ContentWrapper>
-          <FinalBox>
-            <FinalIcon>✨</FinalIcon>
-            <FinalTitle>You're all set!</FinalTitle>
-            <FinalText>
-              Create a room, set your bet, and challenge your friends. May the best strategist win!
-            </FinalText>
-          </FinalBox>
           <QuickTips>
             <TipTitle>💡 Quick Tips:</TipTitle>
             <TipItem>• Use emojis to communicate with your opponent</TipItem>
-            <TipItem>• Check round history during the game</TipItem>
-            <TipItem>• Save your high-value cards for crucial moments</TipItem>
+            <TipItem>• Save high-value cards for crucial moments</TipItem>
             <TipItem>• Watch the timer - don't let it run out!</TipItem>
+            <TipItem>• Draws consume cards but award no points</TipItem>
           </QuickTips>
           <CheckboxWrapper>
             <Checkbox
@@ -456,14 +384,6 @@ const HighlightText = styled.p`
   font-weight: 600;
 `;
 
-const InfoText = styled.p`
-  font-size: 15px;
-  color: rgba(255, 255, 255, 0.8);
-  text-align: center;
-  margin: 0;
-  line-height: 1.6;
-`;
-
 const RulesGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -546,48 +466,6 @@ const StepText = styled.div`
   line-height: 1.5;
 `;
 
-const WarningBox = styled.div`
-  background: rgba(243, 156, 18, 0.15);
-  border: 2px solid #f39c12;
-  border-radius: 12px;
-  padding: 16px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-`;
-
-const WarningIcon = styled.div`
-  font-size: 24px;
-  flex-shrink: 0;
-`;
-
-const WarningText = styled.div`
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.9);
-  line-height: 1.5;
-`;
-
-const TimerBox = styled.div`
-  background: linear-gradient(135deg, rgba(243, 156, 18, 0.2) 0%, rgba(230, 126, 34, 0.2) 100%);
-  border: 2px solid #f39c12;
-  border-radius: 16px;
-  padding: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-`;
-
-const TimerIcon = styled.div`
-  font-size: 48px;
-`;
-
-const TimerText = styled.div`
-  font-size: 24px;
-  color: white;
-  font-weight: bold;
-`;
-
 const PenaltyList = styled.div`
   display: flex;
   flex-direction: column;
@@ -596,7 +474,7 @@ const PenaltyList = styled.div`
 
 const PenaltyItem = styled.div`
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 12px;
@@ -643,77 +521,6 @@ const BetText = styled.p`
   color: rgba(255, 255, 255, 0.8);
   margin: 0;
 `;
-
-const CommissionBox = styled.div`
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
-  padding: 16px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-`;
-
-const CommissionIcon = styled.div`
-  font-size: 24px;
-`;
-
-const CommissionText = styled.div`
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.9);
-`;
-
-const RewardList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-`;
-
-const RewardItem = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: rgba(46, 204, 113, 0.1);
-  border: 1px solid rgba(46, 204, 113, 0.3);
-  border-radius: 12px;
-  padding: 16px;
-`;
-
-const RewardIcon = styled.div`
-  font-size: 24px;
-  flex-shrink: 0;
-`;
-
-const RewardText = styled.div`
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.9);
-`;
-
-const FinalBox = styled.div`
-  background: linear-gradient(135deg, rgba(46, 204, 113, 0.2) 0%, rgba(39, 174, 96, 0.2) 100%);
-  border: 2px solid #2ecc71;
-  border-radius: 16px;
-  padding: 32px;
-  text-align: center;
-`;
-
-const FinalIcon = styled.div`
-  font-size: 64px;
-  margin-bottom: 16px;
-`;
-
-const FinalTitle = styled.h3`
-  font-size: 24px;
-  color: white;
-  margin: 0 0 12px 0;
-`;
-
-const FinalText = styled.p`
-  font-size: 16px;
-  color: rgba(255, 255, 255, 0.9);
-  margin: 0;
-  line-height: 1.6;
-`;
-
 const QuickTips = styled.div`
   background: rgba(255, 255, 255, 0.05);
   border-radius: 12px;

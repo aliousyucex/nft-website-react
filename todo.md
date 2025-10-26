@@ -3,13 +3,15 @@
 - Kullanılmayan, .env içerikleri değiştirilecek/silinecek.
 
 
-- tutorial index.tsx'e eklenecek
-- Tutorial'ın çıktığı sayfa, oyun modu seçiminden önce gelmeli, şu anda oyun seçtiğimizde geliyor, ve bypass ederek room'a yönlendiriliyoruz.
-- Landing page'den single/multiplayer seçenekleri ile oyun başlatmak istendiğinde, room'dan önce lobby'e aktarılıyoruz. Direkt Room'a aktarılalım, eğer bir bekleme, kontrol etme süresi gerekiyorsa, loading ekleyip, lobby'i ekranını bypass edip direkt room'a gidelim.
-- Home için eklediğimiz, logo'nun arkaplanını düzeltelim.
-- validateDOMNesting(...): <button> şeklinde bir hatamız var bunun ne olduğuna bakalım.
-- Tutorial'ı kısalt maksimum 3 steplik hızlıca anlatıma sahip bir hale getir.
-
+- tutorial otomatik açılmasın, GameModeModal'ın altına ve walletActions divinin başına sonuna bir yere
+- GameBoard içerisine "leave" butonu ekleyelim. Confirmation ile, free game'de kaybetmiş sayılacaksın diyelim ve session tokenı temizleyelim. Roomdan çıktığını bildirelim ve oyunu otomatik olarak, afk gibi handle edelim. Paid, free ve single oyun modlarının hepsi için geçerli.
+-  Gösterdiğimiz hata mesajlarını düzenlememiz lazım. Single playerde afk olunca Both afk şeklinde uyarı gösteriyoruz. Sen afk olduğun için gibi düzeltmemiz lazım.
+- Oyunumuz dikey telefon ekranları için düzgün hizalanmamış durumda.
+- histroy modal'ı gameboard'a geri eklemeliyiz.
+- console'a çok fazla sensetive bilgi basıyoruz. Bu logları atmayı bırakmamız lazım. Sadece gerektiğinde el ile manuel logging ekleyebiliriz.
+- Create ve quick join modalları içerisinde, single player ise fiyat set edilememeli, butonlarda disable hale gelmeli.
+- Wallet bağlantısı sonrası kullanıcının bulunduğu chain'i get etmeli daha sonra check etmeliyiz. Eğer istediğimiz ağda değil ise, ağı değiştirmesi için bir istek oluşturmamız gerekiyor.
+- 
 
 - Landing page'deki animasyon ve düz kart yerine, oyuna bir logo oluşturup, bunu kullanalım.
 - Oyun için isim önerisi alınacak

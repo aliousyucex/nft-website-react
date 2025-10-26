@@ -1,16 +1,15 @@
 import {Button, Input, InputNumber, Modal, message} from 'antd';
 import type React from 'react';
-import {useEffect, useState} from 'react';
+import {useState} from 'react';
 import styled from 'styled-components';
 import logo from '../../../../../public/logo.svg';
+import WalletConnect from '../../../wallet/WalletConnect';
 import DepositModal from '../components/DepositModal';
 import {LeaderboardModal} from '../components/LeaderboardModal';
 import RoomList from '../components/RoomList';
 import SoundSettings from '../components/SoundSettings';
-import TutorialModal from '../components/TutorialModal';
 import WithdrawModal from '../components/WithdrawModal';
 import type {Room} from '../types';
-import WalletConnect from '../../../wallet/WalletConnect';
 
 interface GameLobbyProps {
   availableRooms: Room[];
@@ -49,7 +48,6 @@ const GameLobby: React.FC<GameLobbyProps> = ({
   const [passwordModalVisible, setPasswordModalVisible] = useState(false);
   const [depositModalVisible, setDepositModalVisible] = useState(false);
   const [withdrawModalVisible, setWithdrawModalVisible] = useState(false);
-  const [tutorialVisible, setTutorialVisible] = useState(false);
   const [quickJoinModalVisible, setQuickJoinModalVisible] = useState(false);
   const [leaderboardVisible, setLeaderboardVisible] = useState(false);
   const [betAmount, setBetAmount] = useState(0.001);
@@ -62,14 +60,6 @@ const GameLobby: React.FC<GameLobbyProps> = ({
   const [quickGameMode, setQuickGameMode] = useState<'multiplayer' | 'single_player'>(
     'multiplayer'
   );
-
-  // Check if tutorial should be shown on first visit
-  useEffect(() => {
-    const tutorialCompleted = localStorage.getItem('tutorialCompleted');
-    if (!tutorialCompleted) {
-      setTutorialVisible(true);
-    }
-  }, []);
 
   const handleCreateRoom = () => {
     // Allow 0 for free/single player games
@@ -141,30 +131,36 @@ const GameLobby: React.FC<GameLobbyProps> = ({
 
   return (
     <Container>
-      {/* Home Button */}
-      <HomeButton onClick={() => {window.location.href = '/';}} title='Return to Homepage'>
-        <img src={logo} alt='Home' width={50} height={50} />
-      </HomeButton>
 
       <Header>
         <HeaderContent>
+          {/* Home Button */}
+          <HomeButton
+            onClick={() => {
+              window.location.href = '/';
+            }}
+            title='Return to Homepage'
+          >
+            <img src={logo} alt='Home' width={50} height={50} />
+          </HomeButton>
+
           <HeaderText>
-            <Title>🎴 Ice Water Fire</Title>
+            <Title>Ice Water Fire</Title>
           </HeaderText>
           {walletConnected ? (
             <WalletActions>
-            <BalanceDisplay>
-              <BalanceLabel>Balance:</BalanceLabel>
-              <BalanceValue>{parseFloat(balance).toFixed(4)} ETH</BalanceValue>
-            </BalanceDisplay>
-            <DepositButton onClick={() => setDepositModalVisible(true)}>💰 Deposit</DepositButton>
-            <WithdrawButton onClick={() => setWithdrawModalVisible(true)}>
-              💸 Withdraw
-            </WithdrawButton>
-          </WalletActions>) :
-          <WalletConnect />
-          }
-          
+              <BalanceDisplay>
+                <BalanceLabel>Balance:</BalanceLabel>
+                <BalanceValue>{parseFloat(balance).toFixed(4)} ETH</BalanceValue>
+              </BalanceDisplay>
+              <DepositButton onClick={() => setDepositModalVisible(true)}>💰 Deposit</DepositButton>
+              <WithdrawButton onClick={() => setWithdrawModalVisible(true)}>
+                💸 Withdraw
+              </WithdrawButton>
+            </WalletActions>
+          ) : (
+            <WalletConnect />
+          )}
         </HeaderContent>
       </Header>
 
@@ -506,9 +502,6 @@ const GameLobby: React.FC<GameLobbyProps> = ({
         />
       </Modal>
 
-      {/* Tutorial Modal */}
-      <TutorialModal visible={tutorialVisible} onClose={() => setTutorialVisible(false)} />
-
       {/* Leaderboard Modal */}
       <LeaderboardModal visible={leaderboardVisible} onClose={() => setLeaderboardVisible(false)} />
     </Container>
@@ -529,11 +522,12 @@ const Container = styled.div`
 `;
 
 const HomeButton = styled.button`
-  position: absolute;
   top: 20px;
   left: 20px;
   cursor: pointer;
   z-index: 100;
+  background: transparent;
+  border: none;
 
   @media (max-width: 768px) {
     top: 10px;

@@ -406,6 +406,8 @@ const HomeButton = styled.button`
   height: 50px;
   cursor: pointer;
   z-index: 100;
+  background: none;
+  border: none;
 
   @media (max-width: 768px) {
     width: 40px;

@@ -1,11 +1,11 @@
 import {Modal} from 'antd';
 import {motion} from 'framer-motion';
 import type React from 'react';
-import {useState} from 'react';
 import styled from 'styled-components';
 
 interface GameModeModalProps {
   visible: boolean;
+  loading?: boolean;
   onSinglePlayer: () => void;
   onMultiplayer: () => void;
   onCancel: () => void;
@@ -13,35 +13,31 @@ interface GameModeModalProps {
 
 export const GameModeModal: React.FC<GameModeModalProps> = ({
   visible,
+  loading = false,
   onSinglePlayer,
   onMultiplayer,
   onCancel,
 }) => {
-  const [loading, setLoading] = useState(false);
-
   const handleSinglePlayer = () => {
+    if (loading) return;
     console.log('🎮 Single Player selected');
-    setLoading(true);
-    // Don't create room here - let the parent component handle it via pendingGameMode
     onSinglePlayer();
-    setTimeout(() => setLoading(false), 100);
   };
 
   const handleMultiplayer = () => {
+    if (loading) return;
     console.log('👥 Multiplayer selected');
-    setLoading(true);
-    // Don't create room here - let the parent component handle it via pendingGameMode
     onMultiplayer();
-    setTimeout(() => setLoading(false), 100);
   };
 
   return (
     <Modal
       open={visible}
-      onCancel={onCancel}
+      onCancel={loading ? undefined : onCancel}
       footer={null}
       centered
       width={600}
+      closable={!loading}
       styles={{
         content: {
           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -51,44 +47,58 @@ export const GameModeModal: React.FC<GameModeModalProps> = ({
       }}
     >
       <ModalContent>
-        <Title>Choose Game Mode</Title>
-        <Subtitle>Select how you want to play</Subtitle>
+        {loading ? (
+          <>
+            <LoadingSpinner
+              as={motion.div}
+              animate={{rotate: 360}}
+              transition={{duration: 1, repeat: Infinity, ease: 'linear'}}
+            >
+              ⚡
+            </LoadingSpinner>
+            <Title>Setting up your game...</Title>
+            <LoadingText>Please wait a moment</LoadingText>
+          </>
+        ) : (
+          <>
+            <Title>Choose Game Mode</Title>
+            <Subtitle>Select how you want to play</Subtitle>
 
-        <ModesContainer>
-          <ModeCard
-            as={motion.div}
-            whileHover={{scale: 1.05, y: -10}}
-            whileTap={{scale: 0.95}}
-            onClick={handleSinglePlayer}
-            style={{opacity: loading ? 0.6 : 1}}
-          >
-            <ModeIcon>🤖</ModeIcon>
-            <ModeTitle>Single Player</ModeTitle>
-            <ModeDescription>Practice against AI opponent</ModeDescription>
-            <ModeFeatures>
-              <Feature>✓ No wallet required</Feature>
-              <Feature>✓ Practice game mechanics</Feature>
-              <Feature>✓ Instant start</Feature>
-            </ModeFeatures>
-          </ModeCard>
+            <ModesContainer>
+              <ModeCard
+                as={motion.div}
+                whileHover={{scale: 1.05, y: -10}}
+                whileTap={{scale: 0.95}}
+                onClick={handleSinglePlayer}
+              >
+                <ModeIcon>🤖</ModeIcon>
+                <ModeTitle>Single Player</ModeTitle>
+                <ModeDescription>Practice against AI opponent</ModeDescription>
+                <ModeFeatures>
+                  <Feature>✓ No wallet required</Feature>
+                  <Feature>✓ Practice game mechanics</Feature>
+                  <Feature>✓ Instant start</Feature>
+                </ModeFeatures>
+              </ModeCard>
 
-          <ModeCard
-            as={motion.div}
-            whileHover={{scale: 1.05, y: -10}}
-            whileTap={{scale: 0.95}}
-            onClick={handleMultiplayer}
-            style={{opacity: loading ? 0.6 : 1}}
-          >
-            <ModeIcon>👥</ModeIcon>
-            <ModeTitle>Multiplayer</ModeTitle>
-            <ModeDescription>Play with other players</ModeDescription>
-            <ModeFeatures>
-              <Feature>✓ Free or paid games</Feature>
-              <Feature>✓ Real opponents</Feature>
-              <Feature>✓ Leaderboard rankings</Feature>
-            </ModeFeatures>
-          </ModeCard>
-        </ModesContainer>
+              <ModeCard
+                as={motion.div}
+                whileHover={{scale: 1.05, y: -10}}
+                whileTap={{scale: 0.95}}
+                onClick={handleMultiplayer}
+              >
+                <ModeIcon>👥</ModeIcon>
+                <ModeTitle>Multiplayer</ModeTitle>
+                <ModeDescription>Play with other players</ModeDescription>
+                <ModeFeatures>
+                  <Feature>✓ Free or paid games</Feature>
+                  <Feature>✓ Real opponents</Feature>
+                  <Feature>✓ Leaderboard rankings</Feature>
+                </ModeFeatures>
+              </ModeCard>
+            </ModesContainer>
+          </>
+        )}
       </ModalContent>
     </Modal>
   );
@@ -181,4 +191,16 @@ const Feature = styled.div`
   color: rgba(255, 255, 255, 0.9);
   text-align: left;
   padding-left: 8px;
+`;
+
+const LoadingSpinner = styled.div`
+  font-size: 80px;
+  margin-bottom: 24px;
+`;
+
+const LoadingText = styled.p`
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+  text-align: center;
 `;

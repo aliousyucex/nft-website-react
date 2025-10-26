@@ -7,6 +7,7 @@ import styled from 'styled-components';
 import {useAccount} from 'wagmi';
 import WalletConnect from '../../wallet/WalletConnect';
 import {GameModeModal} from './components/GameModeModal';
+import TutorialModal from './components/TutorialModal';
 import {SocketProvider, useSocket} from './context/SocketContext';
 import {useGame} from './hooks/useGame';
 import {useSoundEffects} from './hooks/useSoundEffects';
@@ -24,6 +25,8 @@ type GamePage = 'lobby' | 'room' | 'playing';
 const IceWaterFireGame: React.FC<IceWaterFireGameProps> = ({onDisconnect}) => {
   const {address, isConnected} = useAccount();
   const [showGameModeModal, setShowGameModeModal] = useState(false);
+  const [gameModeLoading, setGameModeLoading] = useState(false);
+  const [tutorialVisible, setTutorialVisible] = useState(false);
   const [guestMode, setGuestMode] = useState(false);
   const [guestAddress, setGuestAddress] = useState('');
   const [pendingGameMode, setPendingGameMode] = useState<'single' | 'multi' | null>(null);
@@ -41,83 +44,145 @@ const IceWaterFireGame: React.FC<IceWaterFireGameProps> = ({onDisconnect}) => {
     }
   }, [guestMode, guestAddress]);
 
+  // Check if tutorial should be shown on first visit
+  useEffect(() => {
+    if ((isConnected || guestMode) && !tutorialVisible && !showGameModeModal) {
+      const tutorialCompleted = localStorage.getItem('tutorialCompleted');
+      if (!tutorialCompleted) {
+        console.log('📚 Showing tutorial for first-time user');
+        setTutorialVisible(true);
+      }
+    }
+  }, [isConnected, guestMode, tutorialVisible, showGameModeModal]);
+
   // If not connected and not in guest mode, show entry choice
   if (!isConnected && !guestMode) {
     return (
-      <WalletPromptContainer>
-        <WalletPromptContent
-          as={motion.div}
-          initial={{opacity: 0, y: 20}}
-          animate={{opacity: 1, y: 0}}
-          transition={{duration: 0.5}}
-        >
-          <WalletTitle>Ice Water Fire</WalletTitle>
-          <WalletSubtitle>Choose how you want to play</WalletSubtitle>
+      <>
+        <WalletPromptContainer>
+          <WalletPromptContent
+            as={motion.div}
+            initial={{opacity: 0, y: 20}}
+            animate={{opacity: 1, y: 0}}
+            transition={{duration: 0.5}}
+          >
+            <WalletTitle>Ice Water Fire</WalletTitle>
+            <WalletSubtitle>Choose how you want to play</WalletSubtitle>
 
-          <ChoiceButtons>
-            <ChoiceButton
-              as={motion.button}
-              whileHover={{scale: 1.05, y: -5}}
-              whileTap={{scale: 0.95}}
-              onClick={() => setShowGameModeModal(true)}
-              $primary
-            >
-              <ButtonIcon>🎮</ButtonIcon>
-              <ButtonText>
-                <ButtonTitle>Play Right Away</ButtonTitle>
-                <ButtonSubtitle>Free practice games</ButtonSubtitle>
-              </ButtonText>
-            </ChoiceButton>
+            <ChoiceButtons>
+              <ChoiceButton
+                as={motion.button}
+                whileHover={{scale: 1.05, y: -5}}
+                whileTap={{scale: 0.95}}
+                onClick={() => setShowGameModeModal(true)}
+                $primary
+              >
+                <ButtonIcon>🎮</ButtonIcon>
+                <ButtonText>
+                  <ButtonTitle>Play Right Away</ButtonTitle>
+                  <ButtonSubtitle>Free practice games</ButtonSubtitle>
+                </ButtonText>
+              </ChoiceButton>
 
-            <ChoiceButton
-              as={motion.div}
-              whileHover={{scale: 1.05, y: -5}}
-              $secondary
-            >
-              <ButtonIcon>💰</ButtonIcon>
-              <ButtonText>
-                <ButtonTitle>Connect Wallet</ButtonTitle>
-                <ButtonSubtitle>Play for ETH & leaderboard</ButtonSubtitle>
-              </ButtonText>
-              <WalletConnectWrapper>
-                <WalletConnect />
-              </WalletConnectWrapper>
-            </ChoiceButton>
-          </ChoiceButtons>
-        </WalletPromptContent>
+              <ChoiceButton as={motion.div} whileHover={{scale: 1.05, y: -5}} $secondary>
+                <ButtonIcon>💰</ButtonIcon>
+                <ButtonText>
+                  <ButtonTitle>Connect Wallet</ButtonTitle>
+                  <ButtonSubtitle>Play for ETH & leaderboard</ButtonSubtitle>
+                </ButtonText>
+                <WalletConnectWrapper>
+                  <WalletConnect />
+                </WalletConnectWrapper>
+              </ChoiceButton>
+            </ChoiceButtons>
+          </WalletPromptContent>
+        </WalletPromptContainer>
+
+        <TutorialModal
+          visible={tutorialVisible}
+          onClose={() => {
+            console.log('📚 Tutorial closed, showing game mode selection');
+            setTutorialVisible(false);
+            if (!pendingGameMode) {
+              setShowGameModeModal(true);
+            }
+          }}
+        />
 
         <GameModeModal
           visible={showGameModeModal}
+          loading={gameModeLoading}
           onSinglePlayer={() => {
             console.log('🎮 Modal: Single Player selected, activating guest mode');
             setPendingGameMode('single');
             setGuestMode(true);
-            setShowGameModeModal(false);
+            setGameModeLoading(true);
           }}
           onMultiplayer={() => {
             console.log('👥 Modal: Multiplayer selected, activating guest mode');
             setPendingGameMode('multi');
             setGuestMode(true);
-            setShowGameModeModal(false);
+            setGameModeLoading(true);
           }}
-          onCancel={() => setShowGameModeModal(false)}
+          onCancel={() => {
+            setShowGameModeModal(false);
+            setGameModeLoading(false);
+          }}
         />
-      </WalletPromptContainer>
+      </>
     );
   }
 
   const userAddress = address || guestAddress;
 
   return (
-    <SocketProvider address={userAddress}>
-      <GameContainer
-        userAddress={userAddress}
-        onDisconnect={onDisconnect}
-        isGuest={guestMode}
-        pendingGameMode={pendingGameMode}
-        onGameModeHandled={() => setPendingGameMode(null)}
+    <>
+      <SocketProvider address={userAddress}>
+        <GameContainer
+          userAddress={userAddress}
+          onDisconnect={onDisconnect}
+          isGuest={guestMode}
+          pendingGameMode={pendingGameMode}
+          onGameModeHandled={() => setPendingGameMode(null)}
+          onRoomReady={() => {
+            setGameModeLoading(false);
+            setShowGameModeModal(false);
+          }}
+        />
+      </SocketProvider>
+
+      <TutorialModal
+        visible={tutorialVisible}
+        onClose={() => {
+          console.log('📚 Tutorial closed, showing game mode selection');
+          setTutorialVisible(false);
+          if (!pendingGameMode) {
+            setShowGameModeModal(true);
+          }
+        }}
       />
-    </SocketProvider>
+
+      <GameModeModal
+        visible={showGameModeModal}
+        loading={gameModeLoading}
+        onSinglePlayer={() => {
+          console.log('🎮 Modal: Single Player selected, activating guest mode');
+          setPendingGameMode('single');
+          setGuestMode(true);
+          setGameModeLoading(true);
+        }}
+        onMultiplayer={() => {
+          console.log('👥 Modal: Multiplayer selected, activating guest mode');
+          setPendingGameMode('multi');
+          setGuestMode(true);
+          setGameModeLoading(true);
+        }}
+        onCancel={() => {
+          setShowGameModeModal(false);
+          setGameModeLoading(false);
+        }}
+      />
+    </>
   );
 };
 
@@ -127,6 +192,7 @@ interface GameContainerProps {
   isGuest?: boolean;
   pendingGameMode?: 'single' | 'multi' | null;
   onGameModeHandled?: () => void;
+  onRoomReady?: () => void;
 }
 
 const GameContainer: React.FC<GameContainerProps> = ({
@@ -134,11 +200,13 @@ const GameContainer: React.FC<GameContainerProps> = ({
   isGuest,
   pendingGameMode,
   onGameModeHandled,
+  onRoomReady,
 }) => {
   const {roomId: roomIdFromUrl} = useParams<{roomId: string}>();
   const [currentPage, setCurrentPage] = useState<GamePage>('lobby');
   const [timeRemaining, setTimeRemaining] = useState(10);
   const [balance, setBalance] = useState<string>('0');
+  const [hasCalledRoomReady, setHasCalledRoomReady] = useState(false);
 
   const {
     availableRooms,
@@ -194,15 +262,35 @@ const GameContainer: React.FC<GameContainerProps> = ({
         logger.info('Quick joining free multiplayer room');
         quickJoin(0, false);
       }
-
-      // Clear pending mode after handling
-      if (onGameModeHandled) {
-        onGameModeHandled();
-      }
     }, 1000); // Increased delay to ensure socket is ready
 
     return () => clearTimeout(timer);
-  }, [pendingGameMode, isGuest, socket, userAddress, createRoom, quickJoin, onGameModeHandled]);
+  }, [pendingGameMode, isGuest, socket, userAddress, createRoom, quickJoin]);
+
+  // Handle room ready - switch to room page and close modal (only once for pending game mode)
+  useEffect(() => {
+    if (currentRoom && pendingGameMode && !hasCalledRoomReady) {
+      console.log('✅ Room ready, switching to room page and closing loading modal');
+      setCurrentPage('room');
+      setHasCalledRoomReady(true);
+
+      // Clear pending mode and close loading modal
+      if (onGameModeHandled) {
+        onGameModeHandled();
+      }
+      if (onRoomReady) {
+        onRoomReady();
+      }
+    }
+  }, [currentRoom, pendingGameMode, hasCalledRoomReady, onRoomReady, onGameModeHandled]);
+
+  // Reset hasCalledRoomReady when leaving room
+  useEffect(() => {
+    if (!currentRoom) {
+      setHasCalledRoomReady(false);
+    }
+  }, [currentRoom]);
+
 
   // Handle auto-join via share link (URL parameter)
   useEffect(() => {
@@ -450,7 +538,7 @@ const GameContainer: React.FC<GameContainerProps> = ({
 
   return (
     <>
-      {currentPage === 'lobby' && (
+      {currentPage === 'lobby' && !pendingGameMode && (
         <GameLobby
           availableRooms={availableRooms}
           loading={loading}
