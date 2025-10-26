@@ -70,9 +70,8 @@ const IceWaterFireGame: React.FC<IceWaterFireGameProps> = ({onDisconnect}) => {
             </ChoiceButton>
 
             <ChoiceButton
-              as={motion.button}
+              as={motion.div}
               whileHover={{scale: 1.05, y: -5}}
-              whileTap={{scale: 0.95}}
               $secondary
             >
               <ButtonIcon>💰</ButtonIcon>
@@ -545,21 +544,6 @@ const WalletPromptContent = styled.div`
   gap: 24px;
   max-width: 500px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-`;
-
-const WalletIcon = styled.div`
-  font-size: 80px;
-  animation: float 3s ease-in-out infinite;
-
-  @keyframes float {
-    0%,
-    100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-20px);
-    }
-  }
 `;
 
 const WalletTitle = styled.h1`
