@@ -250,6 +250,30 @@ export const setupGameHandlers = (io: Server, socket: Socket) => {
         });
       }
 
+      // 🛡️ Guard 1: Check if round is being processed
+      if (player.isProcessingRound) {
+        logger.warn('Card selection rejected - round processing', {
+          roomId: room.roomId,
+          playerAddress: player.address,
+        });
+        return callback({
+          success: false,
+          error: 'Please wait for current round to complete',
+        });
+      }
+
+      // 🛡️ Guard 2: Check if card already selected
+      if (player.selectedCard) {
+        logger.warn('Card selection rejected - already selected', {
+          roomId: room.roomId,
+          playerAddress: player.address,
+        });
+        return callback({
+          success: false,
+          error: 'Card already selected for this round',
+        });
+      }
+
       // Find card in player's hand
       const card = player.hand.find((c) => c.id === cardId);
 
@@ -664,6 +688,10 @@ async function processRound(io: Server, room: Room) {
     return;
   }
 
+  // 🔒 LOCK: Mark round as processing - prevent new selections
+  room.players[0].isProcessingRound = true;
+  room.players[1].isProcessingRound = true;
+
   // Increment round counter
   room.currentRound++;
 
@@ -699,6 +727,51 @@ async function processRound(io: Server, room: Room) {
     gameOver: result.gameOver,
   });
 
+  // Send round result with full history BEFORE checking game over
+  // This ensures final round cards are revealed to players
+  room.players.forEach((player: Player, index: number) => {
+    const opponent = room.players[1 - index];
+    const roundData = {
+      round: room.currentRound,
+      myCard: index === 0 ? card1 : card2,
+      opponentCard: index === 0 ? card2 : card1,
+      winner: result.winner?.toLowerCase() || null, // Ensure lowercase for address comparison
+      result: result.result,
+      isDraw: result.isDraw,
+      myScore: player.roundsWon,
+      opponentScore: opponent.roundsWon,
+      myCardsRemaining: player.hand.length,
+      opponentCardsRemaining: opponent.hand.length,
+      roundHistory: room.roundHistory.map((h: RoundHistoryEntry) => ({
+        round: h.roundNumber,
+        player1Card: h.player1Card,
+        player1Address: h.player1Address?.toLowerCase() || null,
+        player2Card: h.player2Card,
+        player2Address: h.player2Address?.toLowerCase() || null,
+        winner: h.winner?.toLowerCase() || null, // Ensure lowercase for address comparison
+        result: h.result,
+      })),
+    };
+
+    logger.info('Sending round_result to player', {
+      roomId: room.roomId,
+      playerAddress: player.address,
+      round: roundData.round,
+      myScore: roundData.myScore,
+      opponentScore: roundData.opponentScore,
+      winner: roundData.winner || 'DRAW',
+      isWinner: roundData.winner ? roundData.winner === player.address : false,
+      isDraw: roundData.isDraw,
+      myCard: roundData.myCard ? `${roundData.myCard.type}_${roundData.myCard.value}` : 'none',
+      opponentCard: roundData.opponentCard
+        ? `${roundData.opponentCard.type}_${roundData.opponentCard.value}`
+        : 'none',
+      historyCount: roundData.roundHistory.length,
+    });
+
+    io.to(player.socketId).emit('round_result', roundData);
+  });
+
   // Check if game is over - if so, skip deck updates and timer
   if (result.gameOver) {
     logger.info('Game over detected, skipping deck updates and timer', {
@@ -723,47 +796,13 @@ async function processRound(io: Server, room: Room) {
     });
   });
 
-  // Send round result with full history
-  room.players.forEach((player: Player, index: number) => {
-    const opponent = room.players[1 - index];
-    const roundData = {
-      round: room.currentRound,
-      myCard: index === 0 ? card1 : card2,
-      opponentCard: index === 0 ? card2 : card1,
-      winner: result.winner?.toLowerCase() || null, // Ensure lowercase for address comparison
-      result: result.result,
-      isDraw: result.isDraw,
-      myScore: player.roundsWon,
-      opponentScore: opponent.roundsWon,
-      myCardsRemaining: player.hand.length,
-      opponentCardsRemaining: opponent.hand.length,
-      roundHistory: room.roundHistory.map((h: RoundHistoryEntry) => ({
-        round: h.roundNumber,
-        player1Card: h.player1Card,
-        player2Card: h.player2Card,
-        winner: h.winner?.toLowerCase() || null, // Ensure lowercase for address comparison
-        result: h.result,
-      })),
-    };
+  // 🔓 UNLOCK: Round processing complete, ready for next round
+  room.players[0].isProcessingRound = false;
+  room.players[1].isProcessingRound = false;
 
-    logger.info('Sending round_result to player', {
-      roomId: room.roomId,
-      playerAddress: player.address,
-      round: roundData.round,
-      myScore: roundData.myScore,
-      opponentScore: roundData.opponentScore,
-      winner: roundData.winner || 'DRAW',
-      isWinner: roundData.winner ? roundData.winner === player.address : false,
-      isDraw: roundData.isDraw,
-      myCard: roundData.myCard ? `${roundData.myCard.type}_${roundData.myCard.value}` : 'none',
-      opponentCard: roundData.opponentCard
-        ? `${roundData.opponentCard.type}_${roundData.opponentCard.value}`
-        : 'none',
-      historyCount: roundData.roundHistory.length,
-    });
-
-    io.to(player.socketId).emit('round_result', roundData);
-  });
+  // Clear selected cards for next round
+  room.players[0].selectedCard = null;
+  room.players[1].selectedCard = null;
 
   // Start next round (game over is already handled above with early return)
   setTimeout(() => {
@@ -850,7 +889,7 @@ async function handleGameEnd(io: Server, room: Room) {
 /**
  * Handle disconnect forfeit
  */
-async function handleDisconnectForfeit(io: Server, room: Room, disconnectedAddress: string) {
+export async function handleDisconnectForfeit(io: Server, room: Room, disconnectedAddress: string) {
   try {
     const remaining = room.players.find(
       (p: Player) => p.address !== disconnectedAddress && p.isConnected

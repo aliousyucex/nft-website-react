@@ -7,7 +7,9 @@ export type RoundResult = 'player1_win' | 'player2_win' | 'draw';
 export interface RoundHistoryEntry {
   roundNumber: number;
   player1Card: Card;
+  player1Address: string;
   player2Card: Card;
+  player2Address: string;
   winner: string | null;
   result: RoundResult;
   timestamp: Date;

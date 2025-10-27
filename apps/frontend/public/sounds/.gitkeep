@@ -2,16 +2,16 @@
 
 Place your sound effect files here with the following names:
 
-- card-select.mp3 - Played when a card is selected
-- card-reveal.mp3 - Played when cards are revealed
-- round-win.mp3 - Played when you win a round
-- round-lose.mp3 - Played when you lose a round
-- round-draw.mp3 - Played when a round is a draw
-- game-win.mp3 - Played when you win the game
-- game-lose.mp3 - Played when you lose the game
-- ready.mp3 - Played when the ready button is clicked
-- room-join.mp3 - Played when joining/creating a room
-- timer-warning.mp3 - Played when timer reaches 2 seconds
+- card-select.mp3 - Played when a card is selected ✅
+- card-reveal.mp3 - Played when cards are revealed✅
+- round-win.mp3 - Played when you win a round ✅
+- round-lose.mp3 - Played when you lose a round ✅
+- round-draw.mp3 - Played when a round is a draw ✅
+- game-win.mp3 - Played when you win the game ✅
+- game-lose.mp3 - Played when you lose the game ✅
+- ready.mp3 - Played when the ready button is clicked ✅
+- room-join.mp3 - Played when joining/creating a room ✅
+- timer-warning.mp3 - Played when timer reaches 2 seconds ✅
 
 ## Recommended Sound Sources
 

@@ -1,9 +1,9 @@
 import {Button, Modal} from 'antd';
 import type React from 'react';
 import styled from 'styled-components';
+import {useAccount} from 'wagmi';
 import type {Card as CardType} from '../types';
 import Card from './Card';
-import { useAccount } from 'wagmi';
 
 interface RoundResultProps {
   visible: boolean;
@@ -30,7 +30,6 @@ export const RoundResultModal: React.FC<RoundResultProps> = ({
         <ResultTitle result={result}>
           {result === 'win' && '🎉 You Won!'}
           {result === 'lose' && '😢 You Lost!'}
-          {result === 'draw' && '🤝 Draw!'}
         </ResultTitle>
 
         <CardsDisplay>
@@ -73,6 +72,7 @@ interface GameResultProps {
   reason?: string; // Reason for game end (e.g. 'both_afk', 'afk_forfeit', etc.)
   isSinglePlayer?: boolean;
   afkPlayerAddresses?: string[];
+  currentUserAddress?: string;
 }
 
 export const GameResultModal: React.FC<GameResultProps> = ({
@@ -84,45 +84,86 @@ export const GameResultModal: React.FC<GameResultProps> = ({
   onClose,
   onReturnToLobby,
   isPaidGame = true,
-  reason,
   isSinglePlayer = false,
+  afkPlayerAddresses = [],
+  currentUserAddress = '',
 }) => {
   const isFreeGame = betAmount === 0 || !isPaidGame;
-  const isBothAfk = reason === 'both_afk';
-  const isAfk = reason === 'afk_forfeit';
   const {isConnected} = useAccount();
-  
-  // TITLE
-  const titleWinConditionText = result === 'win' ? 'Victory!' : 'Defeat';
-  const titleAfkConditionText = isAfk ? 'AFK Forfeit' : isBothAfk && isSinglePlayer ? 'AFK Forfeit' : 'Both Players AFK';
-  const titleText = isBothAfk || isAfk ? titleAfkConditionText : titleWinConditionText;
 
-  // SUBTITLE
-  const subTitlePracticeGameText = result === 'win' ? 'Great job! Keep practicing!' : 'Better luck next time!';
-  const subTitlePaidGameText = result === 'win' ? 'Congratulations! You won the game!' : 'Better luck next time!';
-  const subTitleWinConditionText = isSinglePlayer ? subTitlePracticeGameText : subTitlePaidGameText;
-  const subTitleAfkConditionText = isSinglePlayer ? 'You were AFK. Game ended with no winner.' : 'Both players were repeatedly AFK. Game ended with no winner.';
-  const subTitleText = isBothAfk ? subTitleAfkConditionText : subTitleWinConditionText;
+  // Helper functions to determine AFK status
+  const isCurrentUserAfk = afkPlayerAddresses.some(
+    (addr) => addr.toLowerCase() === currentUserAddress.toLowerCase()
+  );
+  const isBothPlayersAfk = !isSinglePlayer && afkPlayerAddresses.length >= 2;
+  const isOpponentAfk = afkPlayerAddresses.length > 0 && !isCurrentUserAfk;
+
+  // Determine title color type
+  const determineTitleColor = (): 'win' | 'lose' | 'neutral' => {
+    if (isBothPlayersAfk) return 'lose'; // Both lose - red
+    if (isCurrentUserAfk) return 'lose'; // Current user loses - red
+    if (isOpponentAfk) {
+      // Opponent AFK, user was behind in paid game = refund scenario = neutral
+      if (isPaidGame && finalScore.my < finalScore.opponent) {
+        return 'neutral';
+      }
+      return 'win'; // Otherwise it's a win - green
+    }
+    // Normal game end
+    return result === 'win' ? 'win' : result === 'lose' ? 'lose' : 'neutral';
+  };
+
+  // Determine title text
+  const determineTitleText = (): string => {
+    if (isBothPlayersAfk) return 'Both Players AFK';
+    if (isCurrentUserAfk) return 'AFK Forfeit';
+    if (isOpponentAfk) return 'Victory!';
+    // Normal game end
+    return result === 'win' ? 'Victory!' : 'Defeat';
+  };
+
+  // Determine subtitle text
+  const determineSubtitleText = (): string => {
+    // Single Player mode
+    if (isSinglePlayer) {
+      if (isCurrentUserAfk) return 'You were AFK. Game ended with no winner.';
+      if (result === 'win') return 'Great job! Keep practicing!';
+      return 'Better luck next time!';
+    }
+
+    // Multiplayer mode (free or paid)
+    if (isBothPlayersAfk) return 'Both players were repeatedly AFK. Game ended with no winner.';
+    if (isCurrentUserAfk) return 'You were AFK. Game ended with no winner.';
+    if (isOpponentAfk) return 'Your opponent was AFK. You win by forfeit!';
+
+    // Normal game end
+    if (result === 'win') {
+      return isPaidGame ? 'Congratulations! You won the game!' : 'Great job! Keep practicing!';
+    }
+    return 'Better luck next time!';
+  };
+
+  const titleColor = determineTitleColor();
+  const titleText = determineTitleText();
+  const subTitleText = determineSubtitleText();
 
   return (
     <Modal open={visible} onCancel={onClose} footer={null} centered width={500} closable={false}>
       <GameResultContainer>
-        <GameResultTitle result={isBothAfk ? 'lose' : result}>
-          {titleText}
-        </GameResultTitle>
+        <GameResultTitle result={titleColor}>{titleText}</GameResultTitle>
 
         {isFreeGame && <PracticeGameBadge>⚡ Practice Game</PracticeGameBadge>}
 
-        <GameResultSubtitle>
-          {subTitleText}
-        </GameResultSubtitle>
+        <GameResultSubtitle>{subTitleText}</GameResultSubtitle>
 
-        {!isFreeGame && !isBothAfk && result === 'win' && prizeAmount !== undefined && (
-          <PrizeAmount>+{prizeAmount} ETH</PrizeAmount>
-        )}
-        {!isFreeGame && (isBothAfk || result !== 'win') && betAmount > 0 && (
-          <LoseAmount>-{betAmount} ETH</LoseAmount>
-        )}
+        {!isFreeGame &&
+          !isBothPlayersAfk &&
+          !isCurrentUserAfk &&
+          (result === 'win' || isOpponentAfk) &&
+          prizeAmount !== undefined && <PrizeAmount>+{prizeAmount} ETH</PrizeAmount>}
+        {!isFreeGame &&
+          (isBothPlayersAfk || isCurrentUserAfk || (result === 'lose' && !isOpponentAfk)) &&
+          betAmount > 0 && <LoseAmount>-{betAmount} ETH</LoseAmount>}
 
         <FinalScoreDisplay>
           <FinalScoreLabel>Final Score</FinalScoreLabel>
@@ -223,11 +264,15 @@ const GameResultContainer = styled.div`
   gap: 16px;
 `;
 
-const GameResultTitle = styled.h1<{result: 'win' | 'lose' | 'draw'}>`
+const GameResultTitle = styled.h1<{result: 'win' | 'lose' | 'neutral'}>`
   font-size: 32px;
   margin: 0;
   color: ${(props) =>
-    props.result === 'win' ? '#2ECC71' : props.result === 'draw' ? '#3498DB' : '#E74C3C'};
+    props.result === 'win'
+      ? '#2ECC71'
+      : props.result === 'neutral'
+        ? 'rgba(0, 0, 0, 0.85)'
+        : '#E74C3C'};
   text-align: center;
   text-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 `;

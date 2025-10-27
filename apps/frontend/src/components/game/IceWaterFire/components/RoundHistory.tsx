@@ -1,61 +1,15 @@
-import {AnimatePresence, motion } from 'framer-motion';
+import {AnimatePresence, motion} from 'framer-motion';
 import type React from 'react';
 import styled from 'styled-components';
-import type {Card as CardType, RoundHistoryItem} from '../types';
+import type {RoundHistoryItem} from '../types';
 
 interface RoundHistoryProps {
   history: RoundHistoryItem[];
 }
 
+// round number desc şekilde sıralanmalı last round first olacak.
+
 const RoundHistory: React.FC<RoundHistoryProps> = ({history}) => {
-  const getCardIcon = (type: CardType['type']) => {
-    switch (type) {
-      case 'fire':
-        return '🔥';
-      case 'ice':
-        return '❄️';
-      case 'water':
-        return '💧';
-      default:
-        return '?';
-    }
-  };
-
-  const getCardColor = (type: CardType['type']) => {
-    switch (type) {
-      case 'fire':
-        return '#FF6B6B';
-      case 'ice':
-        return '#4ECDC4';
-      case 'water':
-        return '#45B7D1';
-      default:
-        return '#95A5A6';
-    }
-  };
-
-  const getResultIcon = (result: 'win' | 'lose' | 'draw') => {
-    switch (result) {
-      case 'win':
-        return '✓';
-      case 'lose':
-        return '✗';
-      case 'draw':
-        return '=';
-    }
-  };
-
-  const getResultColor = (result: 'win' | 'lose' | 'draw') => {
-    switch (result) {
-      case 'win':
-        return '#2ECC71';
-      case 'lose':
-        return '#E74C3C';
-      case 'draw':
-        return '#F39C12';
-    }
-  };
-
   return (
     <AnimatePresence>
       <Content>
@@ -66,7 +20,7 @@ const RoundHistory: React.FC<RoundHistoryProps> = ({history}) => {
           </EmptyState>
         ) : (
           <HistoryList>
-            {history.map((item, index) => {
+            {[...history].reverse().map((item, index) => {
               // Skip items with missing card data
               if (!item.myCard || !item.opponentCard) {
                 return null;
@@ -85,23 +39,22 @@ const RoundHistory: React.FC<RoundHistoryProps> = ({history}) => {
                   <RoundNumber $result={item.result}>Round {item.round}</RoundNumber>
 
                   <CardsDisplay>
-                    <MiniCard $color={getCardColor(item.myCard.type)}>
-                      <CardIcon>{getCardIcon(item.myCard.type)}</CardIcon>
-                      <CardValue>{item.myCard.value}</CardValue>
+                    <MiniCard>
+                      <CardFrontImage
+                        src={`/cards/${item.myCard.type}_${item.myCard.value}.png`}
+                        alt={`${item.myCard.type} ${item.myCard.value}`}
+                      />
                     </MiniCard>
 
                     <VSText>vs</VSText>
 
-                    <MiniCard $color={getCardColor(item.opponentCard.type)}>
-                      <CardIcon>{getCardIcon(item.opponentCard.type)}</CardIcon>
-                      <CardValue>{item.opponentCard.value}</CardValue>
+                    <MiniCard>
+                    <CardFrontImage
+                        src={`/cards/${item.opponentCard.type}_${item.opponentCard.value}.png`}
+                        alt={`${item.opponentCard.type} ${item.opponentCard.value}`}
+                      />
                     </MiniCard>
                   </CardsDisplay>
-
-                  <ResultBadge $color={getResultColor(item.result)}>
-                    <ResultIcon>{getResultIcon(item.result)}</ResultIcon>
-                    <ResultText>{item.result.toUpperCase()}</ResultText>
-                  </ResultBadge>
                 </HistoryItem>
               );
             })}
@@ -113,6 +66,14 @@ const RoundHistory: React.FC<RoundHistoryProps> = ({history}) => {
 };
 
 export default RoundHistory;
+
+const CardFrontImage = styled.img`
+  height: 100px;
+  width: 66px;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 8px;
+`;
 
 const Content = styled.div`
   flex: 1;
@@ -204,55 +165,16 @@ const CardsDisplay = styled.div`
   gap: 8px;
 `;
 
-const MiniCard = styled.div<{$color: string}>`
+const MiniCard = styled.div`
   flex: 1;
-  background: ${(props) => props.$color};
   border-radius: 8px;
-  padding: 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-`;
-
-const CardIcon = styled.div`
-  font-size: 24px;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-`;
-
-const CardValue = styled.div`
-  font-size: 16px;
-  font-weight: bold;
-  color: white;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 `;
 
 const VSText = styled.div`
   font-size: 12px;
   color: rgba(255, 255, 255, 0.5);
   font-weight: bold;
-`;
-
-const ResultBadge = styled.div<{$color: string}>`
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  background: ${(props) => props.$color}20;
-  border: 1px solid ${(props) => props.$color};
-  border-radius: 8px;
-  align-self: flex-start;
-`;
-
-const ResultIcon = styled.div`
-  font-size: 14px;
-  font-weight: bold;
-`;
-
-const ResultText = styled.div`
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
 `;

@@ -13,6 +13,8 @@ export const useGame = (userAddress: string) => {
   const [receivedEmoji, setReceivedEmoji] = useState<{emoji: string; timestamp: number} | null>(
     null
   );
+  // Track last selection time to prevent rapid duplicates (debounce)
+  const [lastSelectionTime, setLastSelectionTime] = useState(0);
 
   // Helper function to check if game is over
   const isGameOver = useCallback((state: GameState | null) => {
@@ -28,7 +30,7 @@ export const useGame = (userAddress: string) => {
   const fetchRooms = useCallback(() => {
     if (!socket) return;
 
-    socket.emit('get_rooms', (response: {success: boolean; rooms: Room[]}) => {
+    socket.emit('get_rooms', {}, (response: {success: boolean; rooms: Room[]}) => {
       if (response.success) {
         setAvailableRooms(response.rooms);
       }
@@ -146,12 +148,17 @@ export const useGame = (userAddress: string) => {
   const leaveRoom = useCallback(() => {
     if (!socket) return;
 
-    socket.emit('leave_room', (response: {success: boolean; error?: string}) => {
-      if (response.success) {
-        setCurrentRoom(null);
-        setGameState(null);
-        localStorage.removeItem('gameSessionToken');
-        localStorage.removeItem('currentRoomId');
+    // Clear state immediately (don't wait for callback)
+    setCurrentRoom(null);
+    setGameState(null);
+    localStorage.removeItem('gameSessionToken');
+    localStorage.removeItem('currentRoomId');
+
+    // Then emit to server
+    socket.emit('leave_room', {}, (response: {success: boolean; error?: string}) => {
+      if (!response.success && response.error) {
+        logger.error('Failed to leave room', response.error);
+        setError(response.error);
       }
     });
   }, [socket]);
@@ -195,6 +202,17 @@ export const useGame = (userAddress: string) => {
     (card: Card) => {
       if (!socket || !gameState) return;
 
+      // 🛡️ Debounce: Prevent rapid duplicate selections
+      const now = Date.now();
+      if (now - lastSelectionTime < 3000) {
+        logger.warn('Card selection debounced - too fast', {
+          timeSinceLastSelection: now - lastSelectionTime,
+        });
+        return;
+      }
+
+      setLastSelectionTime(now);
+
       socket.emit(
         'select_card',
         {cardId: card.id},
@@ -202,12 +220,15 @@ export const useGame = (userAddress: string) => {
           if (response.success) {
             setGameState((prev) => (prev ? {...prev, selectedCard: card} : null));
           } else {
+            logger.warn('Card selection failed', {error: response.error});
             setError(response.error || 'Failed to select card');
+            // Reset debounce on failure to allow retry
+            setLastSelectionTime(0);
           }
         }
       );
     },
-    [socket, gameState]
+    [socket, gameState, lastSelectionTime]
   );
 
   // Send emoji
@@ -404,12 +425,12 @@ export const useGame = (userAddress: string) => {
           // Convert backend round history to frontend format
           // biome-ignore lint/suspicious/noExplicitAny: <explanation>
           const convertedHistory = (data.roundHistory || []).map((h: any) => {
-            // Determine which card is mine based on matching with current round's myCard
-            const isPlayer1 = h.player1Card.id === data.myCard.id;
-
-            // Case-insensitive address comparison
-            const winnerLower = h.winner?.toLowerCase();
+            // Determine which card is mine based on address comparison
             const myAddressLower = userAddress?.toLowerCase();
+            const isPlayer1 = h.player1Address?.toLowerCase() === myAddressLower;
+
+            // Case-insensitive address comparison for winner
+            const winnerLower = h.winner?.toLowerCase();
 
             return {
               round: h.round,
@@ -461,14 +482,6 @@ export const useGame = (userAddress: string) => {
           logger.warn('Ignoring new_round_started - game is over');
           return;
         }
-
-        logger.timer('New round started', {
-          round: data.round,
-          timeLimit: data.timeLimit,
-          startTime: data.startTime,
-          clientTime: Date.now(),
-          latency: Date.now() - data.startTime,
-        });
         setGameState((prev) =>
           prev
             ? {

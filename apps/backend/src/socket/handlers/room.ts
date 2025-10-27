@@ -12,6 +12,7 @@ import {
   validateRoomPassword,
 } from '../../utils/validators';
 import {checkAddressRateLimit} from '../middleware/rateLimit';
+import {handleDisconnectForfeit} from './game';
 
 export const setupRoomHandlers = (io: Server, socket: Socket) => {
   /**
@@ -250,7 +251,7 @@ export const setupRoomHandlers = (io: Server, socket: Socket) => {
   /**
    * Leave room
    */
-  socket.on('leave_room', (callback) => {
+  socket.on('leave_room', async (_data, callback) => {
     try {
       // Get room info BEFORE removing player
       const roomBeforeLeave = roomManager.getRoomBySocket(socket.id);
@@ -260,12 +261,54 @@ export const setupRoomHandlers = (io: Server, socket: Socket) => {
         socketId: socket.id,
         roomId: roomIdBeforeLeave,
         playersBefore: roomBeforeLeave?.players.length,
+        gameState: roomBeforeLeave?.gameState,
+        isSinglePlayer: roomBeforeLeave?.isSinglePlayer,
       });
 
-      // Now remove the player
+      // Handle playing state BEFORE removing player
+      if (roomBeforeLeave?.gameState === 'playing') {
+        const leavingPlayer = roomBeforeLeave.players.find((p) => p.socketId === socket.id);
+        
+        if (leavingPlayer) {
+          logger.info('Player leaving during active game', {
+            roomId: roomIdBeforeLeave,
+            isSinglePlayer: roomBeforeLeave.isSinglePlayer,
+            playerAddress: leavingPlayer.address,
+          });
+
+          if (roomBeforeLeave.isSinglePlayer) {
+            // Single player: Just delete the room completely
+            logger.info('Single player: destroying room');
+            roomManager.deleteRoom(roomIdBeforeLeave!);
+            
+            // Leave socket room
+            if (roomIdBeforeLeave) {
+              socket.leave(roomIdBeforeLeave);
+            }
+            
+            logger.info('Single player room destroyed');
+            
+            if (callback && typeof callback === 'function') {
+              callback({success: true});
+            }
+            
+            // Broadcast updated room list
+            io.emit('room_list', roomManager.getAvailableRooms().map(formatRoomForList));
+            return; // Exit early
+          // biome-ignore lint/style/noUselessElse: <explanation>
+          } else {
+            // Multiplayer: Use existing disconnect forfeit mechanism
+            logger.info('Multiplayer: processing forfeit');
+            await handleDisconnectForfeit(io, roomBeforeLeave, leavingPlayer.address);
+            logger.info('Multiplayer forfeit processed');
+          }
+        }
+      }
+
+      // Normal leave room flow (for non-playing state or after multiplayer forfeit)
       const {room, roomId} = roomManager.leaveRoom(socket.id);
 
-      if (room && roomIdBeforeLeave) {
+      if (room && roomIdBeforeLeave && room.gameState !== 'playing') {
         // If only 1 player remains, reset their ready state
         if (room.players.length === 1) {
           room.players[0].ready = false;
@@ -280,7 +323,6 @@ export const setupRoomHandlers = (io: Server, socket: Socket) => {
         logger.info('Broadcasting player_left to room', {
           roomId: roomIdBeforeLeave,
           remainingPlayers: room.players.length,
-          roomData,
         });
 
         // Use io.to() to broadcast to ALL sockets in the room
@@ -293,46 +335,51 @@ export const setupRoomHandlers = (io: Server, socket: Socket) => {
         io.to(roomIdBeforeLeave).emit('room_updated', {
           room: roomData,
         });
-
-        logger.info('Notified remaining players', {
-          roomId: roomIdBeforeLeave,
-          remainingPlayers: room.players.length,
-        });
       }
 
-      // NOW leave the socket room
+      // Leave the socket room
       if (roomId) {
         socket.leave(roomId);
       }
 
       logger.info('Player left room complete', {roomId, remainingPlayers: room?.players.length});
 
-      callback({success: true});
+      if (callback && typeof callback === 'function') {
+        callback({success: true});
+      }
 
-      // Broadcast updated room list
-      io.emit('room_list', roomManager.getAvailableRooms().map(formatRoomForList));
+      // Broadcast updated room list (only if not in playing state, as forfeit handler will handle it)
+      if (roomBeforeLeave?.gameState !== 'playing') {
+        io.emit('room_list', roomManager.getAvailableRooms().map(formatRoomForList));
+      }
     } catch (error) {
       logger.error('Error leaving room', error);
-      callback({
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to leave room',
-      });
+      if (callback && typeof callback === 'function') {
+        callback({
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to leave room',
+        });
+      }
     }
   });
 
   /**
    * Get available rooms
    */
-  socket.on('get_rooms', (callback) => {
+  socket.on('get_rooms', (_data, callback) => {
     try {
       const rooms = roomManager.getAvailableRooms().map(formatRoomForList);
-      callback({success: true, rooms});
+      if (callback && typeof callback === 'function') {
+        callback({success: true, rooms});
+      }
     } catch (error) {
       logger.error('Error getting rooms', error);
-      callback({
-        success: false,
-        error: 'Failed to get rooms',
-      });
+      if (callback && typeof callback === 'function') {
+        callback({
+          success: false,
+          error: 'Failed to get rooms',
+        });
+      }
     }
   });
 

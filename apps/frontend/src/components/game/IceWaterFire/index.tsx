@@ -1,15 +1,17 @@
 import {message} from 'antd';
 import {motion} from 'framer-motion';
 import type React from 'react';
-import {useEffect, useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import {useParams} from 'react-router-dom';
 import styled from 'styled-components';
 import {useAccount} from 'wagmi';
 import WalletConnect from '../../wallet/WalletConnect';
 import {GameModeModal} from './components/GameModeModal';
+import { NetworkWarningModal } from './components/NetworkWarningModal';
 import TutorialModal from './components/TutorialModal';
 import {SocketProvider, useSocket} from './context/SocketContext';
 import {useGame} from './hooks/useGame';
+import { useNetworkCheck } from './hooks/useNetworkCheck';
 import {useSoundEffects} from './hooks/useSoundEffects';
 import GameBoard from './pages/GameBoard';
 import GameLobby from './pages/GameLobby';
@@ -39,21 +41,9 @@ const IceWaterFireGame: React.FC<IceWaterFireGameProps> = ({onDisconnect}) => {
       const timestamp = Date.now().toString(16).padStart(12, '0'); // 12 hex chars
       const random = Math.random().toString(16).substring(2, 30).padEnd(28, '0'); // 28 hex chars
       const tempAddress = `0x${timestamp}${random}`;
-      console.log('🎮 Generated guest address:', tempAddress);
       setGuestAddress(tempAddress);
     }
   }, [guestMode, guestAddress]);
-
-  // Check if tutorial should be shown on first visit
-  useEffect(() => {
-    if ((isConnected || guestMode) && !tutorialVisible && !showGameModeModal) {
-      const tutorialCompleted = localStorage.getItem('tutorialCompleted');
-      if (!tutorialCompleted) {
-        console.log('📚 Showing tutorial for first-time user');
-        setTutorialVisible(true);
-      }
-    }
-  }, [isConnected, guestMode, tutorialVisible, showGameModeModal]);
 
   // If not connected and not in guest mode, show entry choice
   if (!isConnected && !guestMode) {
@@ -94,6 +84,20 @@ const IceWaterFireGame: React.FC<IceWaterFireGameProps> = ({onDisconnect}) => {
                   <WalletConnect />
                 </WalletConnectWrapper>
               </ChoiceButton>
+
+              <ChoiceButton
+                as={motion.button}
+                whileHover={{scale: 1.05, y: -5}}
+                whileTap={{scale: 0.95}}
+                onClick={() => setTutorialVisible(true)}
+                $tutorial
+              >
+                <ButtonIcon>💡</ButtonIcon>
+                <ButtonText>
+                  <ButtonTitle>Tutorial</ButtonTitle>
+                  <ButtonSubtitle>Learn the game</ButtonSubtitle>
+                </ButtonText>
+              </ChoiceButton>
             </ChoiceButtons>
           </WalletPromptContent>
         </WalletPromptContainer>
@@ -101,11 +105,7 @@ const IceWaterFireGame: React.FC<IceWaterFireGameProps> = ({onDisconnect}) => {
         <TutorialModal
           visible={tutorialVisible}
           onClose={() => {
-            console.log('📚 Tutorial closed, showing game mode selection');
             setTutorialVisible(false);
-            if (!pendingGameMode) {
-              setShowGameModeModal(true);
-            }
           }}
         />
 
@@ -113,13 +113,11 @@ const IceWaterFireGame: React.FC<IceWaterFireGameProps> = ({onDisconnect}) => {
           visible={showGameModeModal}
           loading={gameModeLoading}
           onSinglePlayer={() => {
-            console.log('🎮 Modal: Single Player selected, activating guest mode');
             setPendingGameMode('single');
             setGuestMode(true);
             setGameModeLoading(true);
           }}
           onMultiplayer={() => {
-            console.log('👥 Modal: Multiplayer selected, activating guest mode');
             setPendingGameMode('multi');
             setGuestMode(true);
             setGameModeLoading(true);
@@ -154,11 +152,7 @@ const IceWaterFireGame: React.FC<IceWaterFireGameProps> = ({onDisconnect}) => {
       <TutorialModal
         visible={tutorialVisible}
         onClose={() => {
-          console.log('📚 Tutorial closed, showing game mode selection');
           setTutorialVisible(false);
-          if (!pendingGameMode) {
-            setShowGameModeModal(true);
-          }
         }}
       />
 
@@ -166,13 +160,11 @@ const IceWaterFireGame: React.FC<IceWaterFireGameProps> = ({onDisconnect}) => {
         visible={showGameModeModal}
         loading={gameModeLoading}
         onSinglePlayer={() => {
-          console.log('🎮 Modal: Single Player selected, activating guest mode');
           setPendingGameMode('single');
           setGuestMode(true);
           setGameModeLoading(true);
         }}
         onMultiplayer={() => {
-          console.log('👥 Modal: Multiplayer selected, activating guest mode');
           setPendingGameMode('multi');
           setGuestMode(true);
           setGameModeLoading(true);
@@ -205,6 +197,9 @@ const GameContainer: React.FC<GameContainerProps> = ({
   const {roomId: roomIdFromUrl} = useParams<{roomId: string}>();
   const [currentPage, setCurrentPage] = useState<GamePage>('lobby');
   const [timeRemaining, setTimeRemaining] = useState(10);
+  
+  // Track if game finished sound has been played (prevent duplicate sounds)
+  const gameFinishedSoundPlayed = useRef(false);
   const [balance, setBalance] = useState<string>('0');
   const [hasCalledRoomReady, setHasCalledRoomReady] = useState(false);
 
@@ -229,29 +224,28 @@ const GameContainer: React.FC<GameContainerProps> = ({
   const {socket} = useSocket();
   const {isConnected} = useAccount();
   const {playSound, soundsEnabled, volume, setVolume, toggleSounds} = useSoundEffects();
+  const {isCorrectNetwork, currentChainId, switchToCorrectNetwork, requiredChainId, requiredNetworkName} = useNetworkCheck();
+  const [showNetworkWarning, setShowNetworkWarning] = useState(false);
+
+  // Check network when wallet connects (only for non-guest users)
+  useEffect(() => {
+    if (isConnected && !isGuest && !isCorrectNetwork) {
+      setShowNetworkWarning(true);
+    }
+  }, [isConnected, isGuest, isCorrectNetwork]);
 
   // Handle pending game mode (auto-create room for guest users)
   useEffect(() => {
     if (!pendingGameMode || !isGuest) return;
 
-    console.log('📋 Pending game mode detected:', pendingGameMode);
-    console.log('🔌 Socket status:', socket ? 'connected' : 'not connected');
-    console.log('👤 User address:', userAddress);
-
     if (!socket || !userAddress) {
-      console.log('⏳ Waiting for socket connection and address...');
       return;
     }
 
-    logger.info('✅ All conditions met, handling pending game mode', {
-      pendingGameMode,
-      userAddress,
-      socketId: socket.id,
-    });
+    logger.info('Handling pending game mode');
 
     // Wait a bit for socket to be fully initialized
     const timer = setTimeout(() => {
-      console.log('🚀 Creating/joining room...');
 
       if (pendingGameMode === 'single') {
         // Create single player room
@@ -270,7 +264,6 @@ const GameContainer: React.FC<GameContainerProps> = ({
   // Handle room ready - switch to room page and close modal (only once for pending game mode)
   useEffect(() => {
     if (currentRoom && pendingGameMode && !hasCalledRoomReady) {
-      console.log('✅ Room ready, switching to room page and closing loading modal');
       setCurrentPage('room');
       setHasCalledRoomReady(true);
 
@@ -303,7 +296,6 @@ const GameContainer: React.FC<GameContainerProps> = ({
 
     // Wait a bit for socket to be fully initialized
     const timer = setTimeout(() => {
-      console.log('🔗 Joining room from share link:', roomIdFromUrl);
       joinRoom(roomIdFromUrl);
     }, 1000);
 
@@ -313,7 +305,6 @@ const GameContainer: React.FC<GameContainerProps> = ({
   // Fetch balance periodically (skip for guest users)
   useEffect(() => {
     if (!userAddress || isGuest) {
-      console.log('⚠️ Guest mode or no userAddress, skipping balance fetch');
       return;
     }
 
@@ -349,13 +340,6 @@ const GameContainer: React.FC<GameContainerProps> = ({
       gameState.roundStartTime &&
       gameState.timeLimit
     ) {
-      logger.timer('Starting timer sync', {
-        roundStartTime: gameState.roundStartTime,
-        timeLimit: gameState.timeLimit,
-        currentTime: Date.now(),
-        hasSelected: !!gameState.selectedCard,
-      });
-
       // Calculate time based on server timestamp
       const calculateTimeRemaining = () => {
         const elapsed = (Date.now() - gameState.roundStartTime!) / 1000; // Convert to seconds
@@ -366,7 +350,6 @@ const GameContainer: React.FC<GameContainerProps> = ({
       // Update immediately
       const initialTime = calculateTimeRemaining();
       setTimeRemaining(initialTime);
-      logger.timer('Timer initialized', {initialTime, hasSelected: !!gameState.selectedCard});
 
       // Track last warning to avoid spamming
       let hasPlayedWarning = false;
@@ -384,7 +367,6 @@ const GameContainer: React.FC<GameContainerProps> = ({
 
         // Play warning sound at 3 seconds (only if player hasn't selected yet)
         if (newTime <= 3 && !hasPlayedWarning && !gameState.selectedCard) {
-          logger.timer('Low time warning', {remaining: newTime});
           playSound('timerWarning');
           hasPlayedWarning = true;
         }
@@ -394,7 +376,6 @@ const GameContainer: React.FC<GameContainerProps> = ({
 
       return () => {
         clearInterval(timer);
-        logger.timer('Timer cleanup');
       };
     }
   }, [
@@ -416,12 +397,13 @@ const GameContainer: React.FC<GameContainerProps> = ({
 
   // Handle room changes (when user joins/creates a room)
   useEffect(() => {
-    if (currentRoom && currentPage === 'lobby') {
+    if (currentRoom && currentPage === 'lobby' && currentRoom.gameState === 'waiting') {
+      // Only navigate to room if game is waiting (not finished/playing)
       playSound('roomJoin');
       setCurrentPage('room');
-    } else if (!currentRoom && currentPage === 'room') {
-      // Room was left or destroyed
-      logger.ui('Navigating back to lobby');
+    } else if (!currentRoom && (currentPage === 'room' || currentPage === 'playing')) {
+      // Room was left or destroyed - navigate back to lobby
+      logger.ui('Navigating back to lobby - room no longer exists');
       setCurrentPage('lobby');
     }
   }, [currentRoom, currentPage, playSound]);
@@ -431,18 +413,23 @@ const GameContainer: React.FC<GameContainerProps> = ({
     if (gameState) {
       if (gameState.gameState === 'waiting') {
         setCurrentPage('room');
+        // Reset sound flag when game restarts
+        gameFinishedSoundPlayed.current = false;
       } else if (gameState.gameState === 'playing') {
         setCurrentPage('playing');
+        // Reset sound flag when game starts
+        gameFinishedSoundPlayed.current = false;
       } else if (gameState.gameState === 'finished') {
-        // Game finished - stay on playing page, modal will show there
-        // Play win/lose/draw sound immediately
-        const isWinner = gameState.winner?.toLowerCase() === userAddress.toLowerCase();
-        const isDraw = !gameState.winner;
-
-        if (isDraw) {
-          playSound('gameLose'); // or add a draw sound
-        } else {
+        // 🛡️ Guard: Only play sound once per game
+        if (!gameFinishedSoundPlayed.current) {
+          gameFinishedSoundPlayed.current = true;
+          
+          // Game finished - stay on playing page, modal will show there
+          // Play win/lose/draw sound immediately
+          const isWinner = gameState.winner?.toLowerCase() === userAddress.toLowerCase();
+          
           playSound(isWinner ? 'gameWin' : 'gameLose');
+          
         }
       }
     }
@@ -454,13 +441,22 @@ const GameContainer: React.FC<GameContainerProps> = ({
   };
 
   const handleReturnToLobby = () => {
+    logger.info('Returning to lobby - clearing states');
+    
     // Clear all game-related states
     clearAnimations();
     setTimeRemaining(10);
-
-    // Leave room and navigate to lobby
+    
+    // Reset sound flag
+    gameFinishedSoundPlayed.current = false;
+    
+    // Leave room (will clear currentRoom, gameState, localStorage immediately)
     leaveRoom();
+    
+    // Navigate to lobby
     setCurrentPage('lobby');
+    
+    logger.info('Navigated to lobby page');
   };
 
   const handleCardSelect = (card: Card) => {
@@ -499,34 +495,6 @@ const GameContainer: React.FC<GameContainerProps> = ({
     selectedCard: !!gameState?.opponentSelected,
   };
 
-  // Debug logging for player scores
-  useEffect(() => {
-    if (gameState && currentPage === 'playing') {
-      console.log('🎮 Player Scores Update:', {
-        gameStateMyScore: gameState.myScore,
-        gameStateOpponentScore: gameState.opponentScore,
-        currentRound: gameState.currentRound,
-        myPlayerRoundsWon: myPlayer.roundsWon,
-        opponentPlayerRoundsWon: opponentPlayer.roundsWon,
-        gameState: gameState.gameState,
-      });
-    } else if (gameState && gameState.gameState === 'finished') {
-      console.log('🏁 Game Finished - Final Scores:', {
-        gameStateMyScore: gameState.myScore,
-        gameStateOpponentScore: gameState.opponentScore,
-        winner: gameState.winner,
-        finalScores: gameState.finalScores,
-        prizeAmount: gameState.prizeAmount,
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    gameState?.myScore,
-    gameState?.opponentScore,
-    gameState?.currentRound,
-    gameState?.gameState,
-    currentPage,
-  ]);
 
   const mockCards: Card[] = [
     {id: 'fire_3', type: 'fire', value: 3},
@@ -603,6 +571,19 @@ const GameContainer: React.FC<GameContainerProps> = ({
           isSinglePlayer={currentRoom?.isSinglePlayer ?? false}
         />
       )}
+
+      {/* Network Warning Modal */}
+      <NetworkWarningModal
+        visible={showNetworkWarning}
+        onClose={() => setShowNetworkWarning(false)}
+        onSwitchNetwork={() => {
+          switchToCorrectNetwork();
+          setShowNetworkWarning(false);
+        }}
+        currentNetworkId={currentChainId}
+        requiredNetworkName={requiredNetworkName}
+        requiredNetworkId={requiredChainId}
+      />
     </>
   );
 };
@@ -658,7 +639,7 @@ const ChoiceButtons = styled.div`
   max-width: 400px;
 `;
 
-const ChoiceButton = styled.button<{$primary?: boolean; $secondary?: boolean}>`
+const ChoiceButton = styled.button<{$primary?: boolean; $secondary?: boolean; $tutorial?: boolean}>`
   position: relative;
   display: flex;
   align-items: center;
@@ -667,18 +648,20 @@ const ChoiceButton = styled.button<{$primary?: boolean; $secondary?: boolean}>`
   background: ${(props) =>
     props.$primary
       ? 'linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%)'
-      : 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)'};
+      : props.$tutorial
+        ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+        : 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)'};
   border: none;
   border-radius: 16px;
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 8px 24px ${(props) =>
-    props.$primary ? 'rgba(78, 205, 196, 0.4)' : 'rgba(255, 215, 0, 0.4)'};
+    props.$primary ? 'rgba(78, 205, 196, 0.4)' : props.$tutorial ? 'rgba(102, 126, 234, 0.4)' : 'rgba(255, 215, 0, 0.4)'};
   overflow: hidden;
 
   &:hover {
     box-shadow: 0 12px 32px ${(props) =>
-      props.$primary ? 'rgba(78, 205, 196, 0.6)' : 'rgba(255, 215, 0, 0.6)'};
+      props.$primary ? 'rgba(78, 205, 196, 0.6)' : props.$tutorial ? 'rgba(102, 126, 234, 0.6)' : 'rgba(255, 215, 0, 0.6)'};
   }
 `;
 

@@ -103,7 +103,9 @@ export class GameService {
     const historyEntry: RoundHistoryEntry = {
       roundNumber: room.currentRound,
       player1Card: card1,
+      player1Address: player1.address,
       player2Card: card2,
+      player2Address: player2.address,
       winner: roundResult.winner,
       result: roundResult.result,
       timestamp: new Date(),

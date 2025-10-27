@@ -8,6 +8,7 @@ import DepositModal from '../components/DepositModal';
 import {LeaderboardModal} from '../components/LeaderboardModal';
 import RoomList from '../components/RoomList';
 import SoundSettings from '../components/SoundSettings';
+import TutorialModal from '../components/TutorialModal';
 import WithdrawModal from '../components/WithdrawModal';
 import type {Room} from '../types';
 
@@ -50,6 +51,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({
   const [withdrawModalVisible, setWithdrawModalVisible] = useState(false);
   const [quickJoinModalVisible, setQuickJoinModalVisible] = useState(false);
   const [leaderboardVisible, setLeaderboardVisible] = useState(false);
+  const [tutorialVisible, setTutorialVisible] = useState(false);
   const [betAmount, setBetAmount] = useState(0.001);
   const [password, setPassword] = useState('');
   const [roomIdToJoin, setRoomIdToJoin] = useState('');
@@ -190,6 +192,12 @@ const GameLobby: React.FC<GameLobbyProps> = ({
             <ActionTitle>Leaderboard</ActionTitle>
             <ActionDescription>View top players and rankings</ActionDescription>
           </ActionCard>
+
+          <ActionCard onClick={() => setTutorialVisible(true)}>
+            <ActionIcon>📚</ActionIcon>
+            <ActionTitle>Tutorial</ActionTitle>
+            <ActionDescription>Learn how to play the game</ActionDescription>
+          </ActionCard>
         </ActionsPanel>
 
         {/* Right Side - Room List & Settings */}
@@ -242,29 +250,34 @@ const GameLobby: React.FC<GameLobbyProps> = ({
               onChange={(val) => setBetAmount(val || 0)}
               addonAfter={betAmount === 0 ? 'FREE' : 'ETH'}
               style={{width: '100%', marginTop: '12px'}}
+              disabled={gameMode === 'single_player'}
             />
             <PresetButtons style={{marginTop: '8px'}}>
               <PresetButton
                 active={betAmount === 0.001 ? 'true' : undefined}
                 onClick={() => setBetAmount(0.001)}
+                disabled={gameMode === 'single_player'}
               >
                 0.001
               </PresetButton>
               <PresetButton
                 active={betAmount === 0.01 ? 'true' : undefined}
                 onClick={() => setBetAmount(0.01)}
+                disabled={gameMode === 'single_player'}
               >
                 0.01
               </PresetButton>
               <PresetButton
                 active={betAmount === 0.1 ? 'true' : undefined}
                 onClick={() => setBetAmount(0.1)}
+                disabled={gameMode === 'single_player'}
               >
                 0.1
               </PresetButton>
               <PresetButton
                 active={betAmount === 1 ? 'true' : undefined}
                 onClick={() => setBetAmount(1)}
+                disabled={gameMode === 'single_player'}
               >
                 1
               </PresetButton>
@@ -413,29 +426,34 @@ const GameLobby: React.FC<GameLobbyProps> = ({
               }}
               addonAfter={quickBetAmount === 0 ? 'FREE' : 'ETH'}
               style={{width: '100%', marginTop: '12px'}}
+              disabled={quickGameMode === 'single_player'}
             />
             <PresetButtons style={{marginTop: '8px'}}>
               <PresetButton
                 active={quickBetAmount === 0.001 ? 'true' : undefined}
                 onClick={() => setQuickBetAmount(0.001)}
+                disabled={quickGameMode === 'single_player'}
               >
                 0.001
               </PresetButton>
               <PresetButton
                 active={quickBetAmount === 0.01 ? 'true' : undefined}
                 onClick={() => setQuickBetAmount(0.01)}
+                disabled={quickGameMode === 'single_player'}
               >
                 0.01
               </PresetButton>
               <PresetButton
                 active={quickBetAmount === 0.1 ? 'true' : undefined}
                 onClick={() => setQuickBetAmount(0.1)}
+                disabled={quickGameMode === 'single_player'}
               >
                 0.1
               </PresetButton>
               <PresetButton
                 active={quickBetAmount === 1 ? 'true' : undefined}
                 onClick={() => setQuickBetAmount(1)}
+                disabled={quickGameMode === 'single_player'}
               >
                 1
               </PresetButton>
@@ -504,6 +522,9 @@ const GameLobby: React.FC<GameLobbyProps> = ({
 
       {/* Leaderboard Modal */}
       <LeaderboardModal visible={leaderboardVisible} onClose={() => setLeaderboardVisible(false)} />
+
+      {/* Tutorial Modal */}
+      <TutorialModal visible={tutorialVisible} onClose={() => setTutorialVisible(false)} />
     </Container>
   );
 };
@@ -800,13 +821,15 @@ const PresetButtons = styled.div`
   gap: 8px;
 `;
 
-const PresetButton = styled.button<{active?: string | undefined; $practice?: boolean}>`
+const PresetButton = styled.button<{active?: string | undefined; $practice?: boolean; disabled?: boolean}>`
   padding: ${(props) => (props.$practice ? '12px 16px' : '8px')};
   border: 2px solid ${(props) => {
+    if (props.disabled) return '#e0e0e0';
     if (props.$practice) return props.active ? '#4ECDC4' : '#4ECDC4';
     return props.active ? '#667eea' : '#e0e0e0';
   }};
   background: ${(props) => {
+    if (props.disabled) return '#f5f5f5';
     if (props.$practice) {
       return props.active
         ? 'linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%)'
@@ -815,27 +838,30 @@ const PresetButton = styled.button<{active?: string | undefined; $practice?: boo
     return props.active ? '#667eea' : 'white';
   }};
   color: ${(props) => {
+    if (props.disabled) return '#bbb';
     if (props.$practice) return props.active ? 'white' : '#4ECDC4';
     return props.active ? 'white' : '#666';
   }};
   border-radius: 8px;
-  cursor: pointer;
+  cursor: ${(props) => (props.disabled ? 'not-allowed' : 'pointer')};
   font-size: ${(props) => (props.$practice ? '16px' : '16px')};
   font-weight: ${(props) => (props.$practice ? '600' : '500')};
   transition: all 0.2s;
+  opacity: ${(props) => (props.disabled ? '0.6' : '1')};
   ${(props) => props.$practice && 'grid-column: 1 / -1;'}
 
   &:hover {
-    border-color: ${(props) => (props.$practice ? '#4ECDC4' : '#667eea')};
+    border-color: ${(props) => (props.disabled ? '#e0e0e0' : props.$practice ? '#4ECDC4' : '#667eea')};
     background: ${(props) => {
+      if (props.disabled) return '#f5f5f5';
       if (props.$practice) {
         return 'linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%)';
       }
       return props.active ? '#5568d3' : '#f0f0f0';
     }};
-    color: ${(props) => (props.$practice ? 'white' : props.active ? 'white' : '#666')};
-    transform: translateY(-2px);
-    box-shadow: ${(props) => (props.$practice ? '0 4px 12px rgba(78, 205, 196, 0.3)' : 'none')};
+    color: ${(props) => (props.disabled ? '#bbb' : props.$practice ? 'white' : props.active ? 'white' : '#666')};
+    transform: ${(props) => (props.disabled ? 'none' : 'translateY(-2px)')};
+    box-shadow: ${(props) => (props.disabled ? 'none' : props.$practice ? '0 4px 12px rgba(78, 205, 196, 0.3)' : 'none')};
   }
 `;
 

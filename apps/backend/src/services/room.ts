@@ -244,6 +244,28 @@ export class RoomManager {
   }
 
   /**
+   * Delete room completely (for single player games)
+   */
+  deleteRoom(roomId: string): void {
+    const room = this.rooms.get(roomId);
+    
+    if (!room) {
+      logger.warn('Attempted to delete non-existent room', {roomId});
+      return;
+    }
+
+    // Clean up all player mappings
+    for (const player of room.players) {
+      this.socketToRoom.delete(player.socketId);
+      this.addressToRoom.delete(player.address);
+    }
+
+    // Delete the room
+    this.rooms.delete(roomId);
+    logger.info('Room deleted completely', {roomId, playerCount: room.players.length});
+  }
+
+  /**
    * Get available rooms (1 player, waiting)
    */
   getAvailableRooms(): Room[] {

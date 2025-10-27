@@ -10,7 +10,6 @@ interface TutorialModalProps {
 
 const TutorialModal: React.FC<TutorialModalProps> = ({visible, onClose}) => {
   const [currentStep, setCurrentStep] = useState(0);
-  const [dontShowAgain, setDontShowAgain] = useState(false);
 
   const steps = [
     {
@@ -98,24 +97,12 @@ const TutorialModal: React.FC<TutorialModalProps> = ({visible, onClose}) => {
             <TipItem>• Watch the timer - don't let it run out!</TipItem>
             <TipItem>• Draws consume cards but award no points</TipItem>
           </QuickTips>
-          <CheckboxWrapper>
-            <Checkbox
-              type='checkbox'
-              id='dontShowAgain'
-              checked={dontShowAgain}
-              onChange={(e) => setDontShowAgain(e.target.checked)}
-            />
-            <CheckboxLabel htmlFor='dontShowAgain'>Don't show this tutorial again</CheckboxLabel>
-          </CheckboxWrapper>
         </ContentWrapper>
       ),
     },
   ];
 
   const handleClose = () => {
-    if (dontShowAgain) {
-      localStorage.setItem('tutorialCompleted', 'true');
-    }
     onClose();
   };
 
@@ -143,7 +130,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({visible, onClose}) => {
           initial={{opacity: 0}}
           animate={{opacity: 1}}
           exit={{opacity: 0}}
-          onClick={handleClose}
+          onClick={onClose}
         >
           <Modal
             as={motion.div}
@@ -157,7 +144,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({visible, onClose}) => {
               as={motion.button}
               whileHover={{scale: 1.1, rotate: 90}}
               whileTap={{scale: 0.9}}
-              onClick={handleClose}
+              onClick={onClose}
             >
               ✕
             </CloseButton>
@@ -542,27 +529,6 @@ const TipItem = styled.div`
   &:last-child {
     margin-bottom: 0;
   }
-`;
-
-const CheckboxWrapper = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 16px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
-`;
-
-const Checkbox = styled.input`
-  width: 20px;
-  height: 20px;
-  cursor: pointer;
-`;
-
-const CheckboxLabel = styled.label`
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.9);
-  cursor: pointer;
 `;
 
 const Footer = styled.div`

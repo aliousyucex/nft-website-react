@@ -1,13 +1,21 @@
 import {Col, Flex, Row} from 'antd';
-import {AnimatePresence, motion } from 'framer-motion';
+import {AnimatePresence, motion} from 'framer-motion';
 import type React from 'react';
-import {useEffect, useState } from 'react';
+import {useEffect, useState} from 'react';
 import styled from 'styled-components';
-import logo from '../../../../../public/logo.svg';
 import Card from '../components/Card';
 import CardHand from '../components/CardHand';
+import {LeaveConfirmationModal} from '../components/LeaveConfirmationModal';
 import {GameResultModal} from '../components/ResultModal';
-import {type Card as CardType, EMOJIS, type GameState, type Player, type RoundHistoryItem, type RoundResult } from '../types';
+import RoundHistory from '../components/RoundHistory';
+import {
+  type Card as CardType,
+  EMOJIS,
+  type GameState,
+  type Player,
+  type RoundHistoryItem,
+  type RoundResult,
+} from '../types';
 import logger from '../utils/logger';
 
 interface GameBoardProps {
@@ -57,6 +65,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
 }) => {
   const [showEmojiPanel, setShowEmojiPanel] = useState(false);
   const [showGameResult, setShowGameResult] = useState(false);
+  const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false);
   const [gameResult, setGameResult] = useState<{
     winner: string | null;
     myScore: number;
@@ -119,7 +128,6 @@ const GameBoard: React.FC<GameBoardProps> = ({
       // Set animation playing flag
       setIsAnimationPlaying(true);
 
-      console.log('lastRoundResult', lastRoundResult);
       const result = determineResult();
 
       // Play sounds
@@ -130,7 +138,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
       const timer = setTimeout(() => {
         setIsAnimationPlaying(false);
         if (onRoundResultComplete) onRoundResultComplete();
-      }, 600); // Match with animation duration
+      }, 3000); // Extended to 3000ms to wait for backend round processing + buffer
 
       return () => {
         clearTimeout(timer);
@@ -142,8 +150,6 @@ const GameBoard: React.FC<GameBoardProps> = ({
   // Handle game finish - Show result modal
   useEffect(() => {
     if (gameState && gameState.gameState === 'finished' && !showGameResult) {
-      console.log('🏁 Game finished in GameBoard, showing modal');
-
       // Case-insensitive address comparison for winner check
       const isWinner = gameState.winner?.toLowerCase() === currentUserAddress.toLowerCase();
       const isDraw = !gameState.winner; // null winner means draw
@@ -157,18 +163,25 @@ const GameBoard: React.FC<GameBoardProps> = ({
         isWinner,
         isDraw,
         reason: gameState.reason,
+        afkPlayerAddresses: gameState.afkPlayerAddresses || [],
       });
 
-      // Show modal after a brief delay to let final animations complete naturally
+      // Show modal after a longer delay to let final round card reveal complete
+      // This ensures players see the final cards before the result modal
       setTimeout(() => {
         setShowGameResult(true);
-      }, 1000);
+      }, 3000);
     }
   }, [gameState?.gameState, currentUserAddress, showGameResult]);
 
   const handleEmojiSend = (emoji: string) => {
     onSendEmoji(emoji);
     setShowEmojiPanel(false);
+  };
+
+  const handleLeaveGame = () => {
+    setShowLeaveConfirmation(false);
+    onReturnToLobby();
   };
 
   const isLowTime = timeRemaining <= 2;
@@ -189,19 +202,15 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
   return (
     <Container>
-      {/* Home Button */}
-      <HomeButton
-        onClick={() => {
-          window.location.href = '/';
-        }}
-        title='Return to Homepage'
-      >
-        <img src={logo} alt='Home' />
-      </HomeButton>
+      {/* Leave Button - Same as GameRoom */}
+      <LeaveButton onClick={() => setShowLeaveConfirmation(true)}>
+        <BackIcon>←</BackIcon>
+        Leave Room
+      </LeaveButton>
 
       {/* Round Result Overlay - Key-based rendering for proper animation */}
       <AnimatePresence mode='wait'>
-        {lastRoundResult && lastRoundResult.round === lastProcessedRound && (
+        {lastRoundResult && lastRoundResult.round === lastProcessedRound && gameState?.gameState !== 'finished' && (
           <RoundResultOverlay
             key={`round-result-${lastRoundResult.round}`}
             as={motion.div}
@@ -372,10 +381,30 @@ const GameBoard: React.FC<GameBoardProps> = ({
             onReturnToLobby();
           }}
           isPaidGame={isPaidGame}
+          isSinglePlayer={isSinglePlayer}
           reason={gameResult.reason}
           afkPlayerAddresses={gameResult.afkPlayerAddresses}
+          currentUserAddress={currentUserAddress}
         />
       )}
+
+      {/* Round History Sidebar */}
+      <HistorySidebar>
+        <HistorySidebarHeader>Round History</HistorySidebarHeader>
+        <RoundHistory history={gameState?.roundHistory || []} />
+      </HistorySidebar>
+
+      {/* Leave Confirmation Modal */}
+      <LeaveConfirmationModal
+        visible={showLeaveConfirmation}
+        onCancel={() => setShowLeaveConfirmation(false)}
+        onConfirm={() => {
+          setShowLeaveConfirmation(false);
+          handleLeaveGame();
+        }}
+        isPaidGame={isPaidGame}
+        betAmount={betAmount}
+      />
     </Container>
   );
 };
@@ -387,53 +416,111 @@ const Container = styled.div`
   max-height: 100vh;
   overflow: hidden;
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: 1fr 300px;
   padding: 10px;
+  gap: 10px;
   position: relative;
+
+  @media (max-width: 1200px) {
+    grid-template-columns: 1fr 250px;
+  }
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
 
   @media (max-height: 900px) {
     padding: 5px;
   }
 `;
 
-const HomeButton = styled.button`
+const LeaveButton = styled.button`
   position: absolute;
   top: 20px;
   left: 20px;
-  width: 50px;
-  height: 50px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, rgba(231, 76, 60, 0.9) 0%, rgba(192, 57, 43, 0.9) 100%);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
   cursor: pointer;
   z-index: 100;
-  background: none;
-  border: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(231, 76, 60, 0.4);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.6);
+    background: linear-gradient(135deg, rgba(192, 57, 43, 0.95) 0%, rgba(231, 76, 60, 0.95) 100%);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
 
   @media (max-width: 768px) {
-    width: 40px;
-    height: 40px;
-    font-size: 20px;
+    padding: 10px 16px;
+    font-size: 14px;
     top: 10px;
     left: 10px;
   }
 `;
 
+const BackIcon = styled.span`
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+`;
+
+const HistorySidebar = styled.div`
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+
+  @media (max-width: 768px) {
+    display: none;
+  }
+`;
+
+const HistorySidebarHeader = styled.div`
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  font-size: 18px;
+  font-weight: bold;
+  color: white;
+  text-align: center;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+`;
+
 const GameContainer = styled.div`
   width: 100%;
-  max-width: 1920px;
   height: 100%;
-  display: grid;
-  gap: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   position: relative;
   overflow: hidden;
+  gap: 10px;
 
   @media (max-height: 900px) {
     gap: 8px;
   }
 
-
   @media (max-width: 768px) {
-    grid-template-rows: auto auto 1fr;
     gap: 5px;
   }
 `;
@@ -705,8 +792,8 @@ const EmojiItem = styled.button`
 
 const RoundResultOverlay = styled.div`
   position: fixed;
-  top: 50%;
-  left: 50%;
+  top: 45%;
+  left: 45%;
   transform: translate(-50%, -50%);
   z-index: 10000;
   pointer-events: none;

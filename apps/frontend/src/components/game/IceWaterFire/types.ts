@@ -49,6 +49,7 @@ export interface GameState {
   prizeAmount?: number;
   isPaidGame?: boolean;
   reason?: string; // Reason for game end (e.g. 'both_afk', 'afk_forfeit', 'disconnect_forfeit', 'normal')
+  afkPlayerAddresses?: string[]; // Addresses of AFK players
   // Added for round result display
   lastRoundResult?: RoundResult;
   roundHistory?: RoundHistoryItem[];

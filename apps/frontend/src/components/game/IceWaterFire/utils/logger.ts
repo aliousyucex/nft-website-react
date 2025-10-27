@@ -34,15 +34,6 @@ export const logger = {
   },
 
   /**
-   * Timer/Round logs (only in development)
-   */
-  timer: (message: string, data?: unknown) => {
-    if (isDev) {
-      console.log(`⏱️ [TIMER] ${message}`, data || '');
-    }
-  },
-
-  /**
    * Animation logs (only in development)
    */
   animation: (message: string, data?: unknown) => {

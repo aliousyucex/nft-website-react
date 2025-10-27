@@ -37,11 +37,8 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({children, address
 
   useEffect(() => {
     if (!address) {
-      console.log('⏳ Waiting for address to initialize socket connection...');
       return;
     }
-
-    console.log('🔌 Initializing socket connection for address:', address);
 
     // Create socket connection
     const newSocket = io(SOCKET_URL, {
@@ -53,7 +50,6 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({children, address
 
     // Connection handlers
     newSocket.on('connect', () => {
-      console.log('✅ Socket connected:', newSocket.id, 'for address:', address);
       setIsConnected(true);
       setError(null);
 
@@ -62,7 +58,6 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({children, address
       const roomId = localStorage.getItem('currentRoomId');
 
       if (sessionToken && roomId && address) {
-        console.log('Found session token, attempting reconnect to room:', roomId);
         newSocket.emit(
           'reconnect_to_room',
           {
@@ -71,10 +66,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({children, address
             sessionToken,
           },
           (response: {success: boolean; error: string}) => {
-            if (response.success) {
-              console.log('Successfully reconnected to room');
-            } else {
-              console.log('Failed to reconnect:', response.error);
+            if (!response.success) {
               // Clear invalid tokens
               localStorage.removeItem('gameSessionToken');
               localStorage.removeItem('currentRoomId');

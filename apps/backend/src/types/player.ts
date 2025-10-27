@@ -11,6 +11,7 @@ export interface Player {
   lastPing: Date;
   disconnectedAt: Date | null;
   afkCount: number; // Track AFK timeout count
+  isProcessingRound?: boolean; // Lock to prevent card selection during round processing
 }
 
 export interface PlayerStats {
