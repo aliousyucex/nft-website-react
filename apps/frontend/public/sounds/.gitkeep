@@ -1,0 +1,28 @@
+# Sound Effects Directory
+
+Place your sound effect files here with the following names:
+
+- card-select.mp3 - Played when a card is selected ✅
+- card-reveal.mp3 - Played when cards are revealed✅
+- round-win.mp3 - Played when you win a round ✅
+- round-lose.mp3 - Played when you lose a round ✅
+- round-draw.mp3 - Played when a round is a draw ✅
+- game-win.mp3 - Played when you win the game ✅
+- game-lose.mp3 - Played when you lose the game ✅
+- ready.mp3 - Played when the ready button is clicked ✅
+- room-join.mp3 - Played when joining/creating a room ✅
+- timer-warning.mp3 - Played when timer reaches 2 seconds ✅
+
+## Recommended Sound Sources
+
+1. Free Sound Effects:
+   - https://freesound.org/
+   - https://www.zapsplat.com/
+   - https://mixkit.co/free-sound-effects/
+
+2. License: Make sure sounds are royalty-free or properly licensed
+
+3. Format: MP3 format, keep files under 100KB for faster loading
+
+4. Volume: Normalize sounds to -12dB to -6dB for consistent volume levels
+
