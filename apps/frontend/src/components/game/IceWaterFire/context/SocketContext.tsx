@@ -3,7 +3,7 @@ import {type ReactNode, createContext, useContext, useEffect, useState } from 'r
 import {type Socket, io } from 'socket.io-client';
 
 // Connect directly to backend (Vite proxy doesn't work well with Socket.IO)
-const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const SOCKET_URL = import.meta.env.VITE_WS_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 interface SocketContextType {
   socket: Socket | null;

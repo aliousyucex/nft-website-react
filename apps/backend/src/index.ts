@@ -13,8 +13,9 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: '*', // Configure this properly in production
+    origin: ['https://ivorynfts.com', 'https://www.ivorynfts.com', 'http://ivorynfts.com', 'http://www.ivorynfts.com', 'http://localhost:5001', 'http://localhost:5000'],
     methods: ['GET', 'POST'],
+    credentials: true,
   },
   pingTimeout: config.socket.pingTimeout,
   pingInterval: config.socket.pingInterval,
@@ -22,7 +23,10 @@ const io = new Server(httpServer, {
 
 // Middleware
 app.use(helmet());
-app.use(cors());
+app.use(cors({
+  origin: ['https://ivorynfts.com', 'https://www.ivorynfts.com', 'http://ivorynfts.com', 'http://www.ivorynfts.com', 'http://localhost:5001', 'http://localhost:5000'],
+  credentials: true,
+}));
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 
