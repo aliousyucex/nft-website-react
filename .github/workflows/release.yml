@@ -19,10 +19,10 @@ jobs:
 
       - name: Build and push Backend
         run: |
-          docker build -t ghcr.io/nft-backend:${{ github.event.release.tag_name }} ./apps/backend
-          docker push ghcr.io/nft-backend:${{ github.event.release.tag_name }}
+          docker build -t ghcr.io/${{ github.repository }}-backend:${{ github.event.release.tag_name }} ./apps/backend
+          docker push ghcr.io/${{ github.repository }}-backend:${{ github.event.release.tag_name }}
 
       - name: Build and push Frontend
         run: |
-          docker build -t ghcr.io/nft-frontend:${{ github.event.release.tag_name }} ./apps/frontend
-          docker push ghcr.io/nft-frontend:${{ github.event.release.tag_name }}
+          docker build -t ghcr.io/${{ github.repository }}-frontend:${{ github.event.release.tag_name }} ./apps/frontend
+          docker push ghcr.io/${{ github.repository }}-frontend:${{ github.event.release.tag_name }}
