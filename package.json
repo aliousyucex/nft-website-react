@@ -1,6 +1,6 @@
 {
   "name": "ice-water-fire-monorepo",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Ice Water Fire - Blockchain Card Game Monorepo",
   "private": true,
   "packageManager": "npm@10.9.0",
