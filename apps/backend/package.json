@@ -1,6 +1,6 @@
 {
   "name": "@apps/backend",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Ice Water Fire Card Game Backend",
   "main": "dist/index.js",
   "scripts": {
