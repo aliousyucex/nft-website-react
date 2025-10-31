@@ -118,7 +118,7 @@ const CardSlot = styled.div<{
   $totalCards: number;
 }>`
   position: absolute;
-  left: ${(props) => (props.$index / (props.$totalCards - 1 || 1)) * 110}%;
+  left: ${(props) => (props.$index / (props.$totalCards - 1 || 1)) * 103}%;
   transform: translateX(-50%) rotate(${(props) => props.$rotation}deg)
     translateY(${(props) => props.$translateY}px);
   transform-origin: center bottom;

@@ -193,7 +193,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({
     setQuickBetAmount(0.001);
   };
 
-  const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS || '';
+  const contractAddress = VITE_CONTRACT_ADDRESS || '0x3A895aeA91388f6b44227CDb565FDb04a8A81C79';
 
   return (
     <Container>
@@ -718,6 +718,7 @@ const DropdownArrow = styled.span<{isOpen: boolean}>`
   color: rgba(255, 255, 255, 0.7);
   transition: transform 0.3s ease;
   transform: ${props => props.isOpen ? 'rotate(180deg)' : 'rotate(0deg)'};
+  user-select: none;
 `;
 
 const BalanceDropdown = styled.div`

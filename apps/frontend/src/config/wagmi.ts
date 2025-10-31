@@ -54,7 +54,7 @@ const abstractMainnet = {
 
 export const config = getDefaultConfig({
   appName: 'Ice Water Fire',
-  projectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || 'YOUR_PROJECT_ID',
+  projectId: VITE_WALLETCONNECT_PROJECT_ID || '4fa1d964ec5302ec1801f47c61b39b7d',
   chains: [abstractTestnet],
   transports: {
     [abstractTestnet.id]: http(),

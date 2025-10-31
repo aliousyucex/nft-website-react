@@ -22,21 +22,6 @@ const Card: React.FC<CardProps> = ({
   disabled = false,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const [imageError, setImageError] = useState(false);
-  const [backImageError, setBackImageError] = useState(false);
-
-  const getCardIcon = (type: CardType['type']) => {
-    switch (type) {
-      case 'fire':
-        return '🔥';
-      case 'ice':
-        return '❄️';
-      case 'water':
-        return '💧';
-      default:
-        return '?';
-    }
-  };
 
   const getCardColor = (type: CardType['type']) => {
     switch (type) {
@@ -67,18 +52,11 @@ const Card: React.FC<CardProps> = ({
       rotateY: 0,
     },
     hover: {
-      y: -20,
-      scale: 1.05,
-      boxShadow: `0 15px 35px ${getCardColor(card.type)}60`,
+      y: -8,
     },
     selected: {
-      y: -30,
-      scale: 1.1,
-      boxShadow: `0 20px 40px ${getCardColor(card.type)}90`,
-    },
-    tap: {
-      scale: 0.95,
-      transition: {duration: 0.1},
+      y: -15,
+      scale: 1,
     },
   };
 
@@ -100,31 +78,12 @@ const Card: React.FC<CardProps> = ({
       $disabled={disabled}
       $cardColor={getCardColor(card.type)}
     >
-      {isOpponent && !isRevealed ? (
-        <CardBack $hasImage={!backImageError}>
-          {!backImageError ? (
-            <CardBackImage
-              src='/cards/card_back.jpg'
-              alt='Card back'
-              onError={() => setBackImageError(true)}
-            />
-          ) : (
-            <BackPattern>🎴</BackPattern>
-          )}
-        </CardBack>
-      ) : (
-        <CardFront $hasImage={!imageError} $cardType={card.type} $cardValue={card.value}>
-          {!imageError && (
+      <CardFront>
             <CardFrontImage
-              src={`/cards/${card.type}_${card.value}.png`}
+              src={`/cards/${card.type}_${card.value}.jpg`}
               alt={`${card.type} ${card.value}`}
-              onError={() => setImageError(true)}
             />
-          )}
-          <CardOverlay />
-          <CardContent>{imageError && <CardIcon>{getCardIcon(card.type)}</CardIcon>}</CardContent>
         </CardFront>
-      )}
       {isSelected && <SelectedIndicator />}
     </CardWrapper>
   );
@@ -163,50 +122,16 @@ const CardWrapper = styled.div<{
   `}
 `;
 
-const CardFront = styled.div<{
-  $hasImage?: boolean;
-  $cardType?: string;
-  $cardValue?: number;
-}>`
+const CardFront = styled.div`
   width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 16px;
-  color: white;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  padding: 12px;
   position: relative;
   border-radius: 12px;
-`;
-
-const CardBack = styled.div<{$hasImage?: boolean}>`
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: ${(props) => (props.$hasImage ? 'transparent' : 'linear-gradient(135deg, #8B0000 0%, #B22222 100%)')};
-  border: 3px solid #DC143C;
-  position: relative;
-  border-radius: 12px;
-`;
-
-const BackPattern = styled.div`
-  font-size: 48px;
-  opacity: 0.6;
-`;
-
-const CardIcon = styled.div`
-  font-size: 48px;
-  margin-bottom: 6px;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-
-  @media (max-height: 900px) {
-    font-size: 40px;
-    margin-bottom: 4px;
-  }
 `;
 
 const CardFrontImage = styled.img`
@@ -218,45 +143,7 @@ const CardFrontImage = styled.img`
   object-fit: cover;
   object-position: center;
   border-radius: 12px;
-`;
-
-const CardBackImage = styled.img`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  border-radius: 12px;
-`;
-
-const CardOverlay = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    to bottom,
-    transparent 0%,
-    transparent 40%,
-    rgba(0, 0, 0, 0.3) 70%,
-    rgba(0, 0, 0, 0.6) 100%
-  );
-  pointer-events: none;
-  z-index: 1;
-`;
-
-const CardContent = styled.div`
-  position: relative;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-`;
+`;  
 
 const SelectedIndicator = styled.div`
   position: absolute;

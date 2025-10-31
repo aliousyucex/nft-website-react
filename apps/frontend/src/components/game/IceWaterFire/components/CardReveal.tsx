@@ -343,9 +343,7 @@ const RevealCard = styled.div<{
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 20px;
-  color: white;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  padding: 12px;
   transform-style: preserve-3d;
   border: ${(props) =>
     props.$phase === 'result'

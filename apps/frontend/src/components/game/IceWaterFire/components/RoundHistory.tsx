@@ -41,7 +41,7 @@ const RoundHistory: React.FC<RoundHistoryProps> = ({history}) => {
                   <CardsDisplay>
                     <MiniCard>
                       <CardFrontImage
-                        src={`/cards/${item.myCard.type}_${item.myCard.value}.png`}
+                        src={`/cards/${item.myCard.type}_${item.myCard.value}.jpg`}
                         alt={`${item.myCard.type} ${item.myCard.value}`}
                       />
                     </MiniCard>
@@ -50,7 +50,7 @@ const RoundHistory: React.FC<RoundHistoryProps> = ({history}) => {
 
                     <MiniCard>
                     <CardFrontImage
-                        src={`/cards/${item.opponentCard.type}_${item.opponentCard.value}.png`}
+                        src={`/cards/${item.opponentCard.type}_${item.opponentCard.value}.jpg`}
                         alt={`${item.opponentCard.type} ${item.opponentCard.value}`}
                       />
                     </MiniCard>

@@ -115,7 +115,6 @@ const DepositModal: React.FC<DepositModalProps> = ({visible, onClose, contractAd
     <Modal open={visible} onCancel={onClose} footer={null} width={500} title={null} centered>
       <Container>
         <Header>
-          <Icon>💰</Icon>
           <Title>Deposit ETH</Title>
           <Subtitle>Deposit ETH to your game balance</Subtitle>
         </Header>
@@ -203,11 +202,6 @@ const Container = styled.div`
 const Header = styled.div`
   text-align: center;
   margin-bottom: 24px;
-`;
-
-const Icon = styled.div`
-  font-size: 48px;
-  margin-bottom: 12px;
 `;
 
 const Title = styled.h2`
