@@ -62,7 +62,7 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({visible, onClose, contract
     setIsRefreshing(true);
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/contract/balance/${address}`
+        `${VITE_API_URL}/api/contract/balance/${address}`
       );
       const data = await response.json();
       setContractBalance(data.balance || '0');

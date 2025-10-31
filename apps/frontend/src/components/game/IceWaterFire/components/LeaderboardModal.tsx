@@ -40,7 +40,7 @@ export const LeaderboardModal: React.FC<LeaderboardModalProps> = ({visible, onCl
     setError(null);
 
     try {
-      const response = await fetch('/api/leaderboard?limit=50');
+      const response = await fetch(`${VITE_API_URL}/api/leaderboard`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch leaderboard');

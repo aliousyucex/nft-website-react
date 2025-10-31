@@ -3,10 +3,12 @@
 - Oyun için isim önerisi alınacak
 
 # COOOK ONCELIKLI
-- origin ayarlari, webscoket baglansin bunlari yap artik
+- 
 
 # Sonraki step
 - INSANLARA TEST ETTIR OYNAT
+- kart selected ise, time sound'unu oynatma
+
 
 # AZ ONCELIKLI
 - Internet sitesindeki text'ler ve diger angarya duzeltmeler yapilmali, chain bilgiler degismeli
