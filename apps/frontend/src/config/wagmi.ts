@@ -21,7 +21,7 @@ const abstractTestnet = {
   blockExplorers: {
     default: {
       name: 'Abstract Explorer',
-      url: 'https://testnet.abscan.org',
+      url: 'https://sepolia.abscan.org/',
     },
   },
   testnet: true,

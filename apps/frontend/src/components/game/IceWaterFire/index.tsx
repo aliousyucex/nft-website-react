@@ -1,11 +1,9 @@
 import {message} from 'antd';
-import {motion} from 'framer-motion';
 import type React from 'react';
 import {useEffect, useRef, useState} from 'react';
 import {useParams} from 'react-router-dom';
-import styled from 'styled-components';
-import {useAccount} from 'wagmi';
-import WalletConnect from '../../wallet/WalletConnect';
+import {formatEther} from 'viem';
+import {useAccount, useBalance} from 'wagmi';
 import {GameModeModal} from './components/GameModeModal';
 import { NetworkWarningModal } from './components/NetworkWarningModal';
 import TutorialModal from './components/TutorialModal';
@@ -35,7 +33,7 @@ const IceWaterFireGame: React.FC<IceWaterFireGameProps> = ({onDisconnect}) => {
 
   // Generate guest address if playing without wallet
   useEffect(() => {
-    if (guestMode && !guestAddress) {
+    if (!isConnected && !guestAddress) {
       // Generate temporary guest address in valid Ethereum format (0x + 40 hex chars)
       // Use timestamp + random hex to create unique address
       const timestamp = Date.now().toString(16).padStart(12, '0'); // 12 hex chars
@@ -44,92 +42,6 @@ const IceWaterFireGame: React.FC<IceWaterFireGameProps> = ({onDisconnect}) => {
       setGuestAddress(tempAddress);
     }
   }, [guestMode, guestAddress]);
-
-  // If not connected and not in guest mode, show entry choice
-  if (!isConnected && !guestMode) {
-    return (
-      <>
-        <WalletPromptContainer>
-          <WalletPromptContent
-            as={motion.div}
-            initial={{opacity: 0, y: 20}}
-            animate={{opacity: 1, y: 0}}
-            transition={{duration: 0.5}}
-          >
-            <WalletTitle>Ice Water Fire</WalletTitle>
-            <WalletSubtitle>Choose how you want to play</WalletSubtitle>
-
-            <ChoiceButtons>
-              <ChoiceButton
-                as={motion.button}
-                whileHover={{scale: 1.05, y: -5}}
-                whileTap={{scale: 0.95}}
-                onClick={() => setShowGameModeModal(true)}
-                $primary
-              >
-                <ButtonIcon>🎮</ButtonIcon>
-                <ButtonText>
-                  <ButtonTitle>Play Right Away</ButtonTitle>
-                  <ButtonSubtitle>Free practice games</ButtonSubtitle>
-                </ButtonText>
-              </ChoiceButton>
-
-              <ChoiceButton as={motion.div} whileHover={{scale: 1.05, y: -5}} $secondary>
-                <ButtonIcon>💰</ButtonIcon>
-                <ButtonText>
-                  <ButtonTitle>Connect Wallet</ButtonTitle>
-                  <ButtonSubtitle>Play for ETH & leaderboard</ButtonSubtitle>
-                </ButtonText>
-                <WalletConnectWrapper>
-                  <WalletConnect />
-                </WalletConnectWrapper>
-              </ChoiceButton>
-
-              <ChoiceButton
-                as={motion.button}
-                whileHover={{scale: 1.05, y: -5}}
-                whileTap={{scale: 0.95}}
-                onClick={() => setTutorialVisible(true)}
-                $tutorial
-              >
-                <ButtonIcon>💡</ButtonIcon>
-                <ButtonText>
-                  <ButtonTitle>Tutorial</ButtonTitle>
-                  <ButtonSubtitle>Learn the game</ButtonSubtitle>
-                </ButtonText>
-              </ChoiceButton>
-            </ChoiceButtons>
-          </WalletPromptContent>
-        </WalletPromptContainer>
-
-        <TutorialModal
-          visible={tutorialVisible}
-          onClose={() => {
-            setTutorialVisible(false);
-          }}
-        />
-
-        <GameModeModal
-          visible={showGameModeModal}
-          loading={gameModeLoading}
-          onSinglePlayer={() => {
-            setPendingGameMode('single');
-            setGuestMode(true);
-            setGameModeLoading(true);
-          }}
-          onMultiplayer={() => {
-            setPendingGameMode('multi');
-            setGuestMode(true);
-            setGameModeLoading(true);
-          }}
-          onCancel={() => {
-            setShowGameModeModal(false);
-            setGameModeLoading(false);
-          }}
-        />
-      </>
-    );
-  }
 
   const userAddress = address || guestAddress;
 
@@ -201,6 +113,7 @@ const GameContainer: React.FC<GameContainerProps> = ({
   // Track if game finished sound has been played (prevent duplicate sounds)
   const gameFinishedSoundPlayed = useRef(false);
   const [balance, setBalance] = useState<string>('0');
+  const [contractBalance, setContractBalance] = useState<string>('0');
   const [hasCalledRoomReady, setHasCalledRoomReady] = useState(false);
 
   const {
@@ -222,10 +135,22 @@ const GameContainer: React.FC<GameContainerProps> = ({
   } = useGame(userAddress);
 
   const {socket} = useSocket();
-  const {isConnected} = useAccount();
+  const {isConnected, address} = useAccount();
   const {playSound, soundsEnabled, volume, setVolume, toggleSounds} = useSoundEffects();
   const {isCorrectNetwork, currentChainId, switchToCorrectNetwork, requiredChainId, requiredNetworkName} = useNetworkCheck();
   const [showNetworkWarning, setShowNetworkWarning] = useState(false);
+  
+  // Get wallet balance (MetaMask ETH balance)
+  const {data: walletBalanceData} = useBalance({
+    address: address as `0x${string}` | undefined,
+  });
+
+  // Update wallet balance when it changes
+  useEffect(() => {
+    if (walletBalanceData) {
+      setBalance(formatEther(walletBalanceData.value));
+    }
+  }, [walletBalanceData]);
 
   // Check network when wallet connects (only for non-guest users)
   useEffect(() => {
@@ -302,28 +227,28 @@ const GameContainer: React.FC<GameContainerProps> = ({
     return () => clearTimeout(timer);
   }, [roomIdFromUrl, socket, userAddress, currentRoom, pendingGameMode, joinRoom]);
 
-  // Fetch balance periodically (skip for guest users)
+  // Fetch contract balance periodically (skip for guest users)
   useEffect(() => {
     if (!userAddress || isGuest) {
       return;
     }
 
-    const fetchBalance = async () => {
+    const fetchContractBalance = async () => {
       try {
-        const response = await fetch(`/api/contract/balance/${userAddress}`);
+        const response = await fetch(`${VITE_API_URL}/api/contract/balance/${userAddress}`);
         if (response.ok) {
           const data = await response.json();
-          setBalance(data.balance || '0');
+          setContractBalance(data.balance || '0');
         } else {
-          console.error('❌ Balance fetch failed:', response.status, response.statusText);
+          console.error('❌ Contract balance fetch failed:', response.status, response.statusText);
         }
       } catch (error) {
-        console.error('❌ Error fetching balance:', error);
+        console.error('❌ Error fetching contract balance:', error);
       }
     };
 
-    fetchBalance();
-    const interval = setInterval(fetchBalance, 10000); // Every 10 seconds
+    fetchContractBalance();
+    const interval = setInterval(fetchContractBalance, 10000); // Every 10 seconds
 
     return () => clearInterval(interval);
   }, [userAddress, isGuest]);
@@ -511,6 +436,8 @@ const GameContainer: React.FC<GameContainerProps> = ({
           availableRooms={availableRooms}
           loading={loading}
           balance={balance}
+          contractBalance={contractBalance}
+          userAddress={userAddress}
           createRoom={createRoom}
           joinRoom={joinRoom}
           quickJoin={quickJoin}
@@ -589,119 +516,3 @@ const GameContainer: React.FC<GameContainerProps> = ({
 };
 
 export default IceWaterFireGame;
-
-const WalletPromptContainer = styled.div`
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-
-  height: 100vh;
-  overflow: hidden;
-`;
-
-const WalletPromptContent = styled.div`
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%);
-  backdrop-filter: blur(20px);
-  border-radius: 24px;
-  padding: 60px 40px;
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 24px;
-  max-width: 500px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-`;
-
-const WalletTitle = styled.h1`
-  font-size: 36px;
-  color: white;
-  margin: 0;
-  text-align: center;
-  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-`;
-
-const WalletSubtitle = styled.p`
-  font-size: 18px;
-  color: rgba(255, 255, 255, 0.9);
-  margin: 0;
-  text-align: center;
-  line-height: 1.6;
-`;
-
-const ChoiceButtons = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  width: 100%;
-  max-width: 400px;
-`;
-
-const ChoiceButton = styled.button<{$primary?: boolean; $secondary?: boolean; $tutorial?: boolean}>`
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  padding: 24px 32px;
-  background: ${(props) =>
-    props.$primary
-      ? 'linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%)'
-      : props.$tutorial
-        ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-        : 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)'};
-  border: none;
-  border-radius: 16px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 8px 24px ${(props) =>
-    props.$primary ? 'rgba(78, 205, 196, 0.4)' : props.$tutorial ? 'rgba(102, 126, 234, 0.4)' : 'rgba(255, 215, 0, 0.4)'};
-  overflow: hidden;
-
-  &:hover {
-    box-shadow: 0 12px 32px ${(props) =>
-      props.$primary ? 'rgba(78, 205, 196, 0.6)' : props.$tutorial ? 'rgba(102, 126, 234, 0.6)' : 'rgba(255, 215, 0, 0.6)'};
-  }
-`;
-
-const ButtonIcon = styled.div`
-  font-size: 48px;
-  flex-shrink: 0;
-`;
-
-const ButtonText = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  flex: 1;
-`;
-
-const ButtonTitle = styled.div`
-  font-size: 20px;
-  font-weight: bold;
-  color: white;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-`;
-
-const ButtonSubtitle = styled.div`
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.9);
-`;
-
-const WalletConnectWrapper = styled.div`
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  pointer-events: none;
-  
-  button {
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    pointer-events: all;
-  }
-`;

@@ -1,7 +1,8 @@
 import {Button, Input, InputNumber, Modal, message} from 'antd';
 import type React from 'react';
-import {useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import styled from 'styled-components';
+import {useDisconnect} from 'wagmi';
 import logo from '../../../../../public/logo.svg';
 import WalletConnect from '../../../wallet/WalletConnect';
 import DepositModal from '../components/DepositModal';
@@ -16,6 +17,8 @@ interface GameLobbyProps {
   availableRooms: Room[];
   loading: boolean;
   balance: string;
+  contractBalance: string;
+  userAddress: string;
   createRoom: (
     betAmount: number,
     password?: string,
@@ -35,6 +38,8 @@ const GameLobby: React.FC<GameLobbyProps> = ({
   availableRooms,
   loading,
   balance,
+  contractBalance,
+  userAddress,
   createRoom,
   joinRoom,
   quickJoin,
@@ -62,6 +67,65 @@ const GameLobby: React.FC<GameLobbyProps> = ({
   const [quickGameMode, setQuickGameMode] = useState<'multiplayer' | 'single_player'>(
     'multiplayer'
   );
+  const [balanceDropdownOpen, setBalanceDropdownOpen] = useState(false);
+  const [walletBalance, setWalletBalance] = useState(balance);
+  const [localContractBalance, setLocalContractBalance] = useState(contractBalance);
+  const [isRefreshingContractBalance, setIsRefreshingContractBalance] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const {disconnect} = useDisconnect();
+
+  // Update local balances when props change
+  useEffect(() => {
+    setWalletBalance(balance);
+  }, [balance]);
+
+  useEffect(() => {
+    setLocalContractBalance(contractBalance);
+  }, [contractBalance]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setBalanceDropdownOpen(false);
+      }
+    };
+
+    if (balanceDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [balanceDropdownOpen]);
+
+  const refreshContractBalance = async () => {
+    if (!userAddress) return;
+
+    setIsRefreshingContractBalance(true);
+    try {
+      const response = await fetch(`${VITE_API_URL}/api/contract/balance/${userAddress}`);
+      if (response.ok) {
+        const data = await response.json();
+        setLocalContractBalance(data.balance || '0');
+        message.success('Contract balance refreshed!');
+      } else {
+        message.error('Failed to refresh contract balance');
+      }
+    } catch (error) {
+      console.error('Error refreshing contract balance:', error);
+      message.error('Error refreshing contract balance');
+    } finally {
+      setIsRefreshingContractBalance(false);
+    }
+  };
+
+  const handleDisconnect = () => {
+    disconnect();
+    setBalanceDropdownOpen(false);
+    message.success('Wallet disconnected');
+  };
 
   const handleCreateRoom = () => {
     // Allow 0 for free/single player games
@@ -151,10 +215,32 @@ const GameLobby: React.FC<GameLobbyProps> = ({
           </HeaderText>
           {walletConnected ? (
             <WalletActions>
-              <BalanceDisplay>
-                <BalanceLabel>Balance:</BalanceLabel>
-                <BalanceValue>{parseFloat(balance).toFixed(4)} ETH</BalanceValue>
-              </BalanceDisplay>
+              <BalanceDisplayContainer ref={dropdownRef}>
+                <BalanceDisplay onClick={() => setBalanceDropdownOpen(!balanceDropdownOpen)}>
+                  <BalanceLabel>Balance:</BalanceLabel>
+                  <BalanceValue>{parseFloat(localContractBalance).toFixed(4)} ETH</BalanceValue>
+                  <DropdownArrow isOpen={balanceDropdownOpen}>▼</DropdownArrow>
+                </BalanceDisplay>
+                {balanceDropdownOpen && (
+                  <BalanceDropdown>
+                    <DropdownItem>
+                      <DropdownLabel>Wallet Balance:</DropdownLabel>
+                      <DropdownValue>{parseFloat(walletBalance).toFixed(4)} ETH</DropdownValue>
+                    </DropdownItem>
+                    <DropdownItem>
+                      <DropdownLabel>Contract Balance:</DropdownLabel>
+                      <DropdownValue>{parseFloat(localContractBalance).toFixed(4)} ETH</DropdownValue>
+                      <RefreshButton onClick={refreshContractBalance} disabled={isRefreshingContractBalance}>
+                        {isRefreshingContractBalance ? '⟳' : '↻'}
+                      </RefreshButton>
+                    </DropdownItem>
+                    <DropdownDivider />
+                    <DisconnectButton onClick={handleDisconnect}>
+                      Disconnect
+                    </DisconnectButton>
+                  </BalanceDropdown>
+                )}
+              </BalanceDisplayContainer>
               <DepositButton onClick={() => setDepositModalVisible(true)}>💰 Deposit</DepositButton>
               <WithdrawButton onClick={() => setWithdrawModalVisible(true)}>
                 💸 Withdraw
@@ -246,38 +332,38 @@ const GameLobby: React.FC<GameLobbyProps> = ({
               min={0}
               max={10}
               step={0.001}
-              value={betAmount}
+              value={walletConnected ? betAmount : 0}
               onChange={(val) => setBetAmount(val || 0)}
               addonAfter={betAmount === 0 ? 'FREE' : 'ETH'}
               style={{width: '100%', marginTop: '12px'}}
-              disabled={gameMode === 'single_player'}
+              disabled={gameMode === 'single_player' || !walletConnected}
             />
             <PresetButtons style={{marginTop: '8px'}}>
               <PresetButton
                 active={betAmount === 0.001 ? 'true' : undefined}
                 onClick={() => setBetAmount(0.001)}
-                disabled={gameMode === 'single_player'}
+                disabled={gameMode === 'single_player' || !walletConnected}
               >
                 0.001
               </PresetButton>
               <PresetButton
                 active={betAmount === 0.01 ? 'true' : undefined}
                 onClick={() => setBetAmount(0.01)}
-                disabled={gameMode === 'single_player'}
+                disabled={gameMode === 'single_player' || !walletConnected}
               >
                 0.01
               </PresetButton>
               <PresetButton
                 active={betAmount === 0.1 ? 'true' : undefined}
                 onClick={() => setBetAmount(0.1)}
-                disabled={gameMode === 'single_player'}
+                disabled={gameMode === 'single_player' || !walletConnected}
               >
                 0.1
               </PresetButton>
               <PresetButton
                 active={betAmount === 1 ? 'true' : undefined}
                 onClick={() => setBetAmount(1)}
-                disabled={gameMode === 'single_player'}
+                disabled={gameMode === 'single_player' || !walletConnected}
               >
                 1
               </PresetButton>
@@ -418,7 +504,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({
               min={0}
               max={10}
               step={0.001}
-              value={quickBetAmount}
+              value={walletConnected ? quickBetAmount : 0}
               onChange={(value) => {
                 if (value !== null && value !== undefined) {
                   setQuickBetAmount(value);
@@ -426,34 +512,34 @@ const GameLobby: React.FC<GameLobbyProps> = ({
               }}
               addonAfter={quickBetAmount === 0 ? 'FREE' : 'ETH'}
               style={{width: '100%', marginTop: '12px'}}
-              disabled={quickGameMode === 'single_player'}
+              disabled={quickGameMode === 'single_player' || !walletConnected}
             />
             <PresetButtons style={{marginTop: '8px'}}>
               <PresetButton
                 active={quickBetAmount === 0.001 ? 'true' : undefined}
                 onClick={() => setQuickBetAmount(0.001)}
-                disabled={quickGameMode === 'single_player'}
+                disabled={quickGameMode === 'single_player' || !walletConnected}
               >
                 0.001
               </PresetButton>
               <PresetButton
                 active={quickBetAmount === 0.01 ? 'true' : undefined}
                 onClick={() => setQuickBetAmount(0.01)}
-                disabled={quickGameMode === 'single_player'}
+                disabled={quickGameMode === 'single_player' || !walletConnected}
               >
                 0.01
               </PresetButton>
               <PresetButton
                 active={quickBetAmount === 0.1 ? 'true' : undefined}
                 onClick={() => setQuickBetAmount(0.1)}
-                disabled={quickGameMode === 'single_player'}
+                disabled={quickGameMode === 'single_player' || !walletConnected}
               >
                 0.1
               </PresetButton>
               <PresetButton
                 active={quickBetAmount === 1 ? 'true' : undefined}
                 onClick={() => setQuickBetAmount(1)}
-                disabled={quickGameMode === 'single_player'}
+                disabled={quickGameMode === 'single_player' || !walletConnected}
               >
                 1
               </PresetButton>
@@ -598,6 +684,10 @@ const WalletActions = styled.div`
   }
 `;
 
+const BalanceDisplayContainer = styled.div`
+  position: relative;
+`;
+
 const BalanceDisplay = styled.div`
   display: flex;
   flex-direction: row;
@@ -608,10 +698,152 @@ const BalanceDisplay = styled.div`
   border-radius: 10px;
   border: 2px solid rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(10px);
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+  }
 
   @media (max-width: 768px) {
     width: 100%;
     align-items: center;
+  }
+`;
+
+const DropdownArrow = styled.span<{isOpen: boolean}>`
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.7);
+  transition: transform 0.3s ease;
+  transform: ${props => props.isOpen ? 'rotate(180deg)' : 'rotate(0deg)'};
+`;
+
+const BalanceDropdown = styled.div`
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(20px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  z-index: 1000;
+  min-width: 300px;
+  animation: slideDown 0.2s ease-out;
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (max-width: 768px) {
+    right: 0;
+    left: auto;
+    min-width: 280px;
+  }
+`;
+
+const DropdownItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: rgba(102, 126, 234, 0.05);
+  }
+`;
+
+const DropdownLabel = styled.span`
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.6);
+  font-weight: 500;
+  flex-shrink: 0;
+`;
+
+const DropdownValue = styled.span`
+  font-size: 13px;
+  font-weight: 600;
+  color: #667eea;
+  flex: 1;
+`;
+
+const RefreshButton = styled.button<{disabled?: boolean}>`
+  background: rgba(102, 126, 234, 0.1);
+  border: 1px solid rgba(102, 126, 234, 0.3);
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
+  font-size: 16px;
+  color: #667eea;
+  transition: all 0.2s ease;
+  opacity: ${props => props.disabled ? 0.5 : 1};
+
+  &:hover {
+    background: ${props => props.disabled ? 'rgba(102, 126, 234, 0.1)' : 'rgba(102, 126, 234, 0.2)'};
+    transform: ${props => props.disabled ? 'none' : 'scale(1.1)'};
+  }
+
+  &:active {
+    transform: ${props => props.disabled ? 'none' : 'scale(0.95)'};
+  }
+
+  ${props => props.disabled && `
+    animation: spin 1s linear infinite;
+  `}
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+`;
+
+const DropdownDivider = styled.div`
+  height: 1px;
+  background: rgba(0, 0, 0, 0.1);
+  margin: 8px 0;
+`;
+
+const DisconnectButton = styled.button`
+  width: 100%;
+  padding: 10px;
+  background: linear-gradient(135deg, #ff4757 0%, #ff6b81 100%);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(255, 71, 87, 0.3);
+
+  &:hover {
+    background: linear-gradient(135deg, #ff3838 0%, #ff5252 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 71, 87, 0.5);
+  }
+
+  &:active {
+    transform: translateY(0);
   }
 `;
 

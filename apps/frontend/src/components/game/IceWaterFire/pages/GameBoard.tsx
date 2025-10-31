@@ -697,7 +697,6 @@ const PlayerSide = styled.div`
   align-items: center;
   gap: 10px;
   padding: 10px;
-  background: linear-gradient(180deg, transparent 0%, rgba(46, 204, 113, 0.1) 100%);
   border-radius: 16px;
 
   @media (max-height: 900px) {
