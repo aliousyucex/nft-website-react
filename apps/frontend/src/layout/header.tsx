@@ -4,8 +4,6 @@ import {S} from './header.styles';
 
 import {useLocation, useNavigate} from 'react-router-dom';
 import logo from '../../public/logo.svg';
-import discordBrown from '../assets/social-media/discord-brown.svg';
-import discord from '../assets/social-media/discord.svg';
 import twitterBrown from '../assets/social-media/twitter-brown.svg';
 import twitter from '../assets/social-media/twitter.svg';
 
@@ -36,9 +34,6 @@ export const Header = (props: {
         <S.MenuLinkItem onClick={() => navigate('/game')}>GAME</S.MenuLinkItem>
         <S.MenuLinkItem onClick={() => navigate('/story')}>STORY</S.MenuLinkItem>
         <Space size='large'>
-          <a href='https://discord.gg/ivorynfts'>
-            <img src={discordBrown} alt='Discord' width={30} />
-          </a>
           <a href='https://x.com/ivorynfts'>
             <img src={twitterBrown} alt='Twitter' width={30} />
           </a>
@@ -108,9 +103,6 @@ export const Header = (props: {
         </S.MenuOutLinkItem>
       </Flex>
       <Space size='large'>
-        <a href='https://discord.gg/ivorynfts'>
-          <img src={discord} alt='Discord' width={35} />
-        </a>
         <a href='https://x.com/ivorynfts'>
           <img src={twitter} alt='Twitter' width={35} />
         </a>

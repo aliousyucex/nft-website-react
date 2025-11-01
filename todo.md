@@ -1,4 +1,3 @@
-- Landing page'deki animasyon ve düz kart yerine, oyuna bir logo oluşturup, bunu kullanalım.
 - Oyunumuz dikey telefon ekranları için düzgün hizalanmamış durumda.
 - Oyun için isim önerisi alınacak
 
@@ -7,7 +6,6 @@
 
 # Sonraki step
 - INSANLARA TEST ETTIR OYNAT
-- kart selected ise, time sound'unu oynatma
 
 
 # AZ ONCELIKLI
