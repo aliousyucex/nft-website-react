@@ -8,7 +8,7 @@ export const FAQ = (props: {myRef: React.RefObject<HTMLDivElement>}) => {
       header: 'Where can I find the most up-to-date information about the project?',
       children: (
         <S.P>
-          Follow our Twitter account and join our Discord server for the latest announcements,
+          Follow our Twitter account for the latest announcements,
           previews, and community events.
         </S.P>
       ),
@@ -24,8 +24,7 @@ export const FAQ = (props: {myRef: React.RefObject<HTMLDivElement>}) => {
       children: (
         <S.P>
           A limited number of whitelist opportunities will be available for early backers and active
-          community members. By joining our Discord server, you can participate in events, complete
-          tasks, and get a chance to win a whitelist by following special announcements on Twitter.
+          community members. Get a chance to win a whitelist by following special announcements on Twitter.
         </S.P>
       ),
     },

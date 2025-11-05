@@ -409,7 +409,7 @@ const VSDivider = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100px;
+  width: 107px;
   height: 150px;
   border-radius: 50%;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);

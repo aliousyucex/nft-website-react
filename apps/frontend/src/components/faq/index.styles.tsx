@@ -86,15 +86,6 @@ export namespace S {
         }
     ` as unknown as typeof Cll;
 
-  export const DiscordLink = styled.a`
-        color: #292826;
-        text-decoration: none;
-
-        :hover {
-            color: #3841AA;
-        }
-    `;
-
   export const P = styled.p`
         padding-left: 36px;
         text-align: left;
