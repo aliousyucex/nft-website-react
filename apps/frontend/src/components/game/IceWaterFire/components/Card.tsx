@@ -99,7 +99,7 @@ const CardWrapper = styled.div<{
   $disabled: boolean;
   $cardColor: string;
 }>`
-  width: 100px;
+  width: 107px;
   height: 150px;
   border-radius: 12px;
   background: ${(props) => (props.$isOpponent && !props.$isRevealed ? '#8B0000' : props.$cardColor)};
@@ -110,7 +110,7 @@ const CardWrapper = styled.div<{
   transform-style: preserve-3d;
 
   @media (max-height: 900px) {
-    width: 100px;
+    width: 107px;
     height: 150px;
   }
 

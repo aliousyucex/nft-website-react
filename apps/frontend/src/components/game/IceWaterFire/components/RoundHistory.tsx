@@ -69,7 +69,7 @@ export default RoundHistory;
 
 const CardFrontImage = styled.img`
   height: 100px;
-  width: 66px;
+  width: 73px;
   object-fit: cover;
   object-position: center;
   border-radius: 8px;
