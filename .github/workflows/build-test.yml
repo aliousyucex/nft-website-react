@@ -1,0 +1,16 @@
+name: Build Test
+on:
+  pull_request:
+    branches: [ "master", "development" ]
+    
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Build Backend
+        run: docker build -t ${{ github.repository }}-backend ./apps/backend
+        
+      - name: Build Frontend
+        run: docker build -t ${{ github.repository }}-frontend ./apps/frontend

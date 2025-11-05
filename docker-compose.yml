@@ -1,0 +1,42 @@
+services:
+  nft-backend:
+    image: ghcr.io/aliousyucex/nft-website-react-backend:1.0.0
+    container_name: nft-backend
+    environment:
+      - PRIVATE_KEY=f0017c5901ca17a6fd57696b67fda666f562030fcc47fc8dabf360cffff52154
+      - DATABASE_URL=postgresql://postgres:postgres@172.17.0.1:5432/game
+      - JWT_SECRET=your_jwt_secret_change_in_production_min_32_chars
+      - API_SECRET_KEY=your_api_secret_key_change_in_production
+      - CONTRACT_ADDRESS=0x3A895aeA91388f6b44227CDb565FDb04a8A81C79
+      - RPC_URL=https://api.testnet.abs.xyz
+      - RATE_LIMIT_WINDOW_MS=60000
+      - RATE_LIMIT_MAX_REQUESTS=100
+      - RATE_LIMIT_BAN_DURATION_MS=3600000
+      - SOCKET_PING_TIMEOUT=10000
+      - SOCKET_PING_INTERVAL=25000
+      - CARD_SELECTION_TIMEOUT=10000
+      - DISCONNECT_GRACE_PERIOD=10000
+      - MAX_ROUND_LIMIT=15
+      - COMMISSION_RATE=0.03
+    env_file:
+      - /opt/nftwebsite/.env
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+
+  web:
+    image: ghcr.io/aliousyucex/nft-website-react-frontend:1.0.0
+    container_name: nft-frontend
+    environment:
+      - VITE_API_URL=https://api.ivorynfts.com
+      - VITE_WS_URL=wss://api.ivorynfts.com
+      - VITE_CONTRACT_ADDRESS=0x3A895aeA91388f6b44227CDb565FDb04a8A81C79
+      - VITE_CHAIN_ID=0x2B74
+      - VITE_WALLETCONNECT_PROJECT_ID=4fa1d964ec5302ec1801f47c61b39b7d
+    ports:
+      - "5001:80"
+    restart: unless-stopped
+
+networks:
+  web:
+    external: false
