@@ -214,7 +214,9 @@ const GameLobby: React.FC<GameLobbyProps> = ({
             <Title>IVORA</Title>
           </HeaderText>
           {walletConnected ? (
+            <>
             <WalletActions>
+            
               <BalanceDisplayContainer ref={dropdownRef}>
                 <BalanceDisplay onClick={() => setBalanceDropdownOpen(!balanceDropdownOpen)}>
                   <BalanceLabel>Balance:</BalanceLabel>
@@ -241,11 +243,14 @@ const GameLobby: React.FC<GameLobbyProps> = ({
                   </BalanceDropdown>
                 )}
               </BalanceDisplayContainer>
+            </WalletActions>
+            <WalletActions>
               <DepositButton onClick={() => setDepositModalVisible(true)}>💰 Deposit</DepositButton>
               <WithdrawButton onClick={() => setWithdrawModalVisible(true)}>
                 💸 Withdraw
               </WithdrawButton>
             </WalletActions>
+            </>
           ) : (
             <WalletConnect />
           )}
@@ -317,28 +322,64 @@ const GameLobby: React.FC<GameLobbyProps> = ({
         ]}
       >
         <ModalContent>
+          <Divider>Practice Mode</Divider>
+          
+          <FormGroup>
+            <Label>Select Practice Type</Label>
+            <GameModeButtons>
+              <GameModeButton
+                active={gameMode === 'single_player' ? 'true' : undefined}
+                onClick={() => {
+                  setGameMode('single_player');
+                  setBetAmount(0); // Force free for single player
+                }}
+              >
+                <GameModeIcon>🤖</GameModeIcon>
+                <GameModeText>
+                  <GameModeTitle>Single Player</GameModeTitle>
+                  <GameModeSubtitle>Practice with AI (Free)</GameModeSubtitle>
+                </GameModeText>
+              </GameModeButton>
+              <GameModeButton
+                active={gameMode === 'multiplayer' ? 'true' : undefined}
+                onClick={() => {
+                  setGameMode('multiplayer');
+                  if (betAmount !== 0) {
+                    setBetAmount(0); // Default to free for practice multiplayer
+                  }
+                }}
+              >
+                <GameModeIcon>👥</GameModeIcon>
+                <GameModeText>
+                  <GameModeTitle>Multiplayer</GameModeTitle>
+                  <GameModeSubtitle>Play with real players</GameModeSubtitle>
+                </GameModeText>
+              </GameModeButton>
+            </GameModeButtons>
+            {gameMode === 'single_player' && (
+              <GameModeHint>💡 Single player mode is always free</GameModeHint>
+            )}
+          </FormGroup>
+
           <FormGroup>
             <Label>Bet Amount</Label>
-            <PresetButtons>
-              <PresetButton
-                active={betAmount === 0 ? 'true' : undefined}
-                onClick={() => setBetAmount(0)}
-                $practice
-              >
-                ⚡ Practice Game (Free)
-              </PresetButton>
-            </PresetButtons>
             <InputNumber
               min={0}
-              max={10}
               step={0.001}
               value={walletConnected ? betAmount : 0}
               onChange={(val) => setBetAmount(val || 0)}
               addonAfter={betAmount === 0 ? 'FREE' : 'ETH'}
-              style={{width: '100%', marginTop: '12px'}}
+              style={{width: '100%'}}
               disabled={gameMode === 'single_player' || !walletConnected}
             />
             <PresetButtons style={{marginTop: '8px'}}>
+              <PresetButton
+                active={betAmount === 0 ? 'true' : undefined}
+                onClick={() => setBetAmount(0)}
+                disabled={gameMode === 'single_player'}
+              >
+                Free
+              </PresetButton>
               <PresetButton
                 active={betAmount === 0.001 ? 'true' : undefined}
                 onClick={() => setBetAmount(0.001)}
@@ -360,45 +401,9 @@ const GameLobby: React.FC<GameLobbyProps> = ({
               >
                 0.1
               </PresetButton>
-              <PresetButton
-                active={betAmount === 1 ? 'true' : undefined}
-                onClick={() => setBetAmount(1)}
-                disabled={gameMode === 'single_player' || !walletConnected}
-              >
-                1
-              </PresetButton>
             </PresetButtons>
-          </FormGroup>
-
-          <FormGroup>
-            <Label>Game Mode</Label>
-            <GameModeButtons>
-              <GameModeButton
-                active={gameMode === 'multiplayer' ? 'true' : undefined}
-                onClick={() => setGameMode('multiplayer')}
-              >
-                <GameModeIcon>👥</GameModeIcon>
-                <GameModeText>
-                  <GameModeTitle>Multiplayer</GameModeTitle>
-                  <GameModeSubtitle>Play with real players</GameModeSubtitle>
-                </GameModeText>
-              </GameModeButton>
-              <GameModeButton
-                active={gameMode === 'single_player' ? 'true' : undefined}
-                onClick={() => {
-                  setGameMode('single_player');
-                  setBetAmount(0); // Force free for single player
-                }}
-              >
-                <GameModeIcon>🤖</GameModeIcon>
-                <GameModeText>
-                  <GameModeTitle>Single Player</GameModeTitle>
-                  <GameModeSubtitle>Practice with AI</GameModeSubtitle>
-                </GameModeText>
-              </GameModeButton>
-            </GameModeButtons>
-            {gameMode === 'single_player' && (
-              <GameModeHint>💡 Single player mode is always free</GameModeHint>
+            {gameMode === 'multiplayer' && (
+              <Hint>💡 Multiplayer practice games can be free or paid</Hint>
             )}
           </FormGroup>
 
@@ -489,20 +494,49 @@ const GameLobby: React.FC<GameLobbyProps> = ({
         ]}
       >
         <ModalContent>
+          <Divider>Practice Mode</Divider>
+          
+          <FormGroup>
+            <Label>Select Practice Type</Label>
+            <GameModeButtons>
+              <GameModeButton
+                active={quickGameMode === 'single_player' ? 'true' : undefined}
+                onClick={() => {
+                  setQuickGameMode('single_player');
+                  setQuickBetAmount(0); // Force free for single player
+                }}
+              >
+                <GameModeIcon>🤖</GameModeIcon>
+                <GameModeText>
+                  <GameModeTitle>Single Player</GameModeTitle>
+                  <GameModeSubtitle>Play with AI instantly (Free)</GameModeSubtitle>
+                </GameModeText>
+              </GameModeButton>
+              <GameModeButton
+                active={quickGameMode === 'multiplayer' ? 'true' : undefined}
+                onClick={() => {
+                  setQuickGameMode('multiplayer');
+                  if (quickBetAmount !== 0) {
+                    setQuickBetAmount(0); // Default to free for practice multiplayer
+                  }
+                }}
+              >
+                <GameModeIcon>👥</GameModeIcon>
+                <GameModeText>
+                  <GameModeTitle>Multiplayer</GameModeTitle>
+                  <GameModeSubtitle>Join or create room</GameModeSubtitle>
+                </GameModeText>
+              </GameModeButton>
+            </GameModeButtons>
+            {quickGameMode === 'single_player' && (
+              <GameModeHint>💡 Single player mode is always free</GameModeHint>
+            )}
+          </FormGroup>
+
           <FormGroup>
             <Label>Bet Amount</Label>
-            <PresetButtons>
-              <PresetButton
-                active={quickBetAmount === 0 ? 'true' : undefined}
-                onClick={() => setQuickBetAmount(0)}
-                $practice
-              >
-                ⚡ Practice Game (Free)
-              </PresetButton>
-            </PresetButtons>
             <InputNumber
               min={0}
-              max={10}
               step={0.001}
               value={walletConnected ? quickBetAmount : 0}
               onChange={(value) => {
@@ -511,10 +545,17 @@ const GameLobby: React.FC<GameLobbyProps> = ({
                 }
               }}
               addonAfter={quickBetAmount === 0 ? 'FREE' : 'ETH'}
-              style={{width: '100%', marginTop: '12px'}}
+              style={{width: '100%'}}
               disabled={quickGameMode === 'single_player' || !walletConnected}
             />
             <PresetButtons style={{marginTop: '8px'}}>
+              <PresetButton
+                active={quickBetAmount === 0 ? 'true' : undefined}
+                onClick={() => setQuickBetAmount(0)}
+                disabled={quickGameMode === 'single_player'}
+              >
+                Free
+              </PresetButton>
               <PresetButton
                 active={quickBetAmount === 0.001 ? 'true' : undefined}
                 onClick={() => setQuickBetAmount(0.001)}
@@ -536,45 +577,9 @@ const GameLobby: React.FC<GameLobbyProps> = ({
               >
                 0.1
               </PresetButton>
-              <PresetButton
-                active={quickBetAmount === 1 ? 'true' : undefined}
-                onClick={() => setQuickBetAmount(1)}
-                disabled={quickGameMode === 'single_player' || !walletConnected}
-              >
-                1
-              </PresetButton>
             </PresetButtons>
-          </FormGroup>
-
-          <FormGroup>
-            <Label>Game Mode</Label>
-            <GameModeButtons>
-              <GameModeButton
-                active={quickGameMode === 'multiplayer' ? 'true' : undefined}
-                onClick={() => setQuickGameMode('multiplayer')}
-              >
-                <GameModeIcon>👥</GameModeIcon>
-                <GameModeText>
-                  <GameModeTitle>Multiplayer</GameModeTitle>
-                  <GameModeSubtitle>Join or create free room</GameModeSubtitle>
-                </GameModeText>
-              </GameModeButton>
-              <GameModeButton
-                active={quickGameMode === 'single_player' ? 'true' : undefined}
-                onClick={() => {
-                  setQuickGameMode('single_player');
-                  setQuickBetAmount(0); // Force free for single player
-                }}
-              >
-                <GameModeIcon>🤖</GameModeIcon>
-                <GameModeText>
-                  <GameModeTitle>Single Player</GameModeTitle>
-                  <GameModeSubtitle>Play with AI instantly</GameModeSubtitle>
-                </GameModeText>
-              </GameModeButton>
-            </GameModeButtons>
-            {quickGameMode === 'single_player' && (
-              <GameModeHint>💡 Single player mode is always free</GameModeHint>
+            {quickGameMode === 'multiplayer' && (
+              <Hint>💡 Multiplayer practice games can be free or paid</Hint>
             )}
           </FormGroup>
         </ModalContent>
@@ -686,6 +691,10 @@ const WalletActions = styled.div`
 
 const BalanceDisplayContainer = styled.div`
   position: relative;
+
+  @media (max-width: 768px) {
+    width: 90%;
+  }
 `;
 
 const BalanceDisplay = styled.div`
@@ -944,8 +953,12 @@ const ActionsPanel = styled.div`
   @media (max-width: 768px) {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(2, 1fr);
     gap: 12px;
+    
+    /* Make tutorial button span full width on mobile for better layout */
+    > :nth-child(5) {
+      grid-column: 1 / -1;
+    }
   }
 `;
 
@@ -1028,6 +1041,17 @@ const RoomListPanel = styled.div`
 
 const ModalContent = styled.div`
   padding: 20px 0;
+`;
+
+const Divider = styled.div`
+  width: 100%;
+  padding: 10px 0;
+  margin-bottom: 16px;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+  font-size: 16px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.75);
+  text-align: left;
 `;
 
 const FormGroup = styled.div`
