@@ -15,6 +15,10 @@ export namespace S {
         @media (max-width: 1200px) {
             width: 100%;
         }
+
+        @media (max-width: 750px) {
+            margin: 12px 0;
+        }
     `;
 
   export const Text = styled.p`
@@ -22,6 +26,13 @@ export namespace S {
         font-size: 18px;
         line-height: 28px;
         color: #292826;
+        margin-bottom: 16px;
+
+        @media (max-width: 750px) {
+            font-size: 16px;
+            line-height: 26px;
+            margin-bottom: 20px;
+        }
     `;
 
   export const PuncLines = styled.strong`
@@ -35,9 +46,15 @@ export namespace S {
   export const ModalTitle = styled.h1`
         color: black;
         font-family: 'Londrina Solid', system-ui;
+        margin-bottom: 24px;
 
         @media (max-width: 1200px) {
             font-size: 32px;
+        }
+
+        @media (max-width: 750px) {
+            font-size: 28px;
+            margin-bottom: 20px;
         }
     `;
 
@@ -52,5 +69,9 @@ export namespace S {
 
   export const InnerContainer = styled(Flex)`
         padding: 36px;
+
+        @media (max-width: 750px) {
+            padding: 20px 16px;
+        }
     `;
 }

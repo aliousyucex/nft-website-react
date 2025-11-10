@@ -1,18 +1,13 @@
 import {Flex} from 'antd';
 import {useRef, useState} from 'react';
 import {S} from './App.styled';
+import manifestFisrt from './assets/manifest/manifest-first.svg';
+import maskot from './assets/manifest/maskot.svg';
 import {FAQ} from './components/faq/index.tsx';
 import {Header} from './layout/header.tsx';
 
-import peanut from '../public/logo.svg';
-import manifestFirstFull from './assets/manifest/manifest.svg';
-import manifestSecondFull from './assets/manifest/manifest2.svg';
-import maskot from './assets/manifest/maskot.svg';
-
 import phaseOne from './assets/roadmap/ticket1.svg';
 import phaseTwo from './assets/roadmap/ticket2.svg';
-import phaseThree from './assets/roadmap/ticket3.svg';
-import phaseFour from './assets/roadmap/ticket4.svg';
 
 import faqText from './assets/faq/FAQ.svg';
 import faqVerticalText from './assets/faq/faqVertical.svg';
@@ -35,43 +30,26 @@ function App() {
       {pageWidth <= 600 && (
         <S.ManifestContainer vertical justify='center' id='manifest' gap={12}>
           <S.ManifestTitle>Manifest</S.ManifestTitle>
-          <strong>New Mechanics, New Adventures</strong>
+          <strong>We believe in the power of the game</strong>
           <span>
-            At Ivory, there’s no room for the ordinary! From the minting process to game
-            development, exclusive community content, and token integration, every stage is
-            meticulously planned.
+            Entertainment is not just a moment; it is a challenge.
+          </span>
+          <span><strong>Fire, Ice, and Water </strong>
+          — each represents a different spirit: passion, strategy, and balance. Here, every move is a challenge, every victory a gain.
           </span>
           <Flex align='center' style={{fontFamily: 'inherit'}}>
-            <span>
-              <strong>Leave Your Mark Through Adoption:</strong> Leave Your Mark Through Adoption:
-              Post-mint, symbolic adoption certificates via WWF will immortalize our community's
-              support.
-            </span>
+          <span>You don't just play, you win; you don't just compete, you become part of the community. Fire Ice Water is where entertainment, strategy, and winning intersect. <br /> <br />
+          In the NFT world, you are no longer just a spectator of the game; <strong>you are its owner.</strong></span>
             <S.Maskot src={maskot} />
           </Flex>
-          <span>
-            <strong>Tokenomics:</strong> Special benefits, airdrops, and much more for our holders.
-          </span>
-          <Flex align='center' justify='space-around' style={{fontFamily: 'inherit'}}>
-            {/* PEANUT */}
-            <S.Peanut src={peanut} />
-            <span>
-              <strong>Peanut Rush:</strong> Enjoy a fun P2E mechanism where you can use your tokens.
-            </span>
-          </Flex>
-          <span>
-            <strong>More:</strong> Each NFT is not just a design but also a feature you can use in
-            the game, paired with its own story.
-          </span>
         </S.ManifestContainer>
       )}
 
       {/* MANIFEST BIG */}
       {pageWidth > 600 && (
         <S.ManifestContainer vertical justify='center' align='center' id='manifest'>
-          <S.ManifestFull src={manifestFirstFull} />
+          <S.ManifestFull src={manifestFisrt  } />
           <S.Maskot src={maskot} />
-          <S.ManifestFull src={manifestSecondFull} />
         </S.ManifestContainer>
       )}
 
@@ -79,8 +57,8 @@ function App() {
       <S.Roadmap vertical justify='center' align='center' id='roadmap'>
         <S.Ticket1 src={phaseOne} />
         <S.Ticket2 src={phaseTwo} />
-        <S.Ticket3 src={phaseThree} />
-        <S.Ticket4 src={phaseFour} />
+        {/* <S.Ticket3 src={phaseThree} />
+        <S.Ticket4 src={phaseFour} /> */}
       </S.Roadmap>
 
       {/* FAQ */}

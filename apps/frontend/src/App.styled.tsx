@@ -35,7 +35,7 @@ export namespace S {
     }
 
     @media (max-width: 1300px) {
-      height: 9500px;
+      width: 100%;
     }
 
     @media (max-width: 1200px) {
@@ -74,17 +74,22 @@ export namespace S {
   `;
 
   export const ManifestFull = styled.img`
-    width: 100%;
-    height: 100%;
+    width: 85%;
+    height: 90%;
   `;
 
   export const Maskot = styled.img`
-    margin-top: -150px;
+    margin-top: -100px;
     max-width: 225px;
 
+    @media (max-width: 1400px) {
+      margin-top: -70px;
+      max-width: 200px;
+    }
+
     @media (max-width: 1300px) {
-      margin-top: -50px;
-      max-width: 150px;
+      margin-top: -30px;
+      max-width: 120px;
     }
 
     @media (max-width: 700px) {
@@ -105,7 +110,7 @@ export namespace S {
     max-height: 1077px;
     width: 100%;
     background-size: contain;
-    background-position: bottom;
+    background-position: left bottom;
     background-repeat: no-repeat;
     background-image: url(${roadmapBackground});
 

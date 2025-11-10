@@ -114,6 +114,12 @@ const CardWrapper = styled.div<{
     height: 150px;
   }
 
+  @media (max-width: 768px) {
+    width: 85px;
+    height: 120px;
+    border-radius: 10px;
+  }
+
   ${(props) =>
     props.$disabled &&
     !props.$isSelected &&
