@@ -13,7 +13,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({visible, onClose}) => {
 
   const steps = [
     {
-      title: '🎴 Ice Water Fire - Game Rules',
+      title: '🎴 IVORA - Game Rules',
       description: 'Learn the basics and win 3 rounds!',
       content: (
         <ContentWrapper>

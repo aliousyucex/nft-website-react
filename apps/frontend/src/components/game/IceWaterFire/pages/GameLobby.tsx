@@ -211,7 +211,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({
           </HomeButton>
 
           <HeaderText>
-            <Title>Ice Water Fire</Title>
+            <Title>IVORA</Title>
           </HeaderText>
           {walletConnected ? (
             <WalletActions>

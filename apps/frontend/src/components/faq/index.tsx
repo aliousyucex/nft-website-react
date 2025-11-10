@@ -16,7 +16,7 @@ export const FAQ = (props: {myRef: React.RefObject<HTMLDivElement>}) => {
     {
       key: 2,
       header: 'How many NFTs can I mint per wallet?',
-      children: <S.P>Each wallet can mint a maximum of 6 NFTs.</S.P>,
+      children: <S.P>Each wallet can mint a maximum of 3 NFTs.</S.P>,
     },
     {
       key: 3,
