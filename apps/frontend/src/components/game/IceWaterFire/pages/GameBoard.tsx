@@ -63,7 +63,6 @@ const GameBoard: React.FC<GameBoardProps> = ({
   onRoundResult,
   onReturnToLobby,
   onPlayAgain,
-  oldRoomId,
   isPaidGame = true,
   isSinglePlayer = false,
 }) => {
