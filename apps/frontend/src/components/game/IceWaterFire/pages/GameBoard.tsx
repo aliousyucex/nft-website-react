@@ -38,6 +38,8 @@ interface GameBoardProps {
   onCardReveal?: () => void;
   onRoundResult?: (result: 'win' | 'lose' | 'draw') => void;
   onReturnToLobby: () => void;
+  onPlayAgain?: () => void;
+  oldRoomId?: string;
   isPaidGame?: boolean;
   isSinglePlayer?: boolean;
 }
@@ -60,11 +62,13 @@ const GameBoard: React.FC<GameBoardProps> = ({
   onCardReveal,
   onRoundResult,
   onReturnToLobby,
+  onPlayAgain,
+  oldRoomId,
   isPaidGame = true,
   isSinglePlayer = false,
 }) => {
   const [showEmojiPanel, setShowEmojiPanel] = useState(false);
-  const [showGameResult, setShowGameResult] = useState(false);
+  const [showResultModal, setShowResultModal] = useState(false); // Separate state for result modal
   const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [gameResult, setGameResult] = useState<{
@@ -150,7 +154,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
   // Handle game finish - Show result modal
   useEffect(() => {
-    if (gameState && gameState.gameState === 'finished' && !showGameResult) {
+    if (gameState && gameState.gameState === 'finished' && !showResultModal) {
       // Case-insensitive address comparison for winner check
       const isWinner = gameState.winner?.toLowerCase() === currentUserAddress.toLowerCase();
       const isDraw = !gameState.winner; // null winner means draw
@@ -170,10 +174,10 @@ const GameBoard: React.FC<GameBoardProps> = ({
       // Show modal after a longer delay to let final round card reveal complete
       // This ensures players see the final cards before the result modal
       setTimeout(() => {
-        setShowGameResult(true);
+        setShowResultModal(true);
       }, 3000);
     }
-  }, [gameState?.gameState, currentUserAddress, showGameResult]);
+  }, [gameState?.gameState, currentUserAddress, showResultModal]);
 
   const handleEmojiSend = (emoji: string) => {
     onSendEmoji(emoji);
@@ -367,9 +371,9 @@ const GameBoard: React.FC<GameBoardProps> = ({
       </GameContainer>
 
       {/* Game Result Modal */}
-      {showGameResult && gameResult && (
+      {showResultModal && gameResult && (
         <GameResultModal
-          visible={showGameResult}
+          visible={showResultModal}
           result={gameResult.isDraw ? 'draw' : gameResult.isWinner ? 'win' : 'lose'}
           finalScore={{
             my: gameResult.myScore,
@@ -378,14 +382,16 @@ const GameBoard: React.FC<GameBoardProps> = ({
           prizeAmount={gameResult.prizeAmount}
           betAmount={betAmount}
           onClose={() => {
-            setShowGameResult(false);
+            // Modal should not be closable, but keep for compatibility
+            setShowResultModal(false);
             setGameResult(null);
           }}
           onReturnToLobby={() => {
-            setShowGameResult(false);
+            setShowResultModal(false);
             setGameResult(null);
             onReturnToLobby();
           }}
+          onPlayAgain={onPlayAgain}
           isPaidGame={isPaidGame}
           isSinglePlayer={isSinglePlayer}
           reason={gameResult.reason}

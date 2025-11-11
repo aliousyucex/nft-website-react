@@ -34,8 +34,8 @@ const DepositModal: React.FC<DepositModalProps> = ({visible, onClose, contractAd
   const [contractBalance, setContractBalance] = useState<string>('0');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Get wallet balance
-  const {data: walletBalance} = useBalance({
+  // Get wallet balance with refetch function
+  const {data: walletBalance, refetch: refetchWalletBalance} = useBalance({
     address: address,
   });
 
@@ -52,8 +52,12 @@ const DepositModal: React.FC<DepositModalProps> = ({visible, onClose, contractAd
     if (isSuccess) {
       message.success('Deposit successful!');
       refreshContractBalance();
+      // Refetch wallet balance after a short delay to ensure blockchain state is updated
+      setTimeout(() => {
+        refetchWalletBalance();
+      }, 1000);
     }
-  }, [isSuccess]);
+  }, [isSuccess, refetchWalletBalance]);
 
   // Fetch contract balance
   const refreshContractBalance = async () => {

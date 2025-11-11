@@ -6,19 +6,24 @@ import type {CreateRoomData, JoinRoomData, Room, } from '../types/room';
 import logger from '../utils/logger';
 import aiService from './ai';
 
+// Room cleanup configuration
+const ROOM_CLEANUP_THRESHOLD_MS = 60 * 1000; // 1 minute
+const ROOM_CLEANUP_INTERVAL_MS = 30 * 1000; // 30 seconds
+
 export class RoomManager {
   private rooms: Map<string, Room> = new Map();
   private socketToRoom: Map<string, string> = new Map();
   private addressToRoom: Map<string, string> = new Map();
+  private replayRoomMapping: Map<string, string> = new Map(); // oldRoomId -> newRoomId
   private roomCleanupInterval: NodeJS.Timeout;
 
   constructor() {
-    // Start room cleanup interval (check every 2 minutes)
+    // Start room cleanup interval (check every 30 seconds)
     this.roomCleanupInterval = setInterval(
       () => {
         this.cleanupInactiveRooms();
       },
-      2 * 60 * 1000
+      ROOM_CLEANUP_INTERVAL_MS
     );
   }
 
@@ -231,10 +236,12 @@ export class RoomManager {
 
     this.socketToRoom.delete(socketId);
 
-    // Delete room if empty
+    // Update lastActivity timestamp instead of deleting immediately
+    room.lastActivity = new Date();
+
+    // Don't delete room immediately - let cleanup handle it after threshold
     if (room.players.length === 0) {
-      this.rooms.delete(roomId);
-      logger.info('Room deleted (empty)', {roomId});
+      logger.info('Room emptied, will be cleaned up after threshold', {roomId});
       return {room: null, roomId};
     }
 
@@ -525,28 +532,53 @@ export class RoomManager {
    */
   cleanupInactiveRooms(): void {
     const now = Date.now();
-    const tenMinutes = 10 * 60 * 1000;
 
     this.rooms.forEach((room, roomId) => {
       const inactiveDuration = now - room.lastActivity.getTime();
 
-      // Delete rooms that have been inactive for more than 10 minutes
+      // Delete rooms with no players that have been inactive for more than threshold
       // Only delete if game is not currently playing
-      if (inactiveDuration > tenMinutes && room.gameState !== 'playing') {
-        // Clean up all player mappings
+      if (
+        room.players.length === 0 &&
+        inactiveDuration > ROOM_CLEANUP_THRESHOLD_MS &&
+        room.gameState !== 'playing'
+      ) {
+        // Clean up all player mappings (should be empty, but be safe)
         room.players.forEach((player) => {
           this.socketToRoom.delete(player.socketId);
           this.addressToRoom.delete(player.address.toLowerCase());
         });
 
+        // Clean up replay room mapping if this room was referenced
+        this.replayRoomMapping.forEach((_newRoomId, oldRoomId) => {
+          if (oldRoomId === roomId) {
+            this.replayRoomMapping.delete(oldRoomId);
+          }
+        });
+
         this.rooms.delete(roomId);
         logger.info('Cleaned up inactive room', {
           roomId,
-          inactiveFor: `${Math.floor(inactiveDuration / 1000 / 60)} minutes`,
+          inactiveFor: `${Math.floor(inactiveDuration / 1000)} seconds`,
           gameState: room.gameState,
         });
       }
     });
+  }
+
+  /**
+   * Get replay room ID for a given old room ID
+   */
+  getReplayRoomId(oldRoomId: string): string | undefined {
+    return this.replayRoomMapping.get(oldRoomId);
+  }
+
+  /**
+   * Set replay room mapping (oldRoomId -> newRoomId)
+   */
+  setReplayRoomId(oldRoomId: string, newRoomId: string): void {
+    this.replayRoomMapping.set(oldRoomId, newRoomId);
+    logger.info('Set replay room mapping', {oldRoomId, newRoomId});
   }
 }
 

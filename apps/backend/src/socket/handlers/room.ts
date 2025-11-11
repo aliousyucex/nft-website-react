@@ -308,6 +308,12 @@ export const setupRoomHandlers = (io: Server, socket: Socket) => {
       // Normal leave room flow (for non-playing state or after multiplayer forfeit)
       const {room, roomId} = roomManager.leaveRoom(socket.id);
 
+      // Leave the socket room FIRST, before broadcasting events
+      // This ensures the leaving player doesn't receive the player_left event
+      if (roomId) {
+        socket.leave(roomId);
+      }
+
       if (room && roomIdBeforeLeave && room.gameState !== 'playing') {
         // If only 1 player remains, reset their ready state
         if (room.players.length === 1) {
@@ -325,7 +331,8 @@ export const setupRoomHandlers = (io: Server, socket: Socket) => {
           remainingPlayers: room.players.length,
         });
 
-        // Use io.to() to broadcast to ALL sockets in the room
+        // Use io.to() to broadcast to ALL sockets in the room (excluding the leaving player)
+        // Since we already called socket.leave(), the leaving player won't receive this
         io.to(roomIdBeforeLeave).emit('player_left', {
           remainingPlayers: room.players.length,
           room: roomData,
@@ -335,11 +342,6 @@ export const setupRoomHandlers = (io: Server, socket: Socket) => {
         io.to(roomIdBeforeLeave).emit('room_updated', {
           room: roomData,
         });
-      }
-
-      // Leave the socket room
-      if (roomId) {
-        socket.leave(roomId);
       }
 
       logger.info('Player left room complete', {roomId, remainingPlayers: room?.players.length});
@@ -360,6 +362,187 @@ export const setupRoomHandlers = (io: Server, socket: Socket) => {
           error: error instanceof Error ? error.message : 'Failed to leave room',
         });
       }
+    }
+  });
+
+  /**
+   * Play again - rejoin or create new room
+   */
+  socket.on('play_again', async (data, callback) => {
+    try {
+      const {oldRoomId, address} = data;
+
+      validateAddress(address);
+
+      // Check rate limit
+      if (!checkAddressRateLimit(address)) {
+        return callback({
+          success: false,
+          error: 'Rate limit exceeded',
+          code: SocketErrorCode.RATE_LIMIT_EXCEEDED,
+        });
+      }
+
+      // Get the old room to check bet amount and game mode
+      const oldRoom = oldRoomId ? roomManager.getRoom(oldRoomId) : null;
+      const betAmount = oldRoom?.betAmount || 0;
+      const isPaidGame = betAmount > 0;
+      const isSinglePlayer = oldRoom?.isSinglePlayer || false;
+
+      // For paid games, check balance first
+      if (isPaidGame) {
+        const userBalance = await contractService.getUserBalance(address);
+        if (parseFloat(userBalance) < betAmount) {
+          return callback({
+            success: false,
+            error: 'Insufficient balance',
+            code: SocketErrorCode.INSUFFICIENT_BALANCE,
+          });
+        }
+      }
+
+      // Check if replay room already exists (other player created it)
+      let targetRoomId: string | undefined;
+      if (oldRoomId) {
+        targetRoomId = roomManager.getReplayRoomId(oldRoomId);
+      }
+
+      let targetRoom: Room | undefined;
+
+      if (targetRoomId) {
+        // Replay room exists, try to join it
+        targetRoom = roomManager.getRoom(targetRoomId);
+        if (targetRoom && targetRoom.players.length < 2 && targetRoom.gameState === 'waiting') {
+          // Room exists and has space, join it
+          try {
+            const joinedRoom = roomManager.joinRoom(
+              {
+                roomId: targetRoomId,
+                address,
+              },
+              socket.id
+            );
+
+            socket.join(targetRoomId);
+            roomManager.updateRoomActivity(targetRoomId);
+
+            logger.info('Player joined replay room', {
+              oldRoomId,
+              newRoomId: targetRoomId,
+              address,
+            });
+
+            callback({
+              success: true,
+              room: formatRoomData(joinedRoom),
+              sessionToken: joinedRoom.sessionTokens[address.toLowerCase()],
+            });
+
+            // Notify other players
+            socket.to(targetRoomId).emit('player_joined', {
+              address,
+              playerCount: joinedRoom.players.length,
+              room: formatRoomData(joinedRoom),
+            });
+
+            // Broadcast updated room list
+            io.emit('room_list', roomManager.getAvailableRooms().map(formatRoomForList));
+            return;
+          } catch (error) {
+            logger.warn('Failed to join replay room, will create new one', {
+              targetRoomId,
+              error: error instanceof Error ? error.message : 'Unknown error',
+            });
+            // Fall through to create new room
+          }
+        }
+      }
+
+      // No replay room exists or couldn't join, create new room
+      // Check if original room still exists and is active
+      if (oldRoom && oldRoom.players.length < 2 && oldRoom.gameState === 'waiting') {
+        // Original room is still active, rejoin it
+        try {
+          const joinedRoom = roomManager.joinRoom(
+            {
+              roomId: oldRoomId!,
+              address,
+            },
+            socket.id
+          );
+
+          socket.join(oldRoomId!);
+          roomManager.updateRoomActivity(oldRoomId!);
+
+          logger.info('Player rejoined original room', {
+            roomId: oldRoomId,
+            address,
+          });
+
+          callback({
+            success: true,
+            room: formatRoomData(joinedRoom),
+            sessionToken: joinedRoom.sessionTokens[address.toLowerCase()],
+          });
+
+          // Notify other players
+          socket.to(oldRoomId!).emit('player_joined', {
+            address,
+            playerCount: joinedRoom.players.length,
+            room: formatRoomData(joinedRoom),
+          });
+
+          // Broadcast updated room list
+          io.emit('room_list', roomManager.getAvailableRooms().map(formatRoomForList));
+          return;
+        } catch (error) {
+          logger.warn('Failed to rejoin original room, will create new one', {
+            oldRoomId,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          });
+          // Fall through to create new room
+        }
+      }
+
+      // Create new room
+      const newRoom = roomManager.createRoom(
+        {
+          betAmount,
+          address,
+          gameMode: isSinglePlayer ? 'single_player' : betAmount === 0 ? 'free' : 'paid',
+          isSinglePlayer,
+        },
+        socket.id
+      );
+
+      // Set replay room mapping if old room existed
+      if (oldRoomId) {
+        roomManager.setReplayRoomId(oldRoomId, newRoom.roomId);
+      }
+
+      socket.join(newRoom.roomId);
+      roomManager.updateRoomActivity(newRoom.roomId);
+
+      logger.info('Player created new room for replay', {
+        oldRoomId,
+        newRoomId: newRoom.roomId,
+        address,
+      });
+
+      callback({
+        success: true,
+        room: formatRoomData(newRoom),
+        sessionToken: newRoom.sessionTokens[address.toLowerCase()],
+      });
+
+      // Broadcast updated room list
+      io.emit('room_list', roomManager.getAvailableRooms().map(formatRoomForList));
+    } catch (error) {
+      logger.error('Error handling play again', error);
+      callback({
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to play again',
+      });
     }
   });
 
