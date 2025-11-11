@@ -106,6 +106,11 @@ export const setupGameHandlers = (io: Server, socket: Socket) => {
           if (startedRoom) {
             logger.info('Game started successfully', {roomId: room.roomId});
 
+            // Notify all players that room state has changed to playing
+            io.to(room.roomId).emit('room_updated', {
+              room: formatRoomData(startedRoom),
+            });
+
             // Deal cards to both players
             io.to(room.roomId).emit('game_started', {
               message: 'Game started! Cards dealt.',
@@ -876,11 +881,34 @@ async function handleGameEnd(io: Server, room: Room) {
       });
     });
 
-    logger.info('Game ended successfully', {
+    // Auto-remove players from room after game finishes
+    // Set ready to false first, then remove players
+    const roomId = room.roomId;
+    const playerSocketIds = [...room.players]
+      .filter((p) => !p.socketId.startsWith('ai-'))
+      .map((p) => p.socketId);
+
+    // Set ready to false for all players first
+    room.players.forEach((player) => {
+      if (!player.socketId.startsWith('ai-')) {
+        player.ready = false;
+      }
+    });
+
+    // Remove players from room (but keep room in memory for replay)
+    playerSocketIds.forEach((socketId) => {
+      roomManager.leaveRoom(socketId);
+    });
+
+    // Update room's lastActivity timestamp
+    roomManager.updateRoomActivity(roomId);
+
+    logger.info('Game ended successfully, players auto-removed', {
       roomId: room.roomId,
       winner: winner.address,
       score: `${winner.roundsWon}-${loser.roundsWon}`,
       isPaidGame,
+      playersRemoved: playerSocketIds.length,
     });
   } catch (error) {
     logger.error('Error handling game end', error);

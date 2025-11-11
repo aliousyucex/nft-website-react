@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useState} from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
 import {useSocket} from '../context/SocketContext';
 import type {Card, GameState, Room, RoundHistoryItem} from '../types';
 import logger from '../utils/logger';
@@ -15,6 +15,8 @@ export const useGame = (userAddress: string) => {
   );
   // Track last selection time to prevent rapid duplicates (debounce)
   const [lastSelectionTime, setLastSelectionTime] = useState(0);
+  // Track if we're in the process of leaving a room to ignore player_left events
+  const isLeavingRoomRef = useRef(false);
 
   // Helper function to check if game is over
   const isGameOver = useCallback((state: GameState | null) => {
@@ -148,6 +150,9 @@ export const useGame = (userAddress: string) => {
   const leaveRoom = useCallback(() => {
     if (!socket) return;
 
+    // Set flag to ignore player_left events
+    isLeavingRoomRef.current = true;
+
     // Clear state immediately (don't wait for callback)
     setCurrentRoom(null);
     setGameState(null);
@@ -156,9 +161,16 @@ export const useGame = (userAddress: string) => {
 
     // Then emit to server
     socket.emit('leave_room', {}, (response: {success: boolean; error?: string}) => {
+      // Reset flag after a short delay to allow any pending events to be ignored
+      setTimeout(() => {
+        isLeavingRoomRef.current = false;
+      }, 1000);
+      
       if (!response.success && response.error) {
         logger.error('Failed to leave room', response.error);
         setError(response.error);
+        // Reset flag on error so we can try again
+        isLeavingRoomRef.current = false;
       }
     });
   }, [socket]);
@@ -285,8 +297,27 @@ export const useGame = (userAddress: string) => {
 
     // Room updated (player joined/left, ready status changed)
     socket.on('room_updated', (data: {room: Room}) => {
+      // Ignore room_updated events if we're in the process of leaving
+      if (isLeavingRoomRef.current) {
+        logger.socket('Ignoring room_updated event - we are leaving the room');
+        return;
+      }
+
       logger.socket('Room updated', data);
       setCurrentRoom(data.room);
+      
+      // If room gameState is 'playing' but our gameState is null or not playing, 
+      // we need to wait for game_started event or cards_dealt event
+      // But if room is 'waiting', ensure gameState is cleared
+      if (data.room.gameState === 'waiting') {
+        // Room is waiting, clear game state if it exists
+        setGameState((prev) => {
+          if (prev && prev.gameState !== 'waiting') {
+            return null;
+          }
+          return prev;
+        });
+      }
     });
 
     // Player joined
@@ -301,30 +332,44 @@ export const useGame = (userAddress: string) => {
     socket.on(
       'player_left',
       (data: {playerCount: number; remainingPlayers: number; room?: Room}) => {
+        // Ignore player_left events if we're in the process of leaving
+        if (isLeavingRoomRef.current) {
+          logger.game('Ignoring player_left event - we are leaving the room');
+          return;
+        }
+
         logger.game('Player left', {
           playerCount: data.playerCount,
           remainingPlayers: data.remainingPlayers,
           room: data.room,
         });
-        console.log('🚪 Player Left Event:', {
-          hasRoom: !!data.room,
-          playersInRoom: data.room?.players?.length,
-          players: data.room?.players,
-        });
-        if (data.room) {
+        // Only update room if we're still in a room (not if we just left)
+        // Check if currentRoom exists and matches the room in the event
+        if (data.room && currentRoom?.roomId === data.room.roomId) {
           setCurrentRoom(data.room);
-          console.log('✅ CurrentRoom updated after player left');
-        } else {
-          console.warn('⚠️ No room data in player_left event');
+        } else if (!data.room || data.remainingPlayers === 0) {
+          // Room was emptied or we're not in this room anymore, clear state
+          setCurrentRoom(null);
+          setGameState(null);
         }
       }
     );
 
     // Game started
-    socket.on('game_started', (data: {roomId: string; cards: Card[]; countdown: number}) => {
+    socket.on('game_started', (data: {roomId?: string; cards?: Card[]; countdown?: number; message?: string}) => {
       logger.game('Game started', data);
+      // Update currentRoom gameState to 'playing' if it exists
+      setCurrentRoom((prevRoom) => {
+        if (prevRoom) {
+          return {
+            ...prevRoom,
+            gameState: 'playing',
+          };
+        }
+        return prevRoom;
+      });
       setGameState({
-        roomId: currentRoom?.roomId || '',
+        roomId: currentRoom?.roomId || data.roomId || '',
         gameState: 'playing',
         currentRound: 0, // Will be incremented when first round starts
         myCards: [],
@@ -630,6 +675,58 @@ export const useGame = (userAddress: string) => {
     return () => clearInterval(interval);
   }, [isConnected, fetchRooms]);
 
+  // Play again - rejoin or create new room
+  const playAgain = useCallback(
+    (oldRoomId: string) => {
+      if (!socket) return;
+
+      setLoading(true);
+      setError(null);
+
+      socket.emit(
+        'play_again',
+        {
+          oldRoomId,
+          address: userAddress,
+        },
+        (response: {
+          success: boolean;
+          room?: Room;
+          sessionToken?: string;
+          error?: string;
+          code?: string;
+        }) => {
+          setLoading(false);
+          if (response.success && response.room) {
+            logger.success('Play again successful', {roomId: response.room.roomId});
+            setCurrentRoom(response.room);
+            // Save session token and roomId
+            if (response.sessionToken) {
+              localStorage.setItem('gameSessionToken', response.sessionToken);
+              localStorage.setItem('currentRoomId', response.room.roomId);
+            }
+            // Reset game state for new game
+            setGameState(null);
+          } else {
+            logger.error('Failed to play again', response.error);
+            // Clear room and game state on failure
+            setCurrentRoom(null);
+            setGameState(null);
+            localStorage.removeItem('gameSessionToken');
+            localStorage.removeItem('currentRoomId');
+            
+            if (response.code === 'INSUFFICIENT_BALANCE') {
+              setError('Insufficient balance');
+            } else {
+              setError(response.error || 'Failed to play again');
+            }
+          }
+        }
+      );
+    },
+    [socket, userAddress]
+  );
+
   // Clear animations helper
   const clearAnimations = useCallback(() => {
     setReceivedEmoji(null);
@@ -646,6 +743,7 @@ export const useGame = (userAddress: string) => {
     joinRoom,
     quickJoin,
     leaveRoom,
+    playAgain,
     setReady,
     setNotReady,
     selectCard,

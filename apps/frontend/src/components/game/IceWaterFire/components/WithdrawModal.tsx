@@ -34,8 +34,8 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({visible, onClose, contract
   const [contractBalance, setContractBalance] = useState<string>('0');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Get wallet balance
-  const {data: walletBalance} = useBalance({
+  // Get wallet balance with refetch function
+  const {data: walletBalance, refetch: refetchWalletBalance} = useBalance({
     address: address,
   });
 
@@ -52,8 +52,12 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({visible, onClose, contract
     if (isSuccess) {
       message.success('Withdrawal successful!');
       refreshContractBalance();
+      // Refetch wallet balance after a short delay to ensure blockchain state is updated
+      setTimeout(() => {
+        refetchWalletBalance();
+      }, 1000);
     }
-  }, [isSuccess]);
+  }, [isSuccess, refetchWalletBalance]);
 
   // Fetch contract balance
   const refreshContractBalance = async () => {
