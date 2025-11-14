@@ -20,6 +20,7 @@
     "@fontsource/bakbak-one": "^5.2.8",
     "@fontsource/londrina-solid": "^5.2.7",
     "@fontsource/poppins": "^5.2.7",
+    "@abstract-foundation/agw-react": "^1.0.0",
     "@rainbow-me/rainbowkit": "^2.0.0",
     "@tanstack/react-query": "^5.17.0",
     "antd": "^5.12.0",

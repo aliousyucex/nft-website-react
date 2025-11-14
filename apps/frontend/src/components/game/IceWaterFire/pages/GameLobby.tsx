@@ -221,7 +221,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({
                 <BalanceDisplay onClick={() => setBalanceDropdownOpen(!balanceDropdownOpen)}>
                   <BalanceLabel>Balance:</BalanceLabel>
                   <BalanceValue>{parseFloat(localContractBalance).toFixed(4)} ETH</BalanceValue>
-                  <DropdownArrow isOpen={balanceDropdownOpen}>▼</DropdownArrow>
+                  <DropdownArrow $isOpen={balanceDropdownOpen}>▼</DropdownArrow>
                 </BalanceDisplay>
                 {balanceDropdownOpen && (
                   <BalanceDropdown>
@@ -722,11 +722,11 @@ const BalanceDisplay = styled.div`
   }
 `;
 
-const DropdownArrow = styled.span<{isOpen: boolean}>`
+const DropdownArrow = styled.span<{$isOpen: boolean}>`
   font-size: 10px;
   color: rgba(255, 255, 255, 0.7);
   transition: transform 0.3s ease;
-  transform: ${props => props.isOpen ? 'rotate(180deg)' : 'rotate(0deg)'};
+  transform: ${props => props.$isOpen ? 'rotate(180deg)' : 'rotate(0deg)'};
   user-select: none;
 `;
 
