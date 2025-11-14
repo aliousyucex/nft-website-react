@@ -1,5 +1,6 @@
-import {getDefaultConfig} from '@rainbow-me/rainbowkit';
-import {http} from 'wagmi';
+import {abstractWalletConnector} from '@abstract-foundation/agw-react/connectors';
+import {http, createConfig } from 'wagmi';
+import {coinbaseWallet, injected, walletConnect} from 'wagmi/connectors';
 
 // Abstract Chain configuration
 const abstractTestnet = {
@@ -52,10 +53,21 @@ const abstractMainnet = {
   testnet: false,
 };
 
-export const config = getDefaultConfig({
-  appName: 'Ice Water Fire',
-  projectId: VITE_WALLETCONNECT_PROJECT_ID || '4fa1d964ec5302ec1801f47c61b39b7d',
+const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || '4fa1d964ec5302ec1801f47c61b39b7d';
+
+// Create config with Abstract connector and standard connectors
+// We use getDefaultConfig for RainbowKit compatibility, but we need to manually add Abstract connector
+// Since getDefaultConfig returns a config object (not config params), we create a new config
+export const config = createConfig({
   chains: [abstractTestnet],
+  connectors: [
+    // Add Abstract connector first (so it appears first in wallet selection)
+    abstractWalletConnector(),
+    // Standard connectors (same as getDefaultConfig would add)
+    injected(),
+    coinbaseWallet({appName: 'Ice Water Fire'}),
+    walletConnect({projectId}),
+  ],
   transports: {
     [abstractTestnet.id]: http(),
   },

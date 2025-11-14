@@ -7,7 +7,7 @@ import type {Card as CardType} from '../types';
 import Card from './Card';
 
 // Auto-redirect timeout: 5 seconds for testing (comment indicates 45 seconds for production)
-const AUTO_REDIRECT_TIMEOUT_MS = 5 * 1000; // TODO: Change to 45 * 1000 for production
+const AUTO_REDIRECT_TIMEOUT_MS = 30 * 1000; // TODO: Change to 45 * 1000 for production
 
 interface RoundResultProps {
   visible: boolean;

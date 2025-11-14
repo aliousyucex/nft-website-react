@@ -131,7 +131,7 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({visible, onClose, contract
         </Header>
 
         <BalanceSection>
-          <BalanceCard highlight>
+          <BalanceCard $highlight>
             <BalanceLabel>
               Contract Balance
               <RefreshButton onClick={refreshContractBalance} disabled={isRefreshing}>
@@ -170,7 +170,7 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({visible, onClose, contract
                 <PresetButton
                   key={percentage}
                   onClick={() => setWithdrawAmount(amount)}
-                  active={withdrawAmount === amount}
+                  $active={withdrawAmount === amount}
                   disabled={parseFloat(contractBalance) === 0}
                 >
                   {percentage}%
@@ -243,12 +243,12 @@ const BalanceSection = styled.div`
   margin-bottom: 24px;
 `;
 
-const BalanceCard = styled.div<{highlight?: boolean}>`
+const BalanceCard = styled.div<{$highlight?: boolean}>`
   background: ${(props) =>
-    props.highlight ? 'linear-gradient(135deg, #52c41a 0%, #73d13d 100%)' : '#f5f5f5'};
+    props.$highlight ? 'linear-gradient(135deg, #52c41a 0%, #73d13d 100%)' : '#f5f5f5'};
   padding: 16px;
   border-radius: 12px;
-  color: ${(props) => (props.highlight ? 'white' : '#1a1a1a')};
+  color: ${(props) => (props.$highlight ? 'white' : '#1a1a1a')};
 `;
 
 const BalanceLabel = styled.div`
@@ -333,11 +333,11 @@ const PresetButtons = styled.div`
   gap: 8px;
 `;
 
-const PresetButton = styled.button<{active?: boolean}>`
+const PresetButton = styled.button<{$active?: boolean}>`
   padding: 8px;
-  border: 2px solid ${(props) => (props.active ? '#52c41a' : '#e0e0e0')};
-  background: ${(props) => (props.active ? '#52c41a' : 'white')};
-  color: ${(props) => (props.active ? 'white' : '#666')};
+  border: 2px solid ${(props) => (props.$active ? '#52c41a' : '#e0e0e0')};
+  background: ${(props) => (props.$active ? '#52c41a' : 'white')};
+  color: ${(props) => (props.$active ? 'white' : '#666')};
   border-radius: 8px;
   cursor: pointer;
   font-size: 12px;
@@ -346,7 +346,7 @@ const PresetButton = styled.button<{active?: boolean}>`
 
   &:hover:not(:disabled) {
     border-color: #52c41a;
-    background: ${(props) => (props.active ? '#73d13d' : '#f0f0f0')};
+    background: ${(props) => (props.$active ? '#73d13d' : '#f0f0f0')};
   }
 
   &:disabled {

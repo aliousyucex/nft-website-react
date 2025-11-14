@@ -282,29 +282,18 @@ const GameBoard: React.FC<GameBoardProps> = ({
           <OpponentCards>
             {lastRoundResult?.opponentCard ? (
               <Flex vertical justify='center' align='center' gap={16}>
-                <Row gutter={[16, 0]} justify='center' align='middle'>
-                  <RevealCol>
+                <Row gutter={[16, 16]} justify='center' align='middle'>
+                  <MyRevealCol>
                     <CardRevealWrapper>
                       <Card card={lastRoundResult.myCard} isRevealed />
                     </CardRevealWrapper>
-                  </RevealCol>
-                  <RevealCol>
-                    <ScoreDivider>VS</ScoreDivider>
-                  </RevealCol>
-                  <RevealCol>
+                  </MyRevealCol>
+                  <Col> </Col>
+                  <OpponentRevealCol>
                     <CardRevealWrapper>
                       <Card card={lastRoundResult.opponentCard} isRevealed />
                     </CardRevealWrapper>
-                  </RevealCol>
-                </Row>
-                <Row gutter={[16, 0]} justify='center' align='middle'>
-                  <RevealCol>
-                    <RevealLabel>Your Card</RevealLabel>
-                  </RevealCol>
-                  <RevealCol> </RevealCol>
-                  <RevealCol>
-                    <RevealLabel>Opponent's Card</RevealLabel>
-                  </RevealCol>
+                  </OpponentRevealCol>
                 </Row>
               </Flex>
             ) : (
@@ -664,14 +653,6 @@ const CardRevealWrapper = styled.div`
   transform: scale(0.8);
 `;
 
-const RevealLabel = styled.div`
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.8);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-`;
-
 const SelectionIndicator = styled.div`
   display: flex;
   align-items: center;
@@ -974,7 +955,13 @@ const ScoreCol = styled(Col)`
   justify-items: center;
 `;
 
-const RevealCol = styled(Col)`
+const MyRevealCol = styled(Col)`
+  width: 100px;
+  justify-items: center;
+  justify-content: center;
+`;
+
+const OpponentRevealCol = styled(Col)`
   width: 100px;
   justify-items: center;
   justify-content: center;

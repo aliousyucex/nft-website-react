@@ -131,7 +131,7 @@ const DepositModal: React.FC<DepositModalProps> = ({visible, onClose, contractAd
             </BalanceValue>
           </BalanceCard>
 
-          <BalanceCard highlight>
+          <BalanceCard $highlight>
             <BalanceLabel>
               Contract Balance
               <RefreshButton onClick={refreshContractBalance} disabled={isRefreshing}>
@@ -158,7 +158,7 @@ const DepositModal: React.FC<DepositModalProps> = ({visible, onClose, contractAd
               <PresetButton
                 key={amount}
                 onClick={() => setDepositAmount(amount)}
-                active={depositAmount === amount}
+                $active={depositAmount === amount}
               >
                 {amount} ETH
               </PresetButton>
@@ -227,12 +227,12 @@ const BalanceSection = styled.div`
   margin-bottom: 24px;
 `;
 
-const BalanceCard = styled.div<{highlight?: boolean}>`
+const BalanceCard = styled.div<{$highlight?: boolean}>`
   background: ${(props) =>
-    props.highlight ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#f5f5f5'};
+    props.$highlight ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#f5f5f5'};
   padding: 16px;
   border-radius: 12px;
-  color: ${(props) => (props.highlight ? 'white' : '#1a1a1a')};
+  color: ${(props) => (props.$highlight ? 'white' : '#1a1a1a')};
 `;
 
 const BalanceLabel = styled.div`
@@ -294,11 +294,11 @@ const PresetButtons = styled.div`
   gap: 8px;
 `;
 
-const PresetButton = styled.button<{active?: boolean}>`
+const PresetButton = styled.button<{$active?: boolean}>`
   padding: 8px;
-  border: 2px solid ${(props) => (props.active ? '#667eea' : '#e0e0e0')};
-  background: ${(props) => (props.active ? '#667eea' : 'white')};
-  color: ${(props) => (props.active ? 'white' : '#666')};
+  border: 2px solid ${(props) => (props.$active ? '#667eea' : '#e0e0e0')};
+  background: ${(props) => (props.$active ? '#667eea' : 'white')};
+  color: ${(props) => (props.$active ? 'white' : '#666')};
   border-radius: 8px;
   cursor: pointer;
   font-size: 12px;
@@ -307,7 +307,7 @@ const PresetButton = styled.button<{active?: boolean}>`
 
   &:hover {
     border-color: #667eea;
-    background: ${(props) => (props.active ? '#5568d3' : '#f0f0f0')};
+    background: ${(props) => (props.$active ? '#5568d3' : '#f0f0f0')};
   }
 `;
 
