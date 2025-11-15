@@ -1,3 +1,0 @@
-# AZ ONCELIKLI
-- Twitter duzenlenmeli
-

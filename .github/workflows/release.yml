@@ -24,5 +24,12 @@ jobs:
 
       - name: Build and push Frontend
         run: |
-          docker build -t ghcr.io/aliousyucex/nft-frontend:${{ github.event.release.tag_name }} ./apps/frontend
+          docker build \
+            --build-arg VITE_API_URL=${{ secrets.VITE_API_URL }} \
+            --build-arg VITE_WS_URL=${{ secrets.VITE_WS_URL }} \
+            --build-arg VITE_CONTRACT_ADDRESS=${{ secrets.VITE_CONTRACT_ADDRESS }} \
+            --build-arg VITE_CHAIN_ID=${{ secrets.VITE_CHAIN_ID }} \
+            --build-arg VITE_WALLETCONNECT_PROJECT_ID=${{ secrets.VITE_WALLETCONNECT_PROJECT_ID }} \
+            -t ghcr.io/aliousyucex/nft-frontend:${{ github.event.release.tag_name }} \
+            ./apps/frontend
           docker push ghcr.io/aliousyucex/nft-frontend:${{ github.event.release.tag_name }}

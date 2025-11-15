@@ -5,11 +5,11 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 /**
- * @title IceWaterFireGame
+ * @title Ivora
  * @dev Smart contract for Ice Water Fire card game
  * @notice Manages user balances and payouts for the game
  */
-contract IceWaterFireGame is Ownable, ReentrancyGuard {
+contract Ivora is Ownable, ReentrancyGuard {
     // Address to balance mapping
     mapping(address => int256) private balances;
     
@@ -139,8 +139,10 @@ contract IceWaterFireGame is Ownable, ReentrancyGuard {
 
     /**
      * @notice Get withdrawable contract balance (owner only)
-     * @return Withdrawable balance
-     * @dev Returns contract balance minus total positive user balances
+     * @return Withdrawable balance in wei
+     * @dev Returns accumulated commission balance that can be withdrawn by owner
+     * @notice IMPORTANT: Returns value in Wei. To convert to ETH, divide by 1e18
+     * @notice Example: 200000000000000000 Wei = 0.2 ETH
      */
     function getWithdrawableContractBalance() external view onlyOwner returns (uint256) {
         return contractBalance;
@@ -149,13 +151,16 @@ contract IceWaterFireGame is Ownable, ReentrancyGuard {
     /**
      * @notice Withdraw from contract balance (owner only)
      * @param to Recipient address
-     * @param amount Amount to withdraw
+     * @param amount Amount to withdraw in wei
      * @dev Withdraws accumulated commission
+     * @notice IMPORTANT: Amount must be in Wei (1 ETH = 1000000000000000000 Wei)
      */
     function withdrawFromContract(address payable to, uint256 amount) external onlyOwner nonReentrant {
         require(amount > 0, "Amount must be greater than 0");
         require(contractBalance >= amount, "Insufficient contract balance");
         require(to != address(0), "Invalid recipient address");
+        // Additional safety check: ensure contract has enough ETH balance
+        require(address(this).balance >= amount, "Contract ETH balance insufficient");
 
         contractBalance -= amount;
 

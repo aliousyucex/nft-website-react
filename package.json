@@ -18,6 +18,8 @@
     "test:contracts": "npm run test --workspace=@packages/contract",
     "deploy:testnet": "npm run deploy:testnet --workspace=@packages/contract",
     "deploy:mainnet": "npm run deploy:mainnet --workspace=@packages/contract",
+    "verify:testnet": "npm run verify:testnet --workspace=@packages/contract",
+    "verify:mainnet": "npm run verify:mainnet --workspace=@packages/contract",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
     "docker:logs": "docker-compose logs -f"

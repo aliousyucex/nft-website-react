@@ -5,8 +5,16 @@ import logger from '../../utils/logger';
 
 export const setupAuthHandlers = (_io: Server, socket: Socket) => {
   /**
-   * Verify wallet signature
-   * This is called before player joins a room to verify they own the wallet
+   * Verify wallet signature (Session-based authentication)
+   * This is called ONCE when user first connects to establish a session
+   * The verified address is stored in socket.data and checked on every operation
+   * until disconnect/reconnect
+   * 
+   * Benefits:
+   * - Single sign request per session (better UX)
+   * - Wallet ownership verification
+   * - Prevents wallet switching during session
+   * - No need to sign on every deposit/withdraw (they already pay gas)
    */
   socket.on('verify_signature', async (data, callback) => {
     try {
@@ -51,14 +59,20 @@ export const setupAuthHandlers = (_io: Server, socket: Socket) => {
         }
       }
 
-      // Store verified address in socket data
+      // Store verified address and session timestamp in socket data
       socket.data.verifiedAddress = address.toLowerCase();
+      socket.data.verifiedAt = Date.now();
 
-      logger.info('Signature verified', {address, socketId: socket.id});
+      logger.info('Signature verified - Session established', {
+        address: address.toLowerCase(),
+        socketId: socket.id,
+        verifiedAt: socket.data.verifiedAt,
+      });
 
       callback({
         success: true,
         address: address.toLowerCase(),
+        message: 'Session established. Wallet verified until disconnect.',
       });
     } catch (error) {
       logger.error('Error verifying signature', error);
@@ -66,6 +80,49 @@ export const setupAuthHandlers = (_io: Server, socket: Socket) => {
         success: false,
         error: 'Verification error',
         code: SocketErrorCode.INVALID_SIGNATURE,
+      });
+    }
+  });
+
+  /**
+   * Check wallet verification status
+   * Useful for frontend to check if wallet is still verified
+   */
+  socket.on('check_wallet_status', async (data, callback) => {
+    try {
+      const {address} = data;
+
+      if (!socket.data.verifiedAddress) {
+        return callback({
+          success: false,
+          verified: false,
+          error: 'Wallet not verified. Please sign to establish session.',
+        });
+      }
+
+      const verifiedAddress = socket.data.verifiedAddress.toLowerCase();
+      const providedAddress = address?.toLowerCase();
+
+      if (providedAddress && verifiedAddress !== providedAddress) {
+        return callback({
+          success: false,
+          verified: false,
+          error: 'Wallet address mismatch. Please reconnect and sign again.',
+        });
+      }
+
+      callback({
+        success: true,
+        verified: true,
+        address: verifiedAddress,
+        verifiedAt: socket.data.verifiedAt,
+      });
+    } catch (error) {
+      logger.error('Error checking wallet status', error);
+      callback({
+        success: false,
+        verified: false,
+        error: 'Error checking wallet status',
       });
     }
   });
