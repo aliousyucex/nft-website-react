@@ -158,10 +158,44 @@ await contract.withdraw(ethers.parseEther("0.1094"));
 ### Owner Flow
 
 ```javascript
-// Withdraw accumulated commission
-const commission = await contract.getWithdrawableContractBalance();
-await contract.withdrawFromContract(ownerAddress, commission);
+// Get withdrawable commission balance (returns Wei)
+const commissionWei = await contract.getWithdrawableContractBalance();
+// Convert to ETH for display
+const commissionEth = ethers.formatEther(commissionWei);
+console.log(`Withdrawable commission: ${commissionEth} ETH`);
+
+// Withdraw accumulated commission (amount must be in Wei)
+await contract.withdrawFromContract(ownerAddress, commissionWei);
 ```
+
+### Using Explorer (abscan.org)
+
+#### Reading Contract Balance
+
+1. Go to contract page on explorer
+2. Click "Read Contract" tab
+3. Find `getWithdrawableContractBalance` function
+4. Click "Query" button (no parameters needed)
+5. **IMPORTANT**: Result is in Wei. To convert to ETH:
+   - Example: `200000000000000000` Wei = 0.2 ETH
+   - Divide by 1e18 (1000000000000000000) to get ETH value
+
+#### Withdrawing from Contract
+
+1. Go to contract page on explorer
+2. Click "Write Contract" tab
+3. Connect your wallet (must be owner)
+4. Find `withdrawFromContract` function
+5. Enter parameters:
+   - `to`: Recipient address (e.g., `0x6c2Ebd1c371cE811e36bfE099e38F37f62410C0b`)
+   - `amount`: Amount in **Wei** (e.g., `200000000000000000` for 0.2 ETH)
+6. Click "Write" and confirm transaction
+
+**Wei Conversion Examples:**
+- 0.001 ETH = `1000000000000000` Wei
+- 0.01 ETH = `10000000000000000` Wei
+- 0.1 ETH = `100000000000000000` Wei
+- 1 ETH = `1000000000000000000` Wei
 
 ## 📁 Project Structure
 

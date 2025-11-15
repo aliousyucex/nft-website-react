@@ -9,7 +9,8 @@
     "test": "hardhat test",
     "deploy:testnet": "hardhat run scripts/deploy.ts --network abstractTestnet",
     "deploy:mainnet": "hardhat run scripts/deploy.ts --network abstractMainnet",
-    "verify": "hardhat verify --network abstractTestnet",
+    "verify:testnet": "hardhat verify --network abstractTestnet",
+    "verify:mainnet": "hardhat verify --network abstractMainnet",
     "clean": "hardhat clean",
     "lint": "echo 'No linting for Solidity contracts'",
     "format": "echo 'No formatting for Solidity contracts'"

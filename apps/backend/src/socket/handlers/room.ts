@@ -12,6 +12,7 @@ import {
   validateRoomPassword,
 } from '../../utils/validators';
 import {checkAddressRateLimit} from '../middleware/rateLimit';
+import {requireWalletVerification} from '../middleware/walletVerification';
 import {handleDisconnectForfeit} from './game';
 
 export const setupRoomHandlers = (io: Server, socket: Socket) => {
@@ -26,6 +27,11 @@ export const setupRoomHandlers = (io: Server, socket: Socket) => {
       validateAddress(address);
       validateBetAmount(betAmount);
       if (password) validateRoomPassword(password);
+
+      // Verify wallet (session-based: only need to sign once on connection)
+      if (!requireWalletVerification(socket, address, callback)) {
+        return; // Error already sent via callback
+      }
 
       // Check rate limit
       if (!checkAddressRateLimit(address)) {
@@ -102,6 +108,11 @@ export const setupRoomHandlers = (io: Server, socket: Socket) => {
       // Update room activity
       roomManager.updateRoomActivity(roomId);
       validateAddress(address);
+
+      // Verify wallet (session-based: only need to sign once on connection)
+      if (!requireWalletVerification(socket, address, callback)) {
+        return; // Error already sent via callback
+      }
 
       // Check rate limit
       if (!checkAddressRateLimit(address)) {

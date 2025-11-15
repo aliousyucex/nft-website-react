@@ -53,7 +53,7 @@ const abstractMainnet = {
   testnet: false,
 };
 
-const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || '4fa1d964ec5302ec1801f47c61b39b7d';
+const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || '';
 
 // Create config with Abstract connector and standard connectors
 // We use getDefaultConfig for RainbowKit compatibility, but we need to manually add Abstract connector
