@@ -7,8 +7,8 @@ services:
       - DATABASE_URL=postgresql://postgres:postgres@172.17.0.1:5432/game
       - JWT_SECRET=your_jwt_secret_change_in_production_min_32_chars
       - API_SECRET_KEY=your_api_secret_key_change_in_production
-      - CONTRACT_ADDRESS=0x3A895aeA91388f6b44227CDb565FDb04a8A81C79
-      - RPC_URL=https://api.testnet.abs.xyz
+      - CONTRACT_ADDRESS=0x95F3e85e18B5e423AD44cF519629Ab87328Da63C
+      - RPC_URL=https://testnet-rpc.monad.xyz
       - RATE_LIMIT_WINDOW_MS=60000
       - RATE_LIMIT_MAX_REQUESTS=100
       - RATE_LIMIT_BAN_DURATION_MS=3600000
@@ -30,8 +30,8 @@ services:
     environment:
       - VITE_API_URL=https://api.ivorynfts.com
       - VITE_WS_URL=wss://api.ivorynfts.com
-      - VITE_CONTRACT_ADDRESS=0x3A895aeA91388f6b44227CDb565FDb04a8A81C79
-      - VITE_CHAIN_ID=0x2B74
+      - VITE_CONTRACT_ADDRESS=0x95F3e85e18B5e423AD44cF519629Ab87328Da63C
+      - VITE_CHAIN_ID=0x2797
       - VITE_WALLETCONNECT_PROJECT_ID=4fa1d964ec5302ec1801f47c61b39b7d
     ports:
       - "5001:80"

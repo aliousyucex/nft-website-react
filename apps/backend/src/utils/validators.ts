@@ -19,10 +19,10 @@ export const validateBetAmount = (amount: number): void => {
   }
   // Allow 0 for free/practice games
   if (amount > 0 && amount < 0.001) {
-    throw new ValidationError('Minimum bet amount is 0.001 ETH (or 0 for free games)');
+    throw new ValidationError('Minimum bet amount is 0.001 MON (or 0 for free games)');
   }
   if (amount > 1000) {
-    throw new ValidationError('Maximum bet amount is 1000 ETH');
+    throw new ValidationError('Maximum bet amount is 1000 MON');
   }
 };
 

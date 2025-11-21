@@ -669,7 +669,7 @@ export function formatRoomForList(room: Room) {
     createdAt: room.createdAt,
     gameMode: room.gameMode || (room.betAmount === 0 ? 'free' : 'paid'),
     isSinglePlayer: room.isSinglePlayer || false,
-    displayLabel: room.betAmount === 0 ? 'Practice Game' : `${room.betAmount} ETH`,
+    displayLabel: room.betAmount === 0 ? 'Practice Game' : `${room.betAmount} MON`,
   };
 }
 
@@ -701,6 +701,6 @@ export function formatRoomData(room: Room) {
     createdAt: room.createdAt.toISOString(),
     gameMode: room.gameMode || (room.betAmount === 0 ? 'free' : 'paid'),
     isSinglePlayer: room.isSinglePlayer || false,
-    displayLabel: room.betAmount === 0 ? 'Practice Game' : `${room.betAmount} ETH`,
+    displayLabel: room.betAmount === 0 ? 'Practice Game' : `${room.betAmount} MON`,
   };
 }

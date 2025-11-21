@@ -1125,7 +1125,7 @@ async function handleBothPlayersAfkForfeit(io: Server, room: Room) {
     logger.info('Game ended - both players AFK', {
       roomId: room.roomId,
       isPaidGame,
-      penalty: isPaidGame ? `${room.betAmount * 2} ETH forfeited` : 'none',
+      penalty: isPaidGame ? `${room.betAmount * 2} MON forfeited` : 'none',
     });
   } catch (error) {
     logger.error('Error handling both players AFK forfeit', error);

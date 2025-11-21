@@ -118,7 +118,7 @@ const GameRoom: React.FC<GameRoomProps> = ({
             </RoomIdContainer>
             <BetInfo>
               <BetLabel>Mode:</BetLabel>
-              <BetAmount>{betAmount === 0 ? '⚡ Practice Game' : `${betAmount} ETH`}</BetAmount>
+              <BetAmount>{betAmount === 0 ? '⚡ Practice Game' : `${betAmount} MON`}</BetAmount>
             </BetInfo>
           </RoomInfo>
 

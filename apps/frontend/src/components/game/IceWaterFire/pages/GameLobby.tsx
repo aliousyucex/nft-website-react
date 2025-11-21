@@ -130,7 +130,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({
   const handleCreateRoom = () => {
     // Allow 0 for free/single player games
     if (betAmount > 0 && betAmount < 0.001) {
-      message.error('Minimum bet amount is 0.001 ETH (or 0 for free games)');
+      message.error('Minimum bet amount is 0.001 MON (or 0 for free games)');
       return;
     }
 
@@ -180,7 +180,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({
   const handleQuickJoin = () => {
     // Allow 0 for free/single player games
     if (quickBetAmount > 0 && quickBetAmount < 0.001) {
-      message.error('Minimum bet amount is 0.001 ETH (or 0 for free games)');
+      message.error('Minimum bet amount is 0.001 MON (or 0 for free games)');
       return;
     }
 
@@ -220,18 +220,18 @@ const GameLobby: React.FC<GameLobbyProps> = ({
               <BalanceDisplayContainer ref={dropdownRef}>
                 <BalanceDisplay onClick={() => setBalanceDropdownOpen(!balanceDropdownOpen)}>
                   <BalanceLabel>Balance:</BalanceLabel>
-                  <BalanceValue>{parseFloat(localContractBalance).toFixed(4)} ETH</BalanceValue>
+                  <BalanceValue>{parseFloat(localContractBalance).toFixed(4)} MON</BalanceValue>
                   <DropdownArrow $isOpen={balanceDropdownOpen}>▼</DropdownArrow>
                 </BalanceDisplay>
                 {balanceDropdownOpen && (
                   <BalanceDropdown>
                     <DropdownItem>
                       <DropdownLabel>Wallet Balance:</DropdownLabel>
-                      <DropdownValue>{parseFloat(walletBalance).toFixed(4)} ETH</DropdownValue>
+                      <DropdownValue>{parseFloat(walletBalance).toFixed(4)} MON</DropdownValue>
                     </DropdownItem>
                     <DropdownItem>
                       <DropdownLabel>Contract Balance:</DropdownLabel>
-                      <DropdownValue>{parseFloat(localContractBalance).toFixed(4)} ETH</DropdownValue>
+                      <DropdownValue>{parseFloat(localContractBalance).toFixed(4)} MON</DropdownValue>
                       <RefreshButton onClick={refreshContractBalance} disabled={isRefreshingContractBalance}>
                         {isRefreshingContractBalance ? '⟳' : '↻'}
                       </RefreshButton>
@@ -368,7 +368,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({
               step={0.001}
               value={walletConnected ? betAmount : 0}
               onChange={(val) => setBetAmount(val || 0)}
-              addonAfter={betAmount === 0 ? 'FREE' : 'ETH'}
+              addonAfter={betAmount === 0 ? 'FREE' : 'MON'}
               style={{width: '100%'}}
               disabled={gameMode === 'single_player' || !walletConnected}
             />
@@ -544,7 +544,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({
                   setQuickBetAmount(value);
                 }
               }}
-              addonAfter={quickBetAmount === 0 ? 'FREE' : 'ETH'}
+              addonAfter={quickBetAmount === 0 ? 'FREE' : 'MON'}
               style={{width: '100%'}}
               disabled={quickGameMode === 'single_player' || !walletConnected}
             />

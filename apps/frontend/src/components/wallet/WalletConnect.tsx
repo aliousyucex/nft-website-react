@@ -4,7 +4,7 @@ import React, {useEffect, useState} from 'react';
 import styled from 'styled-components';
 import {formatEther} from 'viem';
 import {useAccount, useBalance, useChainId, useDisconnect, useSwitchChain} from 'wagmi';
-import {abstractTestnet} from '../../config/wagmi';
+import {monadTestnet} from '../../config/wagmi';
 import WalletSelectionModal from './WalletSelectionModal';
 
 type ConnectionMethod = 'rainbowkit' | 'agw' | null;
@@ -151,9 +151,9 @@ const WalletConnect: React.FC = () => {
           // If connected via AGW (not via RainbowKit), show AGW UI
           // Note: 'connected' is from RainbowKit, 'isConnected' is from wagmi
           if (!connected && isConnected && connectionMethod === 'agw') {
-            const isWrongNetwork = chainId !== abstractTestnet.id;
+            const isWrongNetwork = chainId !== monadTestnet.id;
             const displayAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : '';
-            const displayBalance = balance ? `${parseFloat(formatEther(balance.value)).toFixed(4)} ETH` : '';
+            const displayBalance = balance ? `${parseFloat(formatEther(balance.value)).toFixed(4)} MON` : '';
 
             return (
               <ConnectedContainer>
@@ -161,7 +161,7 @@ const WalletConnect: React.FC = () => {
                   <WrongNetworkButton
                     onClick={() => {
                       if (switchChain) {
-                        switchChain({chainId: abstractTestnet.id});
+                        switchChain({chainId: monadTestnet.id});
                       }
                     }}
                   >
@@ -172,11 +172,11 @@ const WalletConnect: React.FC = () => {
                   <ChainButton
                     onClick={() => {
                       if (switchChain) {
-                        switchChain({chainId: abstractTestnet.id});
+                        switchChain({chainId: monadTestnet.id});
                       }
                     }}
                   >
-                    {abstractTestnet.name}
+                    {monadTestnet.name}
                   </ChainButton>
                 )}
 

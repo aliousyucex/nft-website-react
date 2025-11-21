@@ -15,10 +15,10 @@ export default defineConfig({
     },
   },
   define: {
-    VITE_API_URL: JSON.stringify(process.env.VITE_API_URL || 'https://api.ivorynfts.com'), // 'https://api.ivorynfts.com'),
-    VITE_WS_URL: JSON.stringify(process.env.VITE_WS_URL || 'wss://api.ivorynfts.com'), // 'wss://api.ivorynfts.com'),
-    VITE_CONTRACT_ADDRESS: JSON.stringify(process.env.VITE_CONTRACT_ADDRESS || '0x3A895aeA91388f6b44227CDb565FDb04a8A81C79'),
-    VITE_CHAIN_ID: JSON.stringify(process.env.VITE_CHAIN_ID || '0x2B74'),
+    VITE_API_URL: JSON.stringify(process.env.VITE_API_URL || 'http://localhost:5000'), //, 'https://api.ivorynfts.com'), // 'https://api.ivorynfts.com'),
+    VITE_WS_URL: JSON.stringify(process.env.VITE_WS_URL || 'ws://localhost:5000'), // 'wss://api.ivorynfts.com'),
+    VITE_CONTRACT_ADDRESS: JSON.stringify(process.env.VITE_CONTRACT_ADDRESS || '0x95F3e85e18B5e423AD44cF519629Ab87328Da63C'),
+    VITE_CHAIN_ID: JSON.stringify(process.env.VITE_CHAIN_ID || '0x2797'),
     VITE_WALLETCONNECT_PROJECT_ID: JSON.stringify(process.env.VITE_WALLETCONNECT_PROJECT_ID || ''),
   }
 })

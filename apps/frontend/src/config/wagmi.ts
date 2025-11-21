@@ -2,14 +2,40 @@ import {abstractWalletConnector} from '@abstract-foundation/agw-react/connectors
 import {http, createConfig } from 'wagmi';
 import {coinbaseWallet, injected, walletConnect} from 'wagmi/connectors';
 
-// Abstract Chain configuration
+// Monad Testnet Chain configuration
+const monadTestnet = {
+  id: 10143,
+  name: 'Monad Testnet',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'Monad',
+    symbol: 'MON',
+  },
+  rpcUrls: {
+    default: {
+      http: ['https://testnet-rpc.monad.xyz'],
+    },
+    public: {
+      http: ['https://testnet-rpc.monad.xyz'],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: 'MonadVision',
+      url: 'https://testnet.monadvision.com',
+    },
+  },
+  testnet: true,
+};
+
+// Abstract Chain configuration (kept for reference)
 const abstractTestnet = {
   id: 11124,
   name: 'Abstract Testnet',
   nativeCurrency: {
     decimals: 18,
-    name: 'Ether',
-    symbol: 'ETH',
+    name: 'Monad',
+    symbol: 'MON',
   },
   rpcUrls: {
     default: {
@@ -33,8 +59,8 @@ const abstractMainnet = {
   name: 'Abstract',
   nativeCurrency: {
     decimals: 18,
-    name: 'Ether',
-    symbol: 'ETH',
+    name: 'Monad',
+    symbol: 'MON',
   },
   rpcUrls: {
     default: {
@@ -55,23 +81,19 @@ const abstractMainnet = {
 
 const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || '';
 
-// Create config with Abstract connector and standard connectors
-// We use getDefaultConfig for RainbowKit compatibility, but we need to manually add Abstract connector
-// Since getDefaultConfig returns a config object (not config params), we create a new config
+// Create config with Monad Testnet as default chain
 export const config = createConfig({
-  chains: [abstractTestnet],
+  chains: [monadTestnet],
   connectors: [
-    // Add Abstract connector first (so it appears first in wallet selection)
-    abstractWalletConnector(),
-    // Standard connectors (same as getDefaultConfig would add)
+    // Standard connectors
     injected(),
     coinbaseWallet({appName: 'Ice Water Fire'}),
     walletConnect({projectId}),
   ],
   transports: {
-    [abstractTestnet.id]: http(),
+    [monadTestnet.id]: http(),
   },
   ssr: false,
 });
 
-export {abstractTestnet, abstractMainnet};
+export {monadTestnet, abstractTestnet, abstractMainnet};

@@ -21,25 +21,29 @@ const CONTRACT_ABI = [
 export class ContractService {
   private provider: ethers.Provider;
   private contract: ethers.Contract;
-  private wallet: ethers.Wallet;
+  private wallet: ethers.Wallet | null = null;
 
   constructor() {
     // Initialize provider
     this.provider = new ethers.JsonRpcProvider(config.blockchain.rpcUrl);
 
-    // Initialize wallet
-    this.wallet = new ethers.Wallet(config.blockchain.privateKey, this.provider);
+    // Initialize wallet (only if private key is provided)
+    if (config.blockchain.privateKey) {
+      this.wallet = new ethers.Wallet(config.blockchain.privateKey, this.provider);
+    }
 
-    // Initialize contract
+    // Initialize contract (use wallet if available, otherwise use provider for read-only)
+    const contractSigner = this.wallet || this.provider;
     this.contract = new ethers.Contract(
       config.blockchain.contractAddress,
       CONTRACT_ABI,
-      this.wallet
+      contractSigner
     );
 
     logger.info('Contract service initialized', {
       contractAddress: config.blockchain.contractAddress,
       network: config.blockchain.rpcUrl,
+      hasPrivateKey: !!config.blockchain.privateKey,
     });
   }
 
@@ -68,14 +72,35 @@ export class ContractService {
    */
   async getUserBalance(address: string): Promise<string> {
     try {
-      if (!config.blockchain.contractAddress || config.blockchain.contractAddress === '0x...') {
+      if (!config.blockchain.contractAddress || config.blockchain.contractAddress === '') {
         logger.warn('Contract address not configured, returning 0 balance');
         return '0';
       }
-      const balance = await this.contract.getWithdrawableUserBalance(address);
-      return ethers.formatEther(balance);
+
+      // Use read-only contract instance for balance queries (more efficient)
+      const readOnlyContract = new ethers.Contract(
+        config.blockchain.contractAddress,
+        CONTRACT_ABI,
+        this.provider
+      );
+
+      const balance = await readOnlyContract.getWithdrawableUserBalance(address);
+      const formattedBalance = ethers.formatEther(balance);
+      
+      logger.info('User balance retrieved', {
+        address,
+        balance: formattedBalance,
+        contractAddress: config.blockchain.contractAddress,
+      });
+
+      return formattedBalance;
     } catch (error) {
-      logger.error('Error getting user balance:', error);
+      logger.error('Error getting user balance:', {
+        error: error instanceof Error ? error.message : error,
+        address,
+        contractAddress: config.blockchain.contractAddress,
+        rpcUrl: config.blockchain.rpcUrl,
+      });
       // Return 0 instead of throwing to prevent UI break
       return '0';
     }
@@ -84,7 +109,7 @@ export class ContractService {
   /**
    * Update single user balance (owner only)
    * @param address User wallet address
-   * @param amount Amount to add/subtract (in ETH, can be negative)
+   * @param amount Amount to add/subtract (in MON, can be negative)
    */
   async updateBalance(address: string, amount: number): Promise<void> {
     try {

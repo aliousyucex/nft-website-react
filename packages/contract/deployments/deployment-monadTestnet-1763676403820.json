@@ -1,0 +1,8 @@
+{
+  "network": "monadTestnet",
+  "chainId": "10143",
+  "contractAddress": "0x95F3e85e18B5e423AD44cF519629Ab87328Da63C",
+  "owner": "0x1A8dE5a871c637f99e77484035b67583bCE689F0",
+  "deployedAt": "2025-11-20T22:06:43.820Z",
+  "transactionHash": "0x3f612867e737cfb24cdca50b1a15363d9cad3f681c063e76a6c107d6758b799d"
+}
