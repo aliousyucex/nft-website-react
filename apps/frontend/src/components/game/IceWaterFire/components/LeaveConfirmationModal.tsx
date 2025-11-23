@@ -32,7 +32,7 @@ export const LeaveConfirmationModal: React.FC<LeaveConfirmationModalProps> = ({
         
         {isPaidGame && betAmount > 0 ? (
           <Message>
-            You will <Highlight>forfeit this game</Highlight> and <Highlight>lose your bet of {betAmount} ETH</Highlight>.
+            You will <Highlight>forfeit this game</Highlight> and <Highlight>lose your bet of {betAmount} MON</Highlight>.
             Your opponent will win by forfeit.
           </Message>
         ) : (

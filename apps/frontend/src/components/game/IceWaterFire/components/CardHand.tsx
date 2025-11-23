@@ -108,12 +108,12 @@ const CardsWrapper = styled.div<{$cardCount: number}>`
   display: flex;
   justify-content: center;
   align-items: center;
-  width: ${(props) => Math.min(props.$cardCount * 120, 600)}px;
+  width: ${(props) => Math.min(props.$cardCount * 125, 600)}px;
   height: 180px;
 
   @media (max-height: 900px) {
-    width: ${(props) => Math.min(props.$cardCount * 120, 525)}px;
-    height: 150px;
+    width: ${(props) => Math.min(props.$cardCount * 125, 525)}px;
+    height: 180px;
   }
 
   @media (max-width: 768px) {
@@ -132,7 +132,7 @@ const CardsWrapper = styled.div<{$cardCount: number}>`
       grid-template-columns: repeat(6, 1fr);
       grid-template-rows: auto auto;
       min-height: 240px;
-      width: 300px;
+      width: 320px;
     `}
     
     /* 4 cards: 2x2 grid */

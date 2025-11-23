@@ -68,8 +68,8 @@ const RoundHistory: React.FC<RoundHistoryProps> = ({history}) => {
 export default RoundHistory;
 
 const CardFrontImage = styled.img`
-  height: 100px;
-  width: 73px;
+  width: 80px;
+  height: 120px;
   object-fit: cover;
   object-position: center;
   border-radius: 8px;
@@ -79,6 +79,7 @@ const Content = styled.div`
   flex: 1;
   overflow-y: auto;
   padding: 16px;
+  background: rgba(0, 0, 0, 0.8);
 
   &::-webkit-scrollbar {
     width: 8px;

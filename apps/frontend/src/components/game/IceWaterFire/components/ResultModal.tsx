@@ -211,10 +211,10 @@ export const GameResultModal: React.FC<GameResultProps> = ({
           !isBothPlayersAfk &&
           !isCurrentUserAfk &&
           (result === 'win' || isOpponentAfk) &&
-          prizeAmount !== undefined && <PrizeAmount>+{prizeAmount} ETH</PrizeAmount>}
+          prizeAmount !== undefined && <PrizeAmount>+{prizeAmount} MON</PrizeAmount>}
         {!isFreeGame &&
           (isBothPlayersAfk || isCurrentUserAfk || (result === 'lose' && !isOpponentAfk)) &&
-          betAmount > 0 && <LoseAmount>-{betAmount} ETH</LoseAmount>}
+          betAmount > 0 && <LoseAmount>-{betAmount} MON</LoseAmount>}
 
         <FinalScoreDisplay>
           <FinalScoreLabel>Final Score</FinalScoreLabel>
@@ -225,7 +225,7 @@ export const GameResultModal: React.FC<GameResultProps> = ({
 
         {isFreeGame && !isConnected && (
           <ConnectWalletHint>
-            💡 Connect wallet to play for ETH and rank on leaderboard
+            💡 Connect wallet to play for MON and rank on leaderboard
           </ConnectWalletHint>
         )}
 

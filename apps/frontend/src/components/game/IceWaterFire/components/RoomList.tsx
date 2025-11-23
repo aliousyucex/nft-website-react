@@ -60,7 +60,7 @@ const RoomList: React.FC<RoomListProps> = ({rooms, onJoinRoom, loading = false})
                 <Label>Bet Amount:</Label>
                 <Value>
                   {room.displayLabel ||
-                    (room.betAmount === 0 ? 'Practice Game' : `${room.betAmount} ETH`)}
+                    (room.betAmount === 0 ? 'Practice Game' : `${room.betAmount} MON`)}
                 </Value>
               </InfoRow>
               <InfoRow>

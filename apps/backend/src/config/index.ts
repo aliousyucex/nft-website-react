@@ -45,7 +45,7 @@ const config: Config = {
     nodeEnv: process.env.NODE_ENV || 'development',
   },
   database: {
-    url: process.env.DATABASE_URL || 'postgresql://localhost:5432/iwf_game',
+    url: process.env.DATABASE_URL || 'postgresql://localhost:5432/game',
   },
   jwt: {
     secret: process.env.JWT_SECRET || 'change_this_secret_in_production',
@@ -56,7 +56,7 @@ const config: Config = {
   },
   blockchain: {
     contractAddress: process.env.CONTRACT_ADDRESS || '',
-    rpcUrl: process.env.RPC_URL || 'https://api.testnet.abs.xyz',
+    rpcUrl: process.env.RPC_URL || 'https://testnet-rpc.monad.xyz',
     privateKey: process.env.PRIVATE_KEY || '',
   },
   rateLimit: {

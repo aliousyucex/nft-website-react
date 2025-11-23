@@ -126,8 +126,8 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({visible, onClose, contract
     <Modal open={visible} onCancel={onClose} footer={null} width={500} title={null} centered>
       <Container>
         <Header>
-          <Title>Withdraw ETH</Title>
-          <Subtitle>Withdraw ETH from your game balance</Subtitle>
+          <Title>Withdraw MON</Title>
+          <Subtitle>Withdraw MON from your game balance</Subtitle>
         </Header>
 
         <BalanceSection>
@@ -138,20 +138,20 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({visible, onClose, contract
                 {isRefreshing ? '⟳' : '🔄'}
               </RefreshButton>
             </BalanceLabel>
-            <BalanceValue>{contractBalance} ETH</BalanceValue>
+            <BalanceValue>{contractBalance} MON</BalanceValue>
           </BalanceCard>
 
           <BalanceCard>
             <BalanceLabel>Wallet Balance</BalanceLabel>
             <BalanceValue>
-              {walletBalance ? formatEther(walletBalance.value) : '0'} ETH
+              {walletBalance ? formatEther(walletBalance.value) : '0'} MON
             </BalanceValue>
           </BalanceCard>
         </BalanceSection>
 
         <InputSection>
           <LabelRow>
-            <Label>Withdraw Amount (ETH)</Label>
+            <Label>Withdraw Amount (MON)</Label>
             <MaxButton onClick={withdrawAll}>Max</MaxButton>
           </LabelRow>
           <InputNumber
@@ -183,8 +183,8 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({visible, onClose, contract
         <InfoBox>
           <InfoIcon>ℹ️</InfoIcon>
           <InfoText>
-            Withdrawn ETH will be sent to your wallet. Make sure you have enough ETH for gas fees
-            (~0.0001-0.0005 ETH).
+            Withdrawn MON will be sent to your wallet. Make sure you have enough MON for gas fees
+            (~0.0001-0.0005 MON).
           </InfoText>
         </InfoBox>
 
@@ -204,7 +204,7 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({visible, onClose, contract
                 {isPending ? 'Confirming...' : 'Processing...'}
               </>
             ) : (
-              `Withdraw ${withdrawAmount} ETH`
+              `Withdraw ${withdrawAmount} MON`
             )}
           </WithdrawButton>
         </ActionButtons>

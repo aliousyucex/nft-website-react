@@ -13,13 +13,18 @@ const config: HardhatUserConfig = {
         enabled: true,
         runs: 200,
       },
+      metadata: {
+        bytecodeHash: "none", // disable ipfs - required for Monad verification
+        useLiteralContent: true, // use source code - required for Monad verification
+      },
     },
   },
   sourcify: {
-    // Disabled: Abstract blockchain chains (Testnet: 11124, Mainnet: 2741) may not be supported by Sourcify
-    // Sourcify verification will fail if chain is not in their supported list
-    // Use explorer verification (etherscan) instead for Abstract blockchain
-    enabled: false,
+    // Enabled for Monad Testnet (MonadVision)
+    // Disabled for Abstract blockchain chains (Testnet: 11124, Mainnet: 2741) - not supported by Sourcify
+    enabled: true,
+    apiUrl: "https://sourcify-api-monad.blockvision.org",
+    browserUrl: "https://testnet.monadvision.com",
   },
   networks: {
     abstractTestnet: {
@@ -31,6 +36,11 @@ const config: HardhatUserConfig = {
       url: process.env.RPC_URL_MAINNET || "https://api.abs.xyz",
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
       chainId: 2741, // Abstract Mainnet Chain ID (example, verify actual ID)
+    },
+    monadTestnet: {
+      url: "https://testnet-rpc.monad.xyz",
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      chainId: 10143, // Monad Testnet Chain ID
     },
   },
   etherscan: {
@@ -53,6 +63,14 @@ const config: HardhatUserConfig = {
         urls: {
           apiURL: "https://api.abscan.org/api",
           browserURL: "https://abscan.org",
+        },
+      },
+      {
+        network: "monadTestnet",
+        chainId: 10143,
+        urls: {
+          apiURL: "https://api.socialscan.io/monad-testnet/v1/explorer/command_api/contract",
+          browserURL: "https://socialscan.xyz",
         },
       },
     ],
