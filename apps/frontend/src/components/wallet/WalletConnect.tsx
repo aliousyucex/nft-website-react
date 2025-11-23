@@ -1,220 +1,85 @@
-import {useLoginWithAbstract} from '@abstract-foundation/agw-react';
 import {ConnectButton} from '@rainbow-me/rainbowkit';
-import React, {useEffect, useState} from 'react';
 import styled from 'styled-components';
-import {formatEther} from 'viem';
-import {useAccount, useBalance, useChainId, useDisconnect, useSwitchChain} from 'wagmi';
-import {monadTestnet} from '../../config/wagmi';
-import WalletSelectionModal from './WalletSelectionModal';
-
-type ConnectionMethod = 'rainbowkit' | 'agw' | null;
-
-const CONNECTION_METHOD_KEY = 'wallet_connection_method';
 
 const WalletConnect: React.FC = () => {
-  const [connectionMethod, setConnectionMethod] = useState<ConnectionMethod>(null);
-  const [showSelectionModal, setShowSelectionModal] = useState(false);
-  const [shouldOpenRainbowKit, setShouldOpenRainbowKit] = useState(false);
-  const {address, isConnected} = useAccount();
-  const {disconnect} = useDisconnect();
-  const chainId = useChainId();
-  const {switchChain} = useSwitchChain();
-  const {data: balance} = useBalance({address});
-  const {login: loginWithAbstract} = useLoginWithAbstract();
-
-  // Load connection method from localStorage on mount
-  useEffect(() => {
-    const savedMethod = localStorage.getItem(CONNECTION_METHOD_KEY) as ConnectionMethod;
-    if (savedMethod && (savedMethod === 'rainbowkit' || savedMethod === 'agw')) {
-      setConnectionMethod(savedMethod);
-    }
-  }, []);
-
-  // Clear connection method when disconnected
-  useEffect(() => {
-    if (!isConnected) {
-      setConnectionMethod(null);
-      localStorage.removeItem(CONNECTION_METHOD_KEY);
-      setShouldOpenRainbowKit(false);
-    }
-  }, [isConnected]);
-
-  const handleSelectStandard = () => {
-    setShowSelectionModal(false);
-    setConnectionMethod('rainbowkit');
-    localStorage.setItem(CONNECTION_METHOD_KEY, 'rainbowkit');
-    setShouldOpenRainbowKit(true);
-  };
-
-  const handleSelectAbstract = async () => {
-    setShowSelectionModal(false);
-    setConnectionMethod('agw');
-    localStorage.setItem(CONNECTION_METHOD_KEY, 'agw');
-    try {
-      loginWithAbstract();
-    } catch (error) {
-      console.error('Failed to connect with Abstract Wallet:', error);
-      setConnectionMethod(null);
-      localStorage.removeItem(CONNECTION_METHOD_KEY);
-    }
-  };
-
-  const handleDisconnect = () => {
-    disconnect();
-    setConnectionMethod(null);
-    localStorage.removeItem(CONNECTION_METHOD_KEY);
-  };
-
-  const handleConnectClick = () => {
-    if (!isConnected) {
-      setShowSelectionModal(true);
-    }
-  };
-
-  // Ref to store RainbowKit modal opener function
-  const rainbowKitModalRef = React.useRef<(() => void) | null>(null);
-
-  // Open RainbowKit modal when flag is set
-  useEffect(() => {
-    if (shouldOpenRainbowKit && rainbowKitModalRef.current && !isConnected) {
-      rainbowKitModalRef.current();
-      setShouldOpenRainbowKit(false);
-    }
-  }, [shouldOpenRainbowKit, isConnected]);
-
-  // Render RainbowKit UI (handles both connected and connecting states)
+  // Render RainbowKit UI
   return (
-    <>
-      <ConnectButton.Custom>
-        {({
-          account,
-          chain,
-          openAccountModal,
-          openChainModal,
-          openConnectModal,
-          authenticationStatus,
-          mounted,
-        }) => {
-          const ready = mounted && authenticationStatus !== 'loading';
-          const connected =
-            ready &&
-            account &&
-            chain &&
-            (!authenticationStatus || authenticationStatus === 'authenticated');
+    <ConnectButton.Custom>
+      {({
+        account,
+        chain,
+        openAccountModal,
+        openChainModal,
+        openConnectModal,
+        authenticationStatus,
+        mounted,
+      }) => {
+        const ready = mounted && authenticationStatus !== 'loading';
+        const connected =
+          ready &&
+          account &&
+          chain &&
+          (!authenticationStatus || authenticationStatus === 'authenticated');
 
-          // Store modal opener function in ref
-          rainbowKitModalRef.current = openConnectModal;
-
-          // If connected but connectionMethod is null, assume RainbowKit (backward compatibility)
-          const effectiveConnectionMethod = connected && !connectionMethod ? 'rainbowkit' : connectionMethod;
-
-          // If connected via RainbowKit, show RainbowKit UI
-          if (connected && effectiveConnectionMethod === 'rainbowkit') {
-            if (chain.unsupported) {
-              return (
-                <WrongNetworkButton onClick={openChainModal}>
-                  <WarningIcon>⚠️</WarningIcon>
-                  Wrong Network
-                </WrongNetworkButton>
-              );
-            }
-
+        if (connected) {
+          if (chain.unsupported) {
             return (
-              <ConnectedContainer>
-                <ChainButton onClick={openChainModal}>
-                  {chain.hasIcon && (
-                    <ChainIcon
-                      style={{
-                        background: chain.iconBackground,
-                      }}
-                    >
-                      {chain.iconUrl && (
-                        <img
-                          alt={chain.name ?? 'Chain icon'}
-                          src={chain.iconUrl}
-                          style={{width: 16, height: 16}}
-                        />
-                      )}
-                    </ChainIcon>
-                  )}
-                  {chain.name}
-                </ChainButton>
-
-                <AccountButton onClick={openAccountModal}>
-                  <AddressText>{account.displayName}</AddressText>
-                  {account.displayBalance && <BalanceText>{account.displayBalance}</BalanceText>}
-                </AccountButton>
-              </ConnectedContainer>
+              <WrongNetworkButton onClick={openChainModal}>
+                <WarningIcon>⚠️</WarningIcon>
+                Wrong Network
+              </WrongNetworkButton>
             );
           }
 
-          // If connected via AGW (not via RainbowKit), show AGW UI
-          // Note: 'connected' is from RainbowKit, 'isConnected' is from wagmi
-          if (!connected && isConnected && connectionMethod === 'agw') {
-            const isWrongNetwork = chainId !== monadTestnet.id;
-            const displayAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : '';
-            const displayBalance = balance ? `${parseFloat(formatEther(balance.value)).toFixed(4)} MON` : '';
-
-            return (
-              <ConnectedContainer>
-                {isWrongNetwork ? (
-                  <WrongNetworkButton
-                    onClick={() => {
-                      if (switchChain) {
-                        switchChain({chainId: monadTestnet.id});
-                      }
-                    }}
-                  >
-                    <WarningIcon>⚠️</WarningIcon>
-                    Wrong Network
-                  </WrongNetworkButton>
-                ) : (
-                  <ChainButton
-                    onClick={() => {
-                      if (switchChain) {
-                        switchChain({chainId: monadTestnet.id});
-                      }
-                    }}
-                  >
-                    {monadTestnet.name}
-                  </ChainButton>
-                )}
-
-                <AccountButton onClick={handleDisconnect}>
-                  <AddressText>{displayAddress}</AddressText>
-                  {displayBalance && <BalanceText>{displayBalance}</BalanceText>}
-                </AccountButton>
-              </ConnectedContainer>
-            );
-          }
-
-          // Not connected - show connect button
           return (
-            <div
-              {...(!ready && {
-                'aria-hidden': true,
-                style: {
-                  opacity: 0,
-                  pointerEvents: 'none',
-                  userSelect: 'none',
-                },
-              })}
-            >
-              <ConnectWalletButton onClick={handleConnectClick}>
-                <WalletIcon>👛</WalletIcon>
-                Connect Wallet
-              </ConnectWalletButton>
-            </div>
+            <ConnectedContainer>
+              <ChainButton onClick={openChainModal}>
+                {chain.hasIcon && (
+                  <ChainIcon
+                    style={{
+                      background: chain.iconBackground,
+                    }}
+                  >
+                    {chain.iconUrl && (
+                      <img
+                        alt={chain.name ?? 'Chain icon'}
+                        src={chain.iconUrl}
+                        style={{width: 16, height: 16}}
+                      />
+                    )}
+                  </ChainIcon>
+                )}
+                {chain.name}
+              </ChainButton>
+
+              <AccountButton onClick={openAccountModal}>
+                <AddressText>{account.displayName}</AddressText>
+                {account.displayBalance && <BalanceText>{account.displayBalance}</BalanceText>}
+              </AccountButton>
+            </ConnectedContainer>
           );
-        }}
-      </ConnectButton.Custom>
-      <WalletSelectionModal
-        visible={showSelectionModal}
-        onClose={() => setShowSelectionModal(false)}
-        onSelectStandard={handleSelectStandard}
-        onSelectAbstract={handleSelectAbstract}
-      />
-    </>
+        }
+
+        // Not connected - show connect button
+        return (
+          <div
+            {...(!ready && {
+              'aria-hidden': true,
+              style: {
+                opacity: 0,
+                pointerEvents: 'none',
+                userSelect: 'none',
+              },
+            })}
+          >
+            <ConnectWalletButton onClick={openConnectModal}>
+              <WalletIcon>👛</WalletIcon>
+              Connect Wallet
+            </ConnectWalletButton>
+          </div>
+        );
+      }}
+    </ConnectButton.Custom>
   );
 };
 

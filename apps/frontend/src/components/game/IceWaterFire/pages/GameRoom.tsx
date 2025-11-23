@@ -27,7 +27,6 @@ const GameRoom: React.FC<GameRoomProps> = ({
   onNotReady,
   onLeave,
 }) => {
-  const [copied, setCopied] = useState(false);
   const [aiName, setAiName] = useState('');
 
   // Defensive check for players
@@ -68,9 +67,7 @@ const GameRoom: React.FC<GameRoomProps> = ({
 
   const copyRoomId = () => {
     navigator.clipboard.writeText(roomId);
-    setCopied(true);
     message.success('Room ID copied to clipboard!');
-    setTimeout(() => setCopied(false), 2000);
   };
 
   const shareLink = () => {
@@ -103,29 +100,31 @@ const GameRoom: React.FC<GameRoomProps> = ({
 
       <Content>
         <Header>
-          <BackButton onClick={onLeave}>
-            <BackIcon>←</BackIcon>
-            Leave Room
-          </BackButton>
+          <Flex gap={10}>
+            <BackButton onClick={onLeave}>
+              <BackIcon>←</BackIcon>
+              Leave Room
+            </BackButton>
+
+            <BetInfo>
+              <BetLabel>Bet:</BetLabel>
+              <BetAmount>{betAmount === 0 ? 'Free' : `${betAmount} MON`}</BetAmount>
+            </BetInfo>
+          </Flex>
 
           <RoomInfo>
             <RoomIdContainer>
-              <RoomIdLabel>Room ID:</RoomIdLabel>
               <RoomId onClick={copyRoomId}>
                 {roomId}
-                {copied ? ' ✓' : ' 📋'}
               </RoomId>
             </RoomIdContainer>
-            <BetInfo>
-              <BetLabel>Mode:</BetLabel>
-              <BetAmount>{betAmount === 0 ? '⚡ Practice Game' : `${betAmount} MON`}</BetAmount>
-            </BetInfo>
+            <ShareButton onClick={shareLink}>
+              <ShareIcon>🔗</ShareIcon>
+              Share
+            </ShareButton>
+            
           </RoomInfo>
 
-          <ShareButton onClick={shareLink}>
-            <ShareIcon>🔗</ShareIcon>
-            Share Link
-          </ShareButton>
         </Header>
 
         <GameArea>
@@ -156,8 +155,8 @@ const GameRoom: React.FC<GameRoomProps> = ({
                   animate={{opacity: 1, y: 0}}
                   transition={{delay: 0.4}}
                 >
-                  <ShareOptionButton onClick={copyRoomId}>📋 Copy Room ID</ShareOptionButton>
-                  <ShareOptionButton onClick={shareLink}>🔗 Copy Share Link</ShareOptionButton>
+                  <ShareOptionButton onClick={copyRoomId}>📋 Room ID</ShareOptionButton>
+                  <ShareOptionButton onClick={shareLink}>🔗 Share Link</ShareOptionButton>
                 </ShareOptions>
 
                 <LoadingDots>
@@ -375,11 +374,6 @@ const RoomIdContainer = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-`;
-
-const RoomIdLabel = styled.span`
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 14px;
 `;
 
 const RoomId = styled.button`

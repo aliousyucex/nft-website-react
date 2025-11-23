@@ -1,4 +1,4 @@
-import {Button, Input, InputNumber, Modal, message} from 'antd';
+import {Button, Flex, Input, InputNumber, Modal, message} from 'antd';
 import type React from 'react';
 import {useEffect, useRef, useState} from 'react';
 import styled from 'styled-components';
@@ -197,7 +197,6 @@ const GameLobby: React.FC<GameLobbyProps> = ({
 
   return (
     <Container>
-
       <Header>
         <HeaderContent>
           {/* Home Button */}
@@ -215,41 +214,48 @@ const GameLobby: React.FC<GameLobbyProps> = ({
           </HeaderText>
           {walletConnected ? (
             <>
-            <WalletActions>
-            
-              <BalanceDisplayContainer ref={dropdownRef}>
-                <BalanceDisplay onClick={() => setBalanceDropdownOpen(!balanceDropdownOpen)}>
-                  <BalanceLabel>Balance:</BalanceLabel>
-                  <BalanceValue>{parseFloat(localContractBalance).toFixed(4)} MON</BalanceValue>
-                  <DropdownArrow $isOpen={balanceDropdownOpen}>▼</DropdownArrow>
-                </BalanceDisplay>
-                {balanceDropdownOpen && (
-                  <BalanceDropdown>
-                    <DropdownItem>
-                      <DropdownLabel>Wallet Balance:</DropdownLabel>
-                      <DropdownValue>{parseFloat(walletBalance).toFixed(4)} MON</DropdownValue>
-                    </DropdownItem>
-                    <DropdownItem>
-                      <DropdownLabel>Contract Balance:</DropdownLabel>
-                      <DropdownValue>{parseFloat(localContractBalance).toFixed(4)} MON</DropdownValue>
-                      <RefreshButton onClick={refreshContractBalance} disabled={isRefreshingContractBalance}>
-                        {isRefreshingContractBalance ? '⟳' : '↻'}
-                      </RefreshButton>
-                    </DropdownItem>
-                    <DropdownDivider />
-                    <DisconnectButton onClick={handleDisconnect}>
-                      Disconnect
-                    </DisconnectButton>
-                  </BalanceDropdown>
-                )}
-              </BalanceDisplayContainer>
-            </WalletActions>
-            <WalletActions>
-              <DepositButton onClick={() => setDepositModalVisible(true)}>💰 Deposit</DepositButton>
-              <WithdrawButton onClick={() => setWithdrawModalVisible(true)}>
-                💸 Withdraw
-              </WithdrawButton>
-            </WalletActions>
+              <WalletActions>
+                <BalanceDisplayContainer ref={dropdownRef}>
+                  <BalanceDisplay onClick={() => setBalanceDropdownOpen(!balanceDropdownOpen)}>
+                    <BalanceLabel>Balance:</BalanceLabel>
+                    <BalanceValue>{parseFloat(localContractBalance).toFixed(4)} MON</BalanceValue>
+                    <DropdownArrow $isOpen={balanceDropdownOpen}>▼</DropdownArrow>
+                  </BalanceDisplay>
+                  {balanceDropdownOpen && (
+                    <BalanceDropdown>
+                      <DropdownItem>
+                        <DropdownLabel>Wallet Balance:</DropdownLabel>
+                        <DropdownValue>{parseFloat(walletBalance).toFixed(4)} MON</DropdownValue>
+                      </DropdownItem>
+                      <DropdownItem>
+                        <DropdownLabel>Contract Balance:</DropdownLabel>
+                        <DropdownValue>
+                          {parseFloat(localContractBalance).toFixed(4)} MON
+                        </DropdownValue>
+                        <RefreshButton
+                          onClick={refreshContractBalance}
+                          disabled={isRefreshingContractBalance}
+                        >
+                          {isRefreshingContractBalance ? '⟳' : '↻'}
+                        </RefreshButton>
+                      </DropdownItem>
+
+                      <Flex vertical gap={10}>
+                        <DepositButton onClick={() => setDepositModalVisible(true)}>
+                          Deposit
+                        </DepositButton>
+
+                        <WithdrawButton onClick={() => setWithdrawModalVisible(true)}>
+                          Withdraw
+                        </WithdrawButton>
+                      </Flex>
+
+                      <DropdownDivider />
+                      <DisconnectButton onClick={handleDisconnect}>Disconnect</DisconnectButton>
+                    </BalanceDropdown>
+                  )}
+                </BalanceDisplayContainer>
+              </WalletActions>
             </>
           ) : (
             <WalletConnect />
@@ -323,7 +329,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({
       >
         <ModalContent>
           <Divider>Practice Mode</Divider>
-          
+
           <FormGroup>
             <Label>Select Practice Type</Label>
             <GameModeButtons>
@@ -495,7 +501,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({
       >
         <ModalContent>
           <Divider>Practice Mode</Divider>
-          
+
           <FormGroup>
             <Label>Select Practice Type</Label>
             <GameModeButtons>
@@ -726,7 +732,7 @@ const DropdownArrow = styled.span<{$isOpen: boolean}>`
   font-size: 10px;
   color: rgba(255, 255, 255, 0.7);
   transition: transform 0.3s ease;
-  transform: ${props => props.$isOpen ? 'rotate(180deg)' : 'rotate(0deg)'};
+  transform: ${(props) => (props.$isOpen ? 'rotate(180deg)' : 'rotate(0deg)')};
   user-select: none;
 `;
 
@@ -798,22 +804,24 @@ const RefreshButton = styled.button<{disabled?: boolean}>`
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
+  cursor: ${(props) => (props.disabled ? 'not-allowed' : 'pointer')};
   font-size: 16px;
   color: #667eea;
   transition: all 0.2s ease;
-  opacity: ${props => props.disabled ? 0.5 : 1};
+  opacity: ${(props) => (props.disabled ? 0.5 : 1)};
 
   &:hover {
-    background: ${props => props.disabled ? 'rgba(102, 126, 234, 0.1)' : 'rgba(102, 126, 234, 0.2)'};
-    transform: ${props => props.disabled ? 'none' : 'scale(1.1)'};
+    background: ${(props) => (props.disabled ? 'rgba(102, 126, 234, 0.1)' : 'rgba(102, 126, 234, 0.2)')};
+    transform: ${(props) => (props.disabled ? 'none' : 'scale(1.1)')};
   }
 
   &:active {
-    transform: ${props => props.disabled ? 'none' : 'scale(0.95)'};
+    transform: ${(props) => (props.disabled ? 'none' : 'scale(0.95)')};
   }
 
-  ${props => props.disabled && `
+  ${(props) =>
+    props.disabled &&
+    `
     animation: spin 1s linear infinite;
   `}
 
@@ -872,68 +880,50 @@ const BalanceValue = styled.div`
 `;
 
 const DepositButton = styled.button`
-  padding: 10px 20px;
+  width: 100%;
+  padding: 10px;
   background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
   border: none;
-  border-radius: 10px;
-  font-size: 15px;
+  border-radius: 8px;
+  color: black;
   font-weight: 600;
-  color: #1a1a1a;
+  font-size: 14px;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
   transition: all 0.3s ease;
   box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
-  white-space: nowrap;
 
   &:hover {
-    transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(255, 215, 0, 0.6);
     background: linear-gradient(135deg, #ffed4e 0%, #ffd700 100%);
+    transform: translateY(-2px);
   }
 
   &:active {
     transform: translateY(0);
-  }
-
-  @media (max-width: 768px) {
-    width: 100%;
-    justify-content: center;
-    font-size: 14px;
   }
 `;
 
 const WithdrawButton = styled.button`
-  padding: 10px 20px;
+  width: 100%;
+  padding: 10px;
   background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
   border: none;
-  border-radius: 10px;
-  font-size: 15px;
+  border-radius: 8px;
+  color: black;
   font-weight: 600;
-  color: white;
+  font-size: 14px;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
   transition: all 0.3s ease;
   box-shadow: 0 4px 15px rgba(82, 196, 26, 0.4);
-  white-space: nowrap;
 
   &:hover {
-    transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(82, 196, 26, 0.6);
     background: linear-gradient(135deg, #73d13d 0%, #52c41a 100%);
+    transform: translateY(-2px);
   }
 
   &:active {
     transform: translateY(0);
-  }
-
-  @media (max-width: 768px) {
-    width: 100%;
-    justify-content: center;
-    font-size: 14px;
   }
 `;
 
@@ -1078,7 +1068,11 @@ const PresetButtons = styled.div`
   gap: 8px;
 `;
 
-const PresetButton = styled.button<{active?: string | undefined; $practice?: boolean; disabled?: boolean}>`
+const PresetButton = styled.button<{
+  active?: string | undefined;
+  $practice?: boolean;
+  disabled?: boolean;
+}>`
   padding: ${(props) => (props.$practice ? '12px 16px' : '8px')};
   border: 2px solid ${(props) => {
     if (props.disabled) return '#e0e0e0';
