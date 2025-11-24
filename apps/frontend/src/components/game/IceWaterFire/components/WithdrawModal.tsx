@@ -30,7 +30,7 @@ const CONTRACT_ABI = [
 
 const WithdrawModal: React.FC<WithdrawModalProps> = ({visible, onClose, contractAddress}) => {
   const {address} = useAccount();
-  const [withdrawAmount, setWithdrawAmount] = useState(0.01);
+  const [withdrawAmount, setWithdrawAmount] = useState(0);
   const [contractBalance, setContractBalance] = useState<string>('0');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -144,7 +144,7 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({visible, onClose, contract
           <BalanceCard>
             <BalanceLabel>Wallet Balance</BalanceLabel>
             <BalanceValue>
-              {walletBalance ? formatEther(walletBalance.value) : '0'} MON
+              {walletBalance ? parseFloat(formatEther(walletBalance.value)).toFixed(5) : '0'} MON
             </BalanceValue>
           </BalanceCard>
         </BalanceSection>
@@ -155,11 +155,9 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({visible, onClose, contract
             <MaxButton onClick={withdrawAll}>Max</MaxButton>
           </LabelRow>
           <InputNumber
-            min={0.001}
-            max={parseFloat(contractBalance)}
-            step={0.001}
+            min={0}
             value={withdrawAmount}
-            onChange={(val) => setWithdrawAmount(val || 0.001)}
+            onChange={(val) => setWithdrawAmount(val || 1)}
             style={{width: '100%', marginBottom: '12px'}}
           />
 

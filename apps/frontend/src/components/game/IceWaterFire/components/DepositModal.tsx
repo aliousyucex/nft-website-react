@@ -30,7 +30,7 @@ const CONTRACT_ABI = [
 
 const DepositModal: React.FC<DepositModalProps> = ({visible, onClose, contractAddress}) => {
   const {address} = useAccount();
-  const [depositAmount, setDepositAmount] = useState(0.01);
+  const [depositAmount, setDepositAmount] = useState(1);
   const [contractBalance, setContractBalance] = useState<string>('0');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -184,7 +184,7 @@ const DepositModal: React.FC<DepositModalProps> = ({visible, onClose, contractAd
     }
   };
 
-  const presetAmounts = [0.001, 0.01, 0.1, 0.5];
+  const presetAmounts = [1, 5, 20, 50];
 
   return (
     <Modal open={visible} onCancel={onClose} footer={null} width={500} title={null} centered>
@@ -198,7 +198,7 @@ const DepositModal: React.FC<DepositModalProps> = ({visible, onClose, contractAd
           <BalanceCard>
             <BalanceLabel>Wallet Balance</BalanceLabel>
             <BalanceValue>
-              {walletBalance ? formatEther(walletBalance.value) : '0'} MON
+              {walletBalance ? parseFloat(formatEther(walletBalance.value)).toFixed(5) : '0'} MON
             </BalanceValue>
           </BalanceCard>
 
@@ -216,15 +216,9 @@ const DepositModal: React.FC<DepositModalProps> = ({visible, onClose, contractAd
         <InputSection>
           <Label>Deposit Amount (MON)</Label>
           <InputNumber
-            min={0.001}
-            max={
-              walletBalance
-                ? Math.max(0, parseFloat(formatEther(walletBalance.value)) - 0.01)
-                : 10
-            }
-            step={0.001}
+            min={0}
             value={depositAmount}
-            onChange={(val) => setDepositAmount(val || 0.001)}
+            onChange={(val) => {setDepositAmount(val || 1); console.log(val)}}
             style={{width: '100%', marginBottom: '12px'}}
           />
 

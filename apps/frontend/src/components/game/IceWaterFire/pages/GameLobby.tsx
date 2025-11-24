@@ -57,7 +57,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({
   const [quickJoinModalVisible, setQuickJoinModalVisible] = useState(false);
   const [leaderboardVisible, setLeaderboardVisible] = useState(false);
   const [tutorialVisible, setTutorialVisible] = useState(false);
-  const [betAmount, setBetAmount] = useState(0.001);
+  const [betAmount, setBetAmount] = useState(1);
   const [password, setPassword] = useState('');
   const [roomIdToJoin, setRoomIdToJoin] = useState('');
   const [roomPasswordToJoin, setRoomPasswordToJoin] = useState('');
@@ -193,7 +193,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({
     setQuickBetAmount(0.001);
   };
 
-  const contractAddress = VITE_CONTRACT_ADDRESS || '0x3A895aeA91388f6b44227CDb565FDb04a8A81C79';
+  const contractAddress = VITE_CONTRACT_ADDRESS || '';
 
   return (
     <Container>
@@ -218,19 +218,19 @@ const GameLobby: React.FC<GameLobbyProps> = ({
                 <BalanceDisplayContainer ref={dropdownRef}>
                   <BalanceDisplay onClick={() => setBalanceDropdownOpen(!balanceDropdownOpen)}>
                     <BalanceLabel>Balance:</BalanceLabel>
-                    <BalanceValue>{parseFloat(localContractBalance).toFixed(4)} MON</BalanceValue>
+                    <BalanceValue>{parseFloat(localContractBalance).toFixed(2)} MON</BalanceValue>
                     <DropdownArrow $isOpen={balanceDropdownOpen}>▼</DropdownArrow>
                   </BalanceDisplay>
                   {balanceDropdownOpen && (
                     <BalanceDropdown>
                       <DropdownItem>
                         <DropdownLabel>Wallet Balance:</DropdownLabel>
-                        <DropdownValue>{parseFloat(walletBalance).toFixed(4)} MON</DropdownValue>
+                        <DropdownValue>{parseFloat(walletBalance).toFixed(2)} MON</DropdownValue>
                       </DropdownItem>
                       <DropdownItem>
                         <DropdownLabel>Contract Balance:</DropdownLabel>
                         <DropdownValue>
-                          {parseFloat(localContractBalance).toFixed(4)} MON
+                          {parseFloat(localContractBalance).toFixed(2)} MON
                         </DropdownValue>
                         <RefreshButton
                           onClick={refreshContractBalance}
@@ -350,9 +350,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({
                 active={gameMode === 'multiplayer' ? 'true' : undefined}
                 onClick={() => {
                   setGameMode('multiplayer');
-                  if (betAmount !== 0) {
-                    setBetAmount(0); // Default to free for practice multiplayer
-                  }
+                  setBetAmount(1); // Default to free for practice multiplayer
                 }}
               >
                 <GameModeIcon>👥</GameModeIcon>
@@ -371,7 +369,6 @@ const GameLobby: React.FC<GameLobbyProps> = ({
             <Label>Bet Amount</Label>
             <InputNumber
               min={0}
-              step={0.001}
               value={walletConnected ? betAmount : 0}
               onChange={(val) => setBetAmount(val || 0)}
               addonAfter={betAmount === 0 ? 'FREE' : 'MON'}
@@ -387,25 +384,25 @@ const GameLobby: React.FC<GameLobbyProps> = ({
                 Free
               </PresetButton>
               <PresetButton
-                active={betAmount === 0.001 ? 'true' : undefined}
-                onClick={() => setBetAmount(0.001)}
+                active={betAmount === 1 ? 'true' : undefined}
+                onClick={() => setBetAmount(1)}
                 disabled={gameMode === 'single_player' || !walletConnected}
               >
-                0.001
+                1
               </PresetButton>
               <PresetButton
-                active={betAmount === 0.01 ? 'true' : undefined}
-                onClick={() => setBetAmount(0.01)}
+                active={betAmount === 5 ? 'true' : undefined}
+                onClick={() => setBetAmount(5)}
                 disabled={gameMode === 'single_player' || !walletConnected}
               >
-                0.01
+                5
               </PresetButton>
               <PresetButton
-                active={betAmount === 0.1 ? 'true' : undefined}
-                onClick={() => setBetAmount(0.1)}
+                active={betAmount === 20 ? 'true' : undefined}
+                onClick={() => setBetAmount(20)}
                 disabled={gameMode === 'single_player' || !walletConnected}
               >
-                0.1
+                20
               </PresetButton>
             </PresetButtons>
             {gameMode === 'multiplayer' && (
@@ -522,9 +519,8 @@ const GameLobby: React.FC<GameLobbyProps> = ({
                 active={quickGameMode === 'multiplayer' ? 'true' : undefined}
                 onClick={() => {
                   setQuickGameMode('multiplayer');
-                  if (quickBetAmount !== 0) {
-                    setQuickBetAmount(0); // Default to free for practice multiplayer
-                  }
+                  setQuickBetAmount(1);
+                  
                 }}
               >
                 <GameModeIcon>👥</GameModeIcon>
@@ -543,7 +539,6 @@ const GameLobby: React.FC<GameLobbyProps> = ({
             <Label>Bet Amount</Label>
             <InputNumber
               min={0}
-              step={0.001}
               value={walletConnected ? quickBetAmount : 0}
               onChange={(value) => {
                 if (value !== null && value !== undefined) {
@@ -563,25 +558,25 @@ const GameLobby: React.FC<GameLobbyProps> = ({
                 Free
               </PresetButton>
               <PresetButton
-                active={quickBetAmount === 0.001 ? 'true' : undefined}
-                onClick={() => setQuickBetAmount(0.001)}
+                active={quickBetAmount === 1 ? 'true' : undefined}
+                onClick={() => setQuickBetAmount(1)}
                 disabled={quickGameMode === 'single_player' || !walletConnected}
               >
-                0.001
+                1
               </PresetButton>
               <PresetButton
-                active={quickBetAmount === 0.01 ? 'true' : undefined}
-                onClick={() => setQuickBetAmount(0.01)}
+                active={quickBetAmount === 5 ? 'true' : undefined}
+                onClick={() => setQuickBetAmount(5)}
                 disabled={quickGameMode === 'single_player' || !walletConnected}
               >
-                0.01
+                5
               </PresetButton>
               <PresetButton
-                active={quickBetAmount === 0.1 ? 'true' : undefined}
-                onClick={() => setQuickBetAmount(0.1)}
+                active={quickBetAmount === 20 ? 'true' : undefined}
+                onClick={() => setQuickBetAmount(20)}
                 disabled={quickGameMode === 'single_player' || !walletConnected}
               >
-                0.1
+                20
               </PresetButton>
             </PresetButtons>
             {quickGameMode === 'multiplayer' && (
