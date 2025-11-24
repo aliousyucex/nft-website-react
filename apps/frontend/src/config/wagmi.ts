@@ -27,7 +27,33 @@ const monadTestnet = {
   testnet: true,
 };
 
-const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || '';
+// Monad Mainnet Chain configuration
+const monadMainnet = {
+  id: 143,
+  name: 'Monad Mainnet',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'Monad',
+    symbol: 'MON',
+  },
+  rpcUrls: {
+    default: {
+      http: ['https://rpc.monad.xyz'],
+    },
+    public: {
+      http: ['https://rpc.monad.xyz'],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: 'MonadVision',
+      url: 'https://monadvision.com',
+    },
+  },
+  testnet: false,
+};
+
+const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID;
 
 // Get default wallets with recommended wallets (MetaMask, Rainbow, Coinbase Wallet, etc.)
 const {connectors} = getDefaultWallets({
@@ -35,14 +61,15 @@ const {connectors} = getDefaultWallets({
   projectId,
 });
 
-// Create config with Monad Testnet as default chain
+// Create config with Monad Mainnet as default chain
 export const config = createConfig({
-  chains: [monadTestnet],
+  chains: [monadMainnet, monadTestnet],
   connectors,
   transports: {
+    [monadMainnet.id]: http(),
     [monadTestnet.id]: http(),
   },
   ssr: false,
 });
 
-export {monadTestnet};
+export {monadTestnet, monadMainnet};

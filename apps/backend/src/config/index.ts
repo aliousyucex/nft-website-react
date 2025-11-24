@@ -56,7 +56,7 @@ const config: Config = {
   },
   blockchain: {
     contractAddress: process.env.CONTRACT_ADDRESS || '',
-    rpcUrl: process.env.RPC_URL || 'https://testnet-rpc.monad.xyz',
+    rpcUrl: process.env.RPC_URL || 'https://rpc.monad.xyz',
     privateKey: process.env.PRIVATE_KEY || '',
   },
   rateLimit: {
