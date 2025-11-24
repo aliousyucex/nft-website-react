@@ -115,6 +115,7 @@ const GameContainer: React.FC<GameContainerProps> = ({
   const [balance, setBalance] = useState<string>('0');
   const [contractBalance, setContractBalance] = useState<string>('0');
   const [hasCalledRoomReady, setHasCalledRoomReady] = useState(false);
+  const [oldRoomId, setOldRoomId] = useState<string | undefined>(undefined);
 
   const {
     availableRooms,
@@ -127,6 +128,7 @@ const GameContainer: React.FC<GameContainerProps> = ({
     joinRoom,
     quickJoin,
     leaveRoom,
+    playAgain,
     setReady,
     setNotReady,
     selectCard,
@@ -141,6 +143,8 @@ const GameContainer: React.FC<GameContainerProps> = ({
   const [showNetworkWarning, setShowNetworkWarning] = useState(false);
   
   // Get wallet balance (MetaMask ETH balance)
+  // Note: Balance will be automatically updated when refetched in DepositModal/WithdrawModal
+  // due to Wagmi's shared cache mechanism
   const {data: walletBalanceData} = useBalance({
     address: address as `0x${string}` | undefined,
   });
@@ -317,21 +321,54 @@ const GameContainer: React.FC<GameContainerProps> = ({
   useEffect(() => {
     if (error) {
       message.error(error);
+      // If insufficient balance error, redirect to lobby and clear states
+      if (error.toLowerCase().includes('insufficient balance')) {
+        logger.info('Insufficient balance error - redirecting to lobby');
+        // Clear all game-related states
+        clearAnimations();
+        setTimeRemaining(10);
+        gameFinishedSoundPlayed.current = false;
+        setOldRoomId(undefined);
+        // Ensure we're on lobby page
+        setCurrentPage('lobby');
+        // Leave room if we're still in one
+        if (currentRoom) {
+          leaveRoom();
+        }
+      }
     }
-  }, [error]);
+  }, [error, currentRoom, leaveRoom, clearAnimations]);
 
   // Handle room changes (when user joins/creates a room)
   useEffect(() => {
-    if (currentRoom && currentPage === 'lobby' && currentRoom.gameState === 'waiting') {
-      // Only navigate to room if game is waiting (not finished/playing)
-      playSound('roomJoin');
-      setCurrentPage('room');
+    if (currentRoom) {
+      // Clear oldRoomId when successfully joined a new room (from play again)
+      if (oldRoomId && currentRoom.roomId !== oldRoomId) {
+        logger.info('Successfully joined new room from play again', {
+          oldRoomId,
+          newRoomId: currentRoom.roomId,
+        });
+        setOldRoomId(undefined);
+      }
+
+      if (currentRoom.gameState === 'waiting') {
+        // Navigate to room page if game is waiting
+        if (currentPage === 'lobby' || currentPage === 'playing') {
+          playSound('roomJoin');
+          setCurrentPage('room');
+        }
+      } else if (currentRoom.gameState === 'playing') {
+        // Navigate to playing page if game started (regardless of current page)
+        if (currentPage === 'room' || currentPage === 'lobby') {
+          setCurrentPage('playing');
+        }
+      }
     } else if (!currentRoom && (currentPage === 'room' || currentPage === 'playing')) {
       // Room was left or destroyed - navigate back to lobby
       logger.ui('Navigating back to lobby - room no longer exists');
       setCurrentPage('lobby');
     }
-  }, [currentRoom, currentPage, playSound]);
+  }, [currentRoom, currentPage, playSound, oldRoomId]);
 
   // Handle game state changes
   useEffect(() => {
@@ -355,17 +392,37 @@ const GameContainer: React.FC<GameContainerProps> = ({
           
           playSound(isWinner ? 'gameWin' : 'gameLose');
           
+          // Store old room ID for play again
+          if (currentRoom?.roomId) {
+            setOldRoomId(currentRoom.roomId);
+          }
         }
       }
+    } else if (!gameState && currentRoom?.gameState === 'playing') {
+      // If we have a room with playing state but no gameState, 
+      // we're probably waiting for game_started or cards_dealt event
+      // Don't change page here, let room_updated handler manage it
     }
-  }, [gameState?.gameState, userAddress, playSound]);
+  }, [gameState?.gameState, userAddress, playSound, currentRoom?.roomId, currentRoom?.gameState]);
 
   const handleLeaveRoom = () => {
     leaveRoom();
     setCurrentPage('lobby');
+    setOldRoomId(undefined);
+  };
+
+  const handlePlayAgain = () => {
+    if (oldRoomId) {
+      // Don't reset currentPage here - let playAgain handle navigation
+      // If playAgain fails, error handler will redirect to lobby
+      playAgain(oldRoomId);
+      // Don't reset oldRoomId immediately - keep it in case we need to retry
+      // It will be cleared on success or error
+    }
   };
 
   const handleReturnToLobby = () => {
+    setOldRoomId(undefined);
     logger.info('Returning to lobby - clearing states');
     
     // Clear all game-related states
@@ -467,18 +524,18 @@ const GameContainer: React.FC<GameContainerProps> = ({
         />
       )}
 
-      {currentPage === 'playing' && gameState && (
+      {currentPage === 'playing' && (gameState || currentRoom?.gameState === 'playing') && (
         <GameBoard
           betAmount={currentRoom?.betAmount || 0}
-          myCards={gameState.myCards || mockCards}
+          myCards={gameState?.myCards || mockCards}
           myPlayer={myPlayer}
           opponentPlayer={opponentPlayer}
-          selectedCard={gameState.selectedCard}
-          opponentSelected={gameState.opponentSelected}
-          currentRound={gameState.currentRound || 0}
+          selectedCard={gameState?.selectedCard || null}
+          opponentSelected={gameState?.opponentSelected || false}
+          currentRound={gameState?.currentRound || 0}
           timeRemaining={timeRemaining}
-          lastRoundResult={gameState.lastRoundResult}
-          roundHistory={gameState.roundHistory || []}
+          lastRoundResult={gameState?.lastRoundResult || null}
+          roundHistory={gameState?.roundHistory || []}
           receivedEmoji={receivedEmoji?.emoji || null}
           gameState={gameState}
           currentUserAddress={userAddress}
@@ -494,7 +551,9 @@ const GameContainer: React.FC<GameContainerProps> = ({
             else if (result === 'draw') playSound('roundDraw');
           }}
           onReturnToLobby={handleReturnToLobby}
-          isPaidGame={gameState.isPaidGame ?? currentRoom?.betAmount !== 0}
+          onPlayAgain={handlePlayAgain}
+          oldRoomId={oldRoomId}
+          isPaidGame={gameState?.isPaidGame ?? currentRoom?.betAmount !== 0}
           isSinglePlayer={currentRoom?.isSinglePlayer ?? false}
         />
       )}

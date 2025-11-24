@@ -68,8 +68,8 @@ const RoundHistory: React.FC<RoundHistoryProps> = ({history}) => {
 export default RoundHistory;
 
 const CardFrontImage = styled.img`
-  height: 100px;
-  width: 73px;
+  width: 80px;
+  height: 120px;
   object-fit: cover;
   object-position: center;
   border-radius: 8px;
@@ -79,6 +79,7 @@ const Content = styled.div`
   flex: 1;
   overflow-y: auto;
   padding: 16px;
+  background: rgba(0, 0, 0, 0.8);
 
   &::-webkit-scrollbar {
     width: 8px;
@@ -132,14 +133,14 @@ const HistoryItem = styled.div<{$result: 'win' | 'lose' | 'draw'}>`
       ? 'linear-gradient(135deg, rgba(46, 204, 113, 0.15) 0%, rgba(46, 204, 113, 0.05) 100%)'
       : props.$result === 'lose'
         ? 'linear-gradient(135deg, rgba(231, 76, 60, 0.15) 0%, rgba(231, 76, 60, 0.05) 100%)'
-        : 'linear-gradient(135deg, rgba(243, 156, 18, 0.15) 0%, rgba(243, 156, 18, 0.05) 100%)'};
+        : 'linear-gradient(135deg, rgba(228, 219, 204, 0.15) 0%, rgba(238, 230, 218, 0.05) 100%)'};
   border: 1px solid
     ${(props) =>
       props.$result === 'win'
         ? 'rgba(46, 204, 113, 0.3)'
         : props.$result === 'lose'
           ? 'rgba(231, 76, 60, 0.3)'
-          : 'rgba(243, 156, 18, 0.3)'};
+          : 'rgba(230, 222, 210, 0.3)'};
   border-radius: 12px;
   padding: 12px;
   display: flex;
@@ -153,7 +154,7 @@ const RoundNumber = styled.div<{$result: 'win' | 'lose' | 'draw'}>`
   font-size: 12px;
   font-weight: 600;
   color: ${(props) =>
-    props.$result === 'win' ? '#2ECC71' : props.$result === 'lose' ? '#E74C3C' : '#F39C12'};
+    props.$result === 'win' ? '#2ECC71' : props.$result === 'lose' ? '#E74C3C' : '#95A5A34'};
   text-transform: uppercase;
   letter-spacing: 1px;
 `;

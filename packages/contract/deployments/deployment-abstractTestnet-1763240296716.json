@@ -1,0 +1,8 @@
+{
+  "network": "abstractTestnet",
+  "chainId": "11124",
+  "contractAddress": "0x63dd7BcA7A8A48E5468C7d2a74d1f41653023DaE",
+  "owner": "0x6c2Ebd1c371cE811e36bfE099e38F37f62410C0b",
+  "deployedAt": "2025-11-15T20:58:16.716Z",
+  "transactionHash": "0x0970532f9a5153169ba12f05b84b7d06b0696eaaebfc797d434261cf564b375c"
+}

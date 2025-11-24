@@ -1,9 +1,9 @@
+import fs from "node:fs";
+import path from "node:path";
 import { ethers } from "hardhat";
-import fs from "fs";
-import path from "path";
 
 async function main() {
-  console.log("🚀 Starting Ice Water Fire Game contract deployment...\n");
+  console.log("🚀 Starting Ivora contract deployment...\n");
 
   // Get deployer account
   const [deployer] = await ethers.getSigners();
@@ -13,9 +13,9 @@ async function main() {
   console.log("💰 Account balance:", ethers.formatEther(await ethers.provider.getBalance(deployerAddress)), "ETH\n");
 
   // Deploy contract
-  console.log("📝 Deploying IceWaterFireGame contract...");
-  const IceWaterFireGame = await ethers.getContractFactory("IceWaterFireGame");
-  const contract = await IceWaterFireGame.deploy();
+  console.log("📝 Deploying Ivora contract...");
+  const Ivora = await ethers.getContractFactory("Ivora");
+  const contract = await Ivora.deploy();
 
   await contract.waitForDeployment();
   const contractAddress = await contract.getAddress();
@@ -50,12 +50,12 @@ async function main() {
   console.log("📄 Deployment info saved to:", deploymentFile);
 
   // Save ABI
-  const abiDir = path.join(__dirname, "../artifacts/contracts/IceWaterFireGame.sol");
-  const abiFile = path.join(abiDir, "IceWaterFireGame.json");
+  const abiDir = path.join(__dirname, "../artifacts/contracts/ivora.sol");
+  const abiFile = path.join(abiDir, "Ivora.json");
   
   if (fs.existsSync(abiFile)) {
     const artifact = JSON.parse(fs.readFileSync(abiFile, "utf8"));
-    const abiOutputFile = path.join(deploymentDir, "IceWaterFireGame.abi.json");
+    const abiOutputFile = path.join(deploymentDir, "Ivora.abi.json");
     fs.writeFileSync(abiOutputFile, JSON.stringify(artifact.abi, null, 2));
     console.log("📋 ABI saved to:", abiOutputFile);
   }
@@ -65,11 +65,14 @@ async function main() {
   console.log(`CONTRACT_ADDRESS=${contractAddress}`);
   console.log(`OWNER_ADDRESS=${deployerAddress}\n`);
 
-  // If on testnet, instructions for verification
-  if ((await ethers.provider.getNetwork()).name.includes("testnet") || 
-      (await ethers.provider.getNetwork()).name.includes("abstract")) {
-    console.log("🔍 To verify contract, run:");
-    console.log(`npx hardhat verify --network abstractTestnet ${contractAddress}\n`);
+  // Instructions for verification
+  console.log("🔍 To verify contract, run:");
+  if (network.chainId === BigInt(143)) {
+    console.log(`npm run verify:mainnet ${contractAddress}\n`);
+  } else if (network.chainId === BigInt(10143)) {
+    console.log(`npm run verify:testnet ${contractAddress}\n`);
+  } else {
+    console.log(`npx hardhat verify --network ${network.name} ${contractAddress}\n`);
   }
 }
 

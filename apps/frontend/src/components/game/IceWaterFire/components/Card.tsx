@@ -99,10 +99,9 @@ const CardWrapper = styled.div<{
   $disabled: boolean;
   $cardColor: string;
 }>`
-  width: 107px;
-  height: 150px;
+  width: 120px;
+  height: 180px;
   border-radius: 12px;
-  background: ${(props) => (props.$isOpponent && !props.$isRevealed ? '#8B0000' : props.$cardColor)};
   cursor: ${(props) => (props.$disabled || props.$isOpponent ? 'default' : 'pointer')};
   position: relative;
   user-select: none;
@@ -110,8 +109,14 @@ const CardWrapper = styled.div<{
   transform-style: preserve-3d;
 
   @media (max-height: 900px) {
-    width: 107px;
+    width: 100px;
     height: 150px;
+  }
+
+  @media (max-width: 768px) {
+    width: 80px;
+    height: 120px;
+    border-radius: 10px;
   }
 
   ${(props) =>
@@ -123,26 +128,35 @@ const CardWrapper = styled.div<{
 `;
 
 const CardFront = styled.div`
-  width: 100%;
-  height: 100%;
+  width: 120px;
+  height: 180px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 12px;
   position: relative;
-  border-radius: 12px;
+
+  @media (max-width: 768px) {
+    width: 80px;
+    height: 120px;
+  }
 `;
 
 const CardFrontImage = styled.img`
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  width: 120px;
+  height: 180px;
   object-fit: cover;
   object-position: center;
-  border-radius: 12px;
+  border-radius: 8px;
+
+  @media (max-width: 768px) {
+    width: 80px;
+    height: 120px;
+  }
 `;  
 
 const SelectedIndicator = styled.div`

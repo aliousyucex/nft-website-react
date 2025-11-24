@@ -13,7 +13,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({visible, onClose}) => {
 
   const steps = [
     {
-      title: '🎴 Ice Water Fire - Game Rules',
+      title: '🎴 IVORA - Game Rules',
       description: 'Learn the basics and win 3 rounds!',
       content: (
         <ContentWrapper>
@@ -87,7 +87,7 @@ const TutorialModal: React.FC<TutorialModalProps> = ({visible, onClose}) => {
         <ContentWrapper>
           <BetBox>
             <BetIcon>💎</BetIcon>
-            <BetTitle>Min Bet: 0.001 ETH | 3% Commission</BetTitle>
+            <BetTitle>Min Bet: 0.001 MON | 3% Commission</BetTitle>
             <BetText>Winner takes the pot (minus commission). Earn leaderboard points!</BetText>
           </BetBox>
           <QuickTips>

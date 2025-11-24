@@ -34,8 +34,8 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({visible, onClose, contract
   const [contractBalance, setContractBalance] = useState<string>('0');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Get wallet balance
-  const {data: walletBalance} = useBalance({
+  // Get wallet balance with refetch function
+  const {data: walletBalance, refetch: refetchWalletBalance} = useBalance({
     address: address,
   });
 
@@ -52,8 +52,12 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({visible, onClose, contract
     if (isSuccess) {
       message.success('Withdrawal successful!');
       refreshContractBalance();
+      // Refetch wallet balance after a short delay to ensure blockchain state is updated
+      setTimeout(() => {
+        refetchWalletBalance();
+      }, 1000);
     }
-  }, [isSuccess]);
+  }, [isSuccess, refetchWalletBalance]);
 
   // Fetch contract balance
   const refreshContractBalance = async () => {
@@ -122,32 +126,32 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({visible, onClose, contract
     <Modal open={visible} onCancel={onClose} footer={null} width={500} title={null} centered>
       <Container>
         <Header>
-          <Title>Withdraw ETH</Title>
-          <Subtitle>Withdraw ETH from your game balance</Subtitle>
+          <Title>Withdraw MON</Title>
+          <Subtitle>Withdraw MON from your game balance</Subtitle>
         </Header>
 
         <BalanceSection>
-          <BalanceCard highlight>
+          <BalanceCard $highlight>
             <BalanceLabel>
               Contract Balance
               <RefreshButton onClick={refreshContractBalance} disabled={isRefreshing}>
                 {isRefreshing ? '⟳' : '🔄'}
               </RefreshButton>
             </BalanceLabel>
-            <BalanceValue>{contractBalance} ETH</BalanceValue>
+            <BalanceValue>{contractBalance} MON</BalanceValue>
           </BalanceCard>
 
           <BalanceCard>
             <BalanceLabel>Wallet Balance</BalanceLabel>
             <BalanceValue>
-              {walletBalance ? formatEther(walletBalance.value) : '0'} ETH
+              {walletBalance ? formatEther(walletBalance.value) : '0'} MON
             </BalanceValue>
           </BalanceCard>
         </BalanceSection>
 
         <InputSection>
           <LabelRow>
-            <Label>Withdraw Amount (ETH)</Label>
+            <Label>Withdraw Amount (MON)</Label>
             <MaxButton onClick={withdrawAll}>Max</MaxButton>
           </LabelRow>
           <InputNumber
@@ -166,7 +170,7 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({visible, onClose, contract
                 <PresetButton
                   key={percentage}
                   onClick={() => setWithdrawAmount(amount)}
-                  active={withdrawAmount === amount}
+                  $active={withdrawAmount === amount}
                   disabled={parseFloat(contractBalance) === 0}
                 >
                   {percentage}%
@@ -179,8 +183,8 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({visible, onClose, contract
         <InfoBox>
           <InfoIcon>ℹ️</InfoIcon>
           <InfoText>
-            Withdrawn ETH will be sent to your wallet. Make sure you have enough ETH for gas fees
-            (~0.0001-0.0005 ETH).
+            Withdrawn MON will be sent to your wallet. Make sure you have enough MON for gas fees
+            (~0.0001-0.0005 MON).
           </InfoText>
         </InfoBox>
 
@@ -200,7 +204,7 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({visible, onClose, contract
                 {isPending ? 'Confirming...' : 'Processing...'}
               </>
             ) : (
-              `Withdraw ${withdrawAmount} ETH`
+              `Withdraw ${withdrawAmount} MON`
             )}
           </WithdrawButton>
         </ActionButtons>
@@ -239,12 +243,12 @@ const BalanceSection = styled.div`
   margin-bottom: 24px;
 `;
 
-const BalanceCard = styled.div<{highlight?: boolean}>`
+const BalanceCard = styled.div<{$highlight?: boolean}>`
   background: ${(props) =>
-    props.highlight ? 'linear-gradient(135deg, #52c41a 0%, #73d13d 100%)' : '#f5f5f5'};
+    props.$highlight ? 'linear-gradient(135deg, #52c41a 0%, #73d13d 100%)' : '#f5f5f5'};
   padding: 16px;
   border-radius: 12px;
-  color: ${(props) => (props.highlight ? 'white' : '#1a1a1a')};
+  color: ${(props) => (props.$highlight ? 'white' : '#1a1a1a')};
 `;
 
 const BalanceLabel = styled.div`
@@ -329,11 +333,11 @@ const PresetButtons = styled.div`
   gap: 8px;
 `;
 
-const PresetButton = styled.button<{active?: boolean}>`
+const PresetButton = styled.button<{$active?: boolean}>`
   padding: 8px;
-  border: 2px solid ${(props) => (props.active ? '#52c41a' : '#e0e0e0')};
-  background: ${(props) => (props.active ? '#52c41a' : 'white')};
-  color: ${(props) => (props.active ? 'white' : '#666')};
+  border: 2px solid ${(props) => (props.$active ? '#52c41a' : '#e0e0e0')};
+  background: ${(props) => (props.$active ? '#52c41a' : 'white')};
+  color: ${(props) => (props.$active ? 'white' : '#666')};
   border-radius: 8px;
   cursor: pointer;
   font-size: 12px;
@@ -342,7 +346,7 @@ const PresetButton = styled.button<{active?: boolean}>`
 
   &:hover:not(:disabled) {
     border-color: #52c41a;
-    background: ${(props) => (props.active ? '#73d13d' : '#f0f0f0')};
+    background: ${(props) => (props.$active ? '#73d13d' : '#f0f0f0')};
   }
 
   &:disabled {

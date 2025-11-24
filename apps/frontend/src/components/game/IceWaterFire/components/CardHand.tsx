@@ -95,6 +95,12 @@ const HandContainer = styled.div`
     min-height: 170px;
     max-height: 170px;
   }
+
+  @media (max-width: 768px) {
+    min-height: 240px;
+    max-height: 240px;
+    padding: 5px;
+  }
 `;
 
 const CardsWrapper = styled.div<{$cardCount: number}>`
@@ -102,12 +108,64 @@ const CardsWrapper = styled.div<{$cardCount: number}>`
   display: flex;
   justify-content: center;
   align-items: center;
-  width: ${(props) => Math.min(props.$cardCount * 120, 600)}px;
+  width: ${(props) => Math.min(props.$cardCount * 125, 600)}px;
   height: 180px;
 
   @media (max-height: 900px) {
-    width: ${(props) => Math.min(props.$cardCount * 120, 525)}px;
-    height: 150px;
+    width: ${(props) => Math.min(props.$cardCount * 125, 525)}px;
+    height: 180px;
+  }
+
+  @media (max-width: 768px) {
+    /* Mobile: use grid for better control */
+    position: static;
+    display: grid;
+    justify-items: center;
+    align-items: start;
+    gap: 30px;
+    width: 100%;
+    height: auto;
+    padding: 0 10px;
+    
+    /* 5 cards: 3 top, 2 bottom - use 6 columns for better centering */
+    ${(props) => props.$cardCount === 5 && `
+      grid-template-columns: repeat(6, 1fr);
+      grid-template-rows: auto auto;
+      min-height: 240px;
+      width: 320px;
+    `}
+    
+    /* 4 cards: 2x2 grid */
+    ${(props) => props.$cardCount === 4 && `
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(2, auto);
+      min-height: 240px;
+      width: 100%;
+    `}
+    
+    /* 3 cards: single row */
+    ${(props) => props.$cardCount === 3 && `
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: auto;
+      min-height: 130px;
+      width: 100%;
+    `}
+    
+    /* 2 cards: single row */
+    ${(props) => props.$cardCount === 2 && `
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: auto;
+      min-height: 130px;
+      width: 100%;
+    `}
+    
+    /* 1 card: centered */
+    ${(props) => props.$cardCount === 1 && `
+      grid-template-columns: 1fr;
+      grid-template-rows: auto;
+      min-height: 130px;
+      width: 100%;
+    `}
   }
 `;
 
@@ -123,4 +181,39 @@ const CardSlot = styled.div<{
     translateY(${(props) => props.$translateY}px);
   transform-origin: center bottom;
   z-index: ${(props) => props.$index};
+
+  @media (max-width: 768px) {
+    /* Mobile: reset positioning for grid layout */
+    position: static;
+    transform: none !important;
+    left: auto;
+    width: 100%;
+    max-width: 100%;
+    
+    /* 5 cards: position cards in 6-column grid */
+    ${(props) => props.$totalCards === 5 && `
+      /* First 3 cards: top row, each spans 2 columns */
+      &:nth-child(1) {
+        grid-column: 1 / 3;
+        grid-row: 1;
+      }
+      &:nth-child(2) {
+        grid-column: 3 / 5;
+        grid-row: 1;
+      }
+      &:nth-child(3) {
+        grid-column: 5 / 7;
+        grid-row: 1;
+      }
+      /* Last 2 cards: bottom row, centered (columns 2-3 and 4-5) */
+      &:nth-child(4) {
+        grid-column: 2 / 4;
+        grid-row: 2;
+      }
+      &:nth-child(5) {
+        grid-column: 4 / 6;
+        grid-row: 2;
+      }
+    `}
+  }
 `;

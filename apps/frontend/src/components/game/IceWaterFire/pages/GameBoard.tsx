@@ -38,6 +38,8 @@ interface GameBoardProps {
   onCardReveal?: () => void;
   onRoundResult?: (result: 'win' | 'lose' | 'draw') => void;
   onReturnToLobby: () => void;
+  onPlayAgain?: () => void;
+  oldRoomId?: string;
   isPaidGame?: boolean;
   isSinglePlayer?: boolean;
 }
@@ -60,12 +62,14 @@ const GameBoard: React.FC<GameBoardProps> = ({
   onCardReveal,
   onRoundResult,
   onReturnToLobby,
+  onPlayAgain,
   isPaidGame = true,
   isSinglePlayer = false,
 }) => {
   const [showEmojiPanel, setShowEmojiPanel] = useState(false);
-  const [showGameResult, setShowGameResult] = useState(false);
+  const [showResultModal, setShowResultModal] = useState(false); // Separate state for result modal
   const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [gameResult, setGameResult] = useState<{
     winner: string | null;
     myScore: number;
@@ -149,7 +153,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
   // Handle game finish - Show result modal
   useEffect(() => {
-    if (gameState && gameState.gameState === 'finished' && !showGameResult) {
+    if (gameState && gameState.gameState === 'finished' && !showResultModal) {
       // Case-insensitive address comparison for winner check
       const isWinner = gameState.winner?.toLowerCase() === currentUserAddress.toLowerCase();
       const isDraw = !gameState.winner; // null winner means draw
@@ -169,10 +173,10 @@ const GameBoard: React.FC<GameBoardProps> = ({
       // Show modal after a longer delay to let final round card reveal complete
       // This ensures players see the final cards before the result modal
       setTimeout(() => {
-        setShowGameResult(true);
+        setShowResultModal(true);
       }, 3000);
     }
-  }, [gameState?.gameState, currentUserAddress, showGameResult]);
+  }, [gameState?.gameState, currentUserAddress, showResultModal]);
 
   const handleEmojiSend = (emoji: string) => {
     onSendEmoji(emoji);
@@ -207,6 +211,11 @@ const GameBoard: React.FC<GameBoardProps> = ({
         <BackIcon>←</BackIcon>
         Leave Room
       </LeaveButton>
+
+      {/* Mobile History Button */}
+      <HistoryButton onClick={() => setShowHistoryModal(true)}>
+        📋
+      </HistoryButton>
 
       {/* Round Result Overlay - Key-based rendering for proper animation */}
       <AnimatePresence mode='wait'>
@@ -273,29 +282,18 @@ const GameBoard: React.FC<GameBoardProps> = ({
           <OpponentCards>
             {lastRoundResult?.opponentCard ? (
               <Flex vertical justify='center' align='center' gap={16}>
-                <Row gutter={[16, 0]} justify='center' align='middle'>
-                  <RevealCol>
+                <Row gutter={[16, 16]} justify='center' align='middle'>
+                  <MyRevealCol>
                     <CardRevealWrapper>
                       <Card card={lastRoundResult.myCard} isRevealed />
                     </CardRevealWrapper>
-                  </RevealCol>
-                  <RevealCol>
-                    <ScoreDivider>VS</ScoreDivider>
-                  </RevealCol>
-                  <RevealCol>
+                  </MyRevealCol>
+                  <Col> </Col>
+                  <OpponentRevealCol>
                     <CardRevealWrapper>
                       <Card card={lastRoundResult.opponentCard} isRevealed />
                     </CardRevealWrapper>
-                  </RevealCol>
-                </Row>
-                <Row gutter={[16, 0]} justify='center' align='middle'>
-                  <RevealCol>
-                    <RevealLabel>Your Card</RevealLabel>
-                  </RevealCol>
-                  <RevealCol> </RevealCol>
-                  <RevealCol>
-                    <RevealLabel>Opponent's Card</RevealLabel>
-                  </RevealCol>
+                  </OpponentRevealCol>
                 </Row>
               </Flex>
             ) : (
@@ -361,9 +359,9 @@ const GameBoard: React.FC<GameBoardProps> = ({
       </GameContainer>
 
       {/* Game Result Modal */}
-      {showGameResult && gameResult && (
+      {showResultModal && gameResult && (
         <GameResultModal
-          visible={showGameResult}
+          visible={showResultModal}
           result={gameResult.isDraw ? 'draw' : gameResult.isWinner ? 'win' : 'lose'}
           finalScore={{
             my: gameResult.myScore,
@@ -372,14 +370,16 @@ const GameBoard: React.FC<GameBoardProps> = ({
           prizeAmount={gameResult.prizeAmount}
           betAmount={betAmount}
           onClose={() => {
-            setShowGameResult(false);
+            // Modal should not be closable, but keep for compatibility
+            setShowResultModal(false);
             setGameResult(null);
           }}
           onReturnToLobby={() => {
-            setShowGameResult(false);
+            setShowResultModal(false);
             setGameResult(null);
             onReturnToLobby();
           }}
+          onPlayAgain={onPlayAgain}
           isPaidGame={isPaidGame}
           isSinglePlayer={isSinglePlayer}
           reason={gameResult.reason}
@@ -393,6 +393,21 @@ const GameBoard: React.FC<GameBoardProps> = ({
         <HistorySidebarHeader>Round History</HistorySidebarHeader>
         <RoundHistory history={gameState?.roundHistory || []} />
       </HistorySidebar>
+
+      {/* Mobile History Modal */}
+      {showHistoryModal && (
+        <HistoryModalOverlay onClick={() => setShowHistoryModal(false)}>
+          <HistoryModalContent onClick={(e) => e.stopPropagation()}>
+            <HistoryModalHeader>
+              <span>Round History</span>
+              <HistoryCloseButton onClick={() => setShowHistoryModal(false)}>
+                ✕
+              </HistoryCloseButton>
+            </HistoryModalHeader>
+            <RoundHistory history={gameState?.roundHistory || []} />
+          </HistoryModalContent>
+        </HistoryModalOverlay>
+      )}
 
       {/* Leave Confirmation Modal */}
       <LeaveConfirmationModal
@@ -479,6 +494,109 @@ const BackIcon = styled.span`
   align-items: center;
 `;
 
+const HistoryButton = styled.button`
+  display: none;
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  z-index: 100;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+  }
+
+  &:active {
+    transform: translateY(0) scale(0.95);
+  }
+
+  @media (max-width: 768px) {
+    display: flex;
+  }
+`;
+
+const HistoryModalOverlay = styled.div`
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+
+  @media (max-width: 768px) {
+    display: flex;
+  }
+`;
+
+const HistoryModalContent = styled.div`
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  width: 90%;
+  max-width: 400px;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+`;
+
+const HistoryModalHeader = styled.div`
+  padding: 20px;
+  background: rgba(102, 126, 234, 0.1);
+  border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+  font-size: 18px;
+  font-weight: bold;
+  color: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const HistoryCloseButton = styled.button`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.1);
+  color: rgba(0, 0, 0, 0.65);
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.2);
+    transform: scale(1.1);
+  }
+
+  &:active {
+    transform: scale(0.9);
+  }
+`;
+
 const HistorySidebar = styled.div`
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
   backdrop-filter: blur(20px);
@@ -533,14 +651,6 @@ const OpponentCards = styled.div`
 
 const CardRevealWrapper = styled.div`
   transform: scale(0.8);
-`;
-
-const RevealLabel = styled.div`
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.8);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 1px;
 `;
 
 const SelectionIndicator = styled.div`
@@ -716,6 +826,10 @@ const MyCards = styled.div`
   @media (max-height: 900px) {
     max-height: 180px;
   }
+
+  @media (max-width: 800px) {
+    margin-left: -40px;
+  }
 `;
 
 const EmojiButton = styled.button`
@@ -841,7 +955,13 @@ const ScoreCol = styled(Col)`
   justify-items: center;
 `;
 
-const RevealCol = styled(Col)`
+const MyRevealCol = styled(Col)`
+  width: 100px;
+  justify-items: center;
+  justify-content: center;
+`;
+
+const OpponentRevealCol = styled(Col)`
   width: 100px;
   justify-items: center;
   justify-content: center;

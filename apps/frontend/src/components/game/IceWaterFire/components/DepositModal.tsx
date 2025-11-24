@@ -34,13 +34,42 @@ const DepositModal: React.FC<DepositModalProps> = ({visible, onClose, contractAd
   const [contractBalance, setContractBalance] = useState<string>('0');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Get wallet balance
-  const {data: walletBalance} = useBalance({
+  // Get wallet balance with refetch function
+  const {data: walletBalance, refetch: refetchWalletBalance} = useBalance({
     address: address,
   });
 
   // Write contract (deposit)
-  const {writeContract, data: hash, isPending} = useWriteContract();
+  const {writeContract, data: hash, isPending, error: writeError} = useWriteContract();
+
+  // Handle write contract errors
+  useEffect(() => {
+    if (writeError) {
+      console.error('Write contract error:', writeError);
+      const errorMessage = writeError.message || 'Transaction failed';
+      
+      if (errorMessage.includes('Internal JSON-RPC error') || errorMessage.includes('-32603')) {
+        message.error({
+          content: (
+            <div>
+              <div style={{marginBottom: '8px', fontWeight: 'bold'}}>RPC Error Detected</div>
+              <div style={{fontSize: '12px'}}>
+                Please ensure:
+                <ul style={{marginTop: '4px', paddingLeft: '20px'}}>
+                  <li>Monad Testnet is added to MetaMask (Chain ID: 10143)</li>
+                  <li>You have enough MON for gas fees (keep at least 0.01 MON)</li>
+                  <li>RPC URL is correct: https://testnet-rpc.monad.xyz</li>
+                </ul>
+              </div>
+            </div>
+          ),
+          duration: 8,
+        });
+      } else {
+        message.error(errorMessage);
+      }
+    }
+  }, [writeError]);
 
   // Wait for transaction
   const {isLoading: isConfirming, isSuccess} = useWaitForTransactionReceipt({
@@ -52,8 +81,12 @@ const DepositModal: React.FC<DepositModalProps> = ({visible, onClose, contractAd
     if (isSuccess) {
       message.success('Deposit successful!');
       refreshContractBalance();
+      // Refetch wallet balance after a short delay to ensure blockchain state is updated
+      setTimeout(() => {
+        refetchWalletBalance();
+      }, 1000);
     }
-  }, [isSuccess]);
+  }, [isSuccess, refetchWalletBalance]);
 
   // Fetch contract balance
   const refreshContractBalance = async () => {
@@ -91,12 +124,30 @@ const DepositModal: React.FC<DepositModalProps> = ({visible, onClose, contractAd
     }
 
     const maxBalance = walletBalance ? parseFloat(formatEther(walletBalance.value)) : 0;
+    
+    // Monad: Gas fee MON ile ödenir, gas fee için minimum buffer bırakmalıyız
+    const GAS_FEE_BUFFER = 0.01; // Minimum MON to keep for gas fees
+    const maxDepositAmount = maxBalance - GAS_FEE_BUFFER;
+    
+    if (depositAmount > maxDepositAmount) {
+      message.error(
+        `Insufficient balance. You need to keep at least ${GAS_FEE_BUFFER} MON for gas fees. Maximum deposit: ${maxDepositAmount.toFixed(4)} MON`
+      );
+      return;
+    }
+
     if (depositAmount > maxBalance) {
       message.error('Insufficient wallet balance');
       return;
     }
 
     try {
+      // Validate contract address
+      if (!contractAddress || contractAddress === '0x' || contractAddress.length !== 42) {
+        message.error('Invalid contract address. Please check configuration.');
+        return;
+      }
+
       writeContract({
         address: contractAddress as `0x${string}`,
         abi: CONTRACT_ABI,
@@ -105,7 +156,31 @@ const DepositModal: React.FC<DepositModalProps> = ({visible, onClose, contractAd
       });
     } catch (error: unknown) {
       console.error('Deposit error:', error);
-      message.error((error as Error).message || 'Deposit failed');
+      const errorMessage = error instanceof Error ? error.message : 'Deposit failed';
+      
+      // Provide more helpful error messages
+      if (errorMessage.includes('Internal JSON-RPC error') || errorMessage.includes('-32603')) {
+        message.error({
+          content: (
+            <div>
+              <div style={{marginBottom: '8px', fontWeight: 'bold'}}>RPC Error Detected</div>
+              <div style={{fontSize: '12px'}}>
+                Please ensure:
+                <ul style={{marginTop: '4px', paddingLeft: '20px'}}>
+                  <li>Monad Testnet is added to MetaMask (Chain ID: 10143)</li>
+                  <li>You have enough MON for gas fees (keep at least 0.01 MON)</li>
+                  <li>RPC URL is correct: https://testnet-rpc.monad.xyz</li>
+                </ul>
+              </div>
+            </div>
+          ),
+          duration: 8,
+        });
+      } else if (errorMessage.includes('user rejected') || errorMessage.includes('User denied')) {
+        message.warning('Transaction cancelled by user');
+      } else {
+        message.error(errorMessage);
+      }
     }
   };
 
@@ -115,34 +190,38 @@ const DepositModal: React.FC<DepositModalProps> = ({visible, onClose, contractAd
     <Modal open={visible} onCancel={onClose} footer={null} width={500} title={null} centered>
       <Container>
         <Header>
-          <Title>Deposit ETH</Title>
-          <Subtitle>Deposit ETH to your game balance</Subtitle>
+          <Title>Deposit MON</Title>
+          <Subtitle>Deposit MON to your game balance</Subtitle>
         </Header>
 
         <BalanceSection>
           <BalanceCard>
             <BalanceLabel>Wallet Balance</BalanceLabel>
             <BalanceValue>
-              {walletBalance ? formatEther(walletBalance.value) : '0'} ETH
+              {walletBalance ? formatEther(walletBalance.value) : '0'} MON
             </BalanceValue>
           </BalanceCard>
 
-          <BalanceCard highlight>
+          <BalanceCard $highlight>
             <BalanceLabel>
               Contract Balance
               <RefreshButton onClick={refreshContractBalance} disabled={isRefreshing}>
                 {isRefreshing ? '⟳' : '🔄'}
               </RefreshButton>
             </BalanceLabel>
-            <BalanceValue>{contractBalance} ETH</BalanceValue>
+            <BalanceValue>{contractBalance} MON</BalanceValue>
           </BalanceCard>
         </BalanceSection>
 
         <InputSection>
-          <Label>Deposit Amount (ETH)</Label>
+          <Label>Deposit Amount (MON)</Label>
           <InputNumber
             min={0.001}
-            max={walletBalance ? parseFloat(formatEther(walletBalance.value)) : 10}
+            max={
+              walletBalance
+                ? Math.max(0, parseFloat(formatEther(walletBalance.value)) - 0.01)
+                : 10
+            }
             step={0.001}
             value={depositAmount}
             onChange={(val) => setDepositAmount(val || 0.001)}
@@ -154,9 +233,9 @@ const DepositModal: React.FC<DepositModalProps> = ({visible, onClose, contractAd
               <PresetButton
                 key={amount}
                 onClick={() => setDepositAmount(amount)}
-                active={depositAmount === amount}
+                $active={depositAmount === amount}
               >
-                {amount} ETH
+                {amount} MON
               </PresetButton>
             ))}
           </PresetButtons>
@@ -165,8 +244,16 @@ const DepositModal: React.FC<DepositModalProps> = ({visible, onClose, contractAd
         <InfoBox>
           <InfoIcon>ℹ️</InfoIcon>
           <InfoText>
-            You need to deposit ETH to your contract balance before playing. This balance is used
-            for placing bets and will be refunded when you withdraw.
+            <div>
+              <div style={{marginBottom: '4px'}}>
+                You need to deposit MON to your contract balance before playing. This balance is used
+                for placing bets and will be refunded when you withdraw.
+              </div>
+              <div style={{marginTop: '8px', fontSize: '12px', opacity: 0.9}}>
+                <strong>Important:</strong> Keep at least 0.01 MON in your wallet for gas fees. 
+                If you see RPC errors, ensure Monad Testnet (Chain ID: 10143) is added to MetaMask.
+              </div>
+            </div>
           </InfoText>
         </InfoBox>
 
@@ -184,7 +271,7 @@ const DepositModal: React.FC<DepositModalProps> = ({visible, onClose, contractAd
                 {isPending ? 'Confirming...' : 'Processing...'}
               </>
             ) : (
-              `Deposit ${depositAmount} ETH`
+              `Deposit ${depositAmount} MON`
             )}
           </DepositButton>
         </ActionButtons>
@@ -223,12 +310,12 @@ const BalanceSection = styled.div`
   margin-bottom: 24px;
 `;
 
-const BalanceCard = styled.div<{highlight?: boolean}>`
+const BalanceCard = styled.div<{$highlight?: boolean}>`
   background: ${(props) =>
-    props.highlight ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#f5f5f5'};
+    props.$highlight ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#f5f5f5'};
   padding: 16px;
   border-radius: 12px;
-  color: ${(props) => (props.highlight ? 'white' : '#1a1a1a')};
+  color: ${(props) => (props.$highlight ? 'white' : '#1a1a1a')};
 `;
 
 const BalanceLabel = styled.div`
@@ -290,11 +377,11 @@ const PresetButtons = styled.div`
   gap: 8px;
 `;
 
-const PresetButton = styled.button<{active?: boolean}>`
+const PresetButton = styled.button<{$active?: boolean}>`
   padding: 8px;
-  border: 2px solid ${(props) => (props.active ? '#667eea' : '#e0e0e0')};
-  background: ${(props) => (props.active ? '#667eea' : 'white')};
-  color: ${(props) => (props.active ? 'white' : '#666')};
+  border: 2px solid ${(props) => (props.$active ? '#667eea' : '#e0e0e0')};
+  background: ${(props) => (props.$active ? '#667eea' : 'white')};
+  color: ${(props) => (props.$active ? 'white' : '#666')};
   border-radius: 8px;
   cursor: pointer;
   font-size: 12px;
@@ -303,7 +390,7 @@ const PresetButton = styled.button<{active?: boolean}>`
 
   &:hover {
     border-color: #667eea;
-    background: ${(props) => (props.active ? '#5568d3' : '#f0f0f0')};
+    background: ${(props) => (props.$active ? '#5568d3' : '#f0f0f0')};
   }
 `;
 

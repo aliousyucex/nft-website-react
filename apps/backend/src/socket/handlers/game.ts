@@ -106,6 +106,11 @@ export const setupGameHandlers = (io: Server, socket: Socket) => {
           if (startedRoom) {
             logger.info('Game started successfully', {roomId: room.roomId});
 
+            // Notify all players that room state has changed to playing
+            io.to(room.roomId).emit('room_updated', {
+              room: formatRoomData(startedRoom),
+            });
+
             // Deal cards to both players
             io.to(room.roomId).emit('game_started', {
               message: 'Game started! Cards dealt.',
@@ -305,51 +310,6 @@ export const setupGameHandlers = (io: Server, socket: Socket) => {
         });
       }
 
-      // For single player, trigger AI selection after player selects
-      if (room.isSinglePlayer && !room.players[1].selectedCard) {
-        const aiPlayer = room.players[1];
-        const humanPlayer = room.players[0];
-
-        logger.info('Triggering AI card selection', {
-          roomId: room.roomId,
-          aiHand: aiPlayer.hand.length,
-        });
-
-        // Get AI selection with delay to simulate thinking
-        const delay = aiService.getSelectionDelay();
-        setTimeout(() => {
-          const room = roomManager.getRoomBySocket(socket.id);
-          if (!room || !room.isSinglePlayer) return;
-
-          const aiPlayer = room.players[1];
-          if (aiPlayer.selectedCard) return; // Already selected
-
-          // AI selects a card
-          const selectedCard = aiService.selectCard(aiPlayer.hand, undefined, {
-            ai: aiPlayer.roundsWon,
-            player: humanPlayer.roundsWon,
-          });
-
-          aiPlayer.selectedCard = selectedCard;
-
-          logger.info('AI selected card', {
-            roomId: room.roomId,
-            card: `${selectedCard.type}_${selectedCard.value}`,
-          });
-
-          // Notify player that opponent (AI) has selected
-          io.to(humanPlayer.socketId).emit('opponent_selected', {
-            hasSelected: true,
-          });
-
-          // Process round if both selected
-          if (room.players[0].selectedCard && room.players[1].selectedCard) {
-            clearSelectionTimeout(room.roomId);
-            processRound(io, room);
-          }
-        }, delay);
-      }
-
       // Check if both players selected
       if (room.players[0].selectedCard && room.players[1].selectedCard) {
         // Clear timeout
@@ -511,6 +471,52 @@ function startSelectionTimeout(io: Server, roomId: string) {
     timeLimit: config.game.cardSelectionTimeout / 1000,
     startTime: roundStartTime,
   });
+
+  // For single player, schedule AI selection independently after 1-5 seconds
+  if (room.isSinglePlayer) {
+    const aiSelectionDelay = 1000 + Math.random() * 4000; // Random delay between 1-5 seconds
+    
+    setTimeout(() => {
+      const room = roomManager.getRoom(roomId);
+      if (!room || !room.isSinglePlayer) return;
+
+      const aiPlayer = room.players[1];
+      const humanPlayer = room.players[0];
+      
+      // Only select if AI hasn't selected yet
+      if (aiPlayer.selectedCard) return;
+
+      logger.info('AI making independent card selection', {
+        roomId: room.roomId,
+        aiHand: aiPlayer.hand.length,
+        delayMs: aiSelectionDelay,
+      });
+
+      // AI selects a card using its strategy
+      const selectedCard = aiService.selectCard(aiPlayer.hand, undefined, {
+        ai: aiPlayer.roundsWon,
+        player: humanPlayer.roundsWon,
+      });
+
+      aiPlayer.selectedCard = selectedCard;
+
+      logger.info('AI selected card independently', {
+        roomId: room.roomId,
+        card: `${selectedCard.type}_${selectedCard.value}`,
+      });
+
+      // Notify player that opponent (AI) has selected
+      io.to(humanPlayer.socketId).emit('opponent_selected', {
+        hasSelected: true,
+      });
+
+      // Process round if both selected
+      if (humanPlayer.selectedCard && aiPlayer.selectedCard) {
+        clearSelectionTimeout(room.roomId);
+        processRound(io, room);
+      }
+    }, aiSelectionDelay);
+  }
 
   const timeout = setTimeout(async () => {
     const room = roomManager.getRoom(roomId);
@@ -875,11 +881,34 @@ async function handleGameEnd(io: Server, room: Room) {
       });
     });
 
-    logger.info('Game ended successfully', {
+    // Auto-remove players from room after game finishes
+    // Set ready to false first, then remove players
+    const roomId = room.roomId;
+    const playerSocketIds = [...room.players]
+      .filter((p) => !p.socketId.startsWith('ai-'))
+      .map((p) => p.socketId);
+
+    // Set ready to false for all players first
+    room.players.forEach((player) => {
+      if (!player.socketId.startsWith('ai-')) {
+        player.ready = false;
+      }
+    });
+
+    // Remove players from room (but keep room in memory for replay)
+    playerSocketIds.forEach((socketId) => {
+      roomManager.leaveRoom(socketId);
+    });
+
+    // Update room's lastActivity timestamp
+    roomManager.updateRoomActivity(roomId);
+
+    logger.info('Game ended successfully, players auto-removed', {
       roomId: room.roomId,
       winner: winner.address,
       score: `${winner.roundsWon}-${loser.roundsWon}`,
       isPaidGame,
+      playersRemoved: playerSocketIds.length,
     });
   } catch (error) {
     logger.error('Error handling game end', error);
@@ -1096,7 +1125,7 @@ async function handleBothPlayersAfkForfeit(io: Server, room: Room) {
     logger.info('Game ended - both players AFK', {
       roomId: room.roomId,
       isPaidGame,
-      penalty: isPaidGame ? `${room.betAmount * 2} ETH forfeited` : 'none',
+      penalty: isPaidGame ? `${room.betAmount * 2} MON forfeited` : 'none',
     });
   } catch (error) {
     logger.error('Error handling both players AFK forfeit', error);

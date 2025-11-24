@@ -1,9 +1,13 @@
 import {Button, Modal} from 'antd';
 import type React from 'react';
+import {useEffect, useState} from 'react';
 import styled from 'styled-components';
 import {useAccount} from 'wagmi';
 import type {Card as CardType} from '../types';
 import Card from './Card';
+
+// Auto-redirect timeout: 5 seconds for testing (comment indicates 45 seconds for production)
+const AUTO_REDIRECT_TIMEOUT_MS = 30 * 1000; // TODO: Change to 45 * 1000 for production
 
 interface RoundResultProps {
   visible: boolean;
@@ -68,6 +72,7 @@ interface GameResultProps {
   betAmount: number;
   onClose: () => void;
   onReturnToLobby: () => void;
+  onPlayAgain?: () => void;
   isPaidGame?: boolean;
   reason?: string; // Reason for game end (e.g. 'both_afk', 'afk_forfeit', etc.)
   isSinglePlayer?: boolean;
@@ -81,8 +86,9 @@ export const GameResultModal: React.FC<GameResultProps> = ({
   finalScore,
   prizeAmount,
   betAmount,
-  onClose,
+  onClose: _onClose, // Not used - modal is not closable
   onReturnToLobby,
+  onPlayAgain,
   isPaidGame = true,
   isSinglePlayer = false,
   afkPlayerAddresses = [],
@@ -90,6 +96,7 @@ export const GameResultModal: React.FC<GameResultProps> = ({
 }) => {
   const isFreeGame = betAmount === 0 || !isPaidGame;
   const {isConnected} = useAccount();
+  const [timeRemaining, setTimeRemaining] = useState(AUTO_REDIRECT_TIMEOUT_MS / 1000);
 
   // Helper functions to determine AFK status
   const isCurrentUserAfk = afkPlayerAddresses.some(
@@ -147,8 +154,52 @@ export const GameResultModal: React.FC<GameResultProps> = ({
   const titleText = determineTitleText();
   const subTitleText = determineSubtitleText();
 
+  // Auto-redirect timer
+  useEffect(() => {
+    if (!visible) {
+      setTimeRemaining(AUTO_REDIRECT_TIMEOUT_MS / 1000);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setTimeRemaining((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          // Auto-redirect to lobby
+          onReturnToLobby();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [visible, onReturnToLobby]);
+
+  const handlePlayAgain = () => {
+    setTimeRemaining(AUTO_REDIRECT_TIMEOUT_MS / 1000);
+    if (onPlayAgain) {
+      onPlayAgain();
+    }
+  };
+
+  const handleReturnToLobby = () => {
+    setTimeRemaining(AUTO_REDIRECT_TIMEOUT_MS / 1000);
+    onReturnToLobby();
+  };
+
   return (
-    <Modal open={visible} onCancel={onClose} footer={null} centered width={500} closable={false}>
+    <Modal
+      open={visible}
+      footer={null}
+      centered
+      width={500}
+      closable={false}
+      maskClosable={false}
+      onCancel={undefined}
+    >
       <GameResultContainer>
         <GameResultTitle result={titleColor}>{titleText}</GameResultTitle>
 
@@ -160,10 +211,10 @@ export const GameResultModal: React.FC<GameResultProps> = ({
           !isBothPlayersAfk &&
           !isCurrentUserAfk &&
           (result === 'win' || isOpponentAfk) &&
-          prizeAmount !== undefined && <PrizeAmount>+{prizeAmount} ETH</PrizeAmount>}
+          prizeAmount !== undefined && <PrizeAmount>+{prizeAmount} MON</PrizeAmount>}
         {!isFreeGame &&
           (isBothPlayersAfk || isCurrentUserAfk || (result === 'lose' && !isOpponentAfk)) &&
-          betAmount > 0 && <LoseAmount>-{betAmount} ETH</LoseAmount>}
+          betAmount > 0 && <LoseAmount>-{betAmount} MON</LoseAmount>}
 
         <FinalScoreDisplay>
           <FinalScoreLabel>Final Score</FinalScoreLabel>
@@ -174,12 +225,21 @@ export const GameResultModal: React.FC<GameResultProps> = ({
 
         {isFreeGame && !isConnected && (
           <ConnectWalletHint>
-            💡 Connect wallet to play for ETH and rank on leaderboard
+            💡 Connect wallet to play for MON and rank on leaderboard
           </ConnectWalletHint>
         )}
 
+        <TimerDisplay>
+          Redirecting to lobby in {timeRemaining}s...
+        </TimerDisplay>
+
         <ButtonGroup>
-          <ActionButton type='default' size='large' onClick={onReturnToLobby}>
+          {onPlayAgain && (
+            <ActionButton type='primary' size='large' onClick={handlePlayAgain}>
+              Play Again
+            </ActionButton>
+          )}
+          <ActionButton type='default' size='large' onClick={handleReturnToLobby}>
             Return to Lobby
           </ActionButton>
         </ButtonGroup>
@@ -353,4 +413,11 @@ const ConnectWalletHint = styled.div`
   font-size: 14px;
   text-align: center;
   line-height: 1.4;
+`;
+
+const TimerDisplay = styled.div`
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.5);
+  text-align: center;
+  font-style: italic;
 `;

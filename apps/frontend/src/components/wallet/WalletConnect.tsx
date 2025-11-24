@@ -1,8 +1,8 @@
 import {ConnectButton} from '@rainbow-me/rainbowkit';
-import type React from 'react';
 import styled from 'styled-components';
 
 const WalletConnect: React.FC = () => {
+  // Render RainbowKit UI
   return (
     <ConnectButton.Custom>
       {({
@@ -21,6 +21,46 @@ const WalletConnect: React.FC = () => {
           chain &&
           (!authenticationStatus || authenticationStatus === 'authenticated');
 
+        if (connected) {
+          if (chain.unsupported) {
+            return (
+              <WrongNetworkButton onClick={openChainModal}>
+                <WarningIcon>⚠️</WarningIcon>
+                Wrong Network
+              </WrongNetworkButton>
+            );
+          }
+
+          return (
+            <ConnectedContainer>
+              <ChainButton onClick={openChainModal}>
+                {chain.hasIcon && (
+                  <ChainIcon
+                    style={{
+                      background: chain.iconBackground,
+                    }}
+                  >
+                    {chain.iconUrl && (
+                      <img
+                        alt={chain.name ?? 'Chain icon'}
+                        src={chain.iconUrl}
+                        style={{width: 16, height: 16}}
+                      />
+                    )}
+                  </ChainIcon>
+                )}
+                {chain.name}
+              </ChainButton>
+
+              <AccountButton onClick={openAccountModal}>
+                <AddressText>{account.displayName}</AddressText>
+                {account.displayBalance && <BalanceText>{account.displayBalance}</BalanceText>}
+              </AccountButton>
+            </ConnectedContainer>
+          );
+        }
+
+        // Not connected - show connect button
         return (
           <div
             {...(!ready && {
@@ -32,53 +72,10 @@ const WalletConnect: React.FC = () => {
               },
             })}
           >
-            {(() => {
-              if (!connected) {
-                return (
-                  <ConnectWalletButton onClick={openConnectModal}>
-                    <WalletIcon>👛</WalletIcon>
-                    Connect Wallet
-                  </ConnectWalletButton>
-                );
-              }
-
-              if (chain.unsupported) {
-                return (
-                  <WrongNetworkButton onClick={openChainModal}>
-                    <WarningIcon>⚠️</WarningIcon>
-                    Wrong Network
-                  </WrongNetworkButton>
-                );
-              }
-
-              return (
-                <ConnectedContainer>
-                  <ChainButton onClick={openChainModal}>
-                    {chain.hasIcon && (
-                      <ChainIcon
-                        style={{
-                          background: chain.iconBackground,
-                        }}
-                      >
-                        {chain.iconUrl && (
-                          <img
-                            alt={chain.name ?? 'Chain icon'}
-                            src={chain.iconUrl}
-                            style={{width: 16, height: 16}}
-                          />
-                        )}
-                      </ChainIcon>
-                    )}
-                    {chain.name}
-                  </ChainButton>
-
-                  <AccountButton onClick={openAccountModal}>
-                    <AddressText>{account.displayName}</AddressText>
-                    {account.displayBalance && <BalanceText>{account.displayBalance}</BalanceText>}
-                  </AccountButton>
-                </ConnectedContainer>
-              );
-            })()}
+            <ConnectWalletButton onClick={openConnectModal}>
+              <WalletIcon>👛</WalletIcon>
+              Connect Wallet
+            </ConnectWalletButton>
           </div>
         );
       }}
