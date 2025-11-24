@@ -15,6 +15,8 @@ import faqVerticalText from './assets/faq/faqVertical.svg';
 function App() {
   const [pageWidth, setPageWidth] = useState<number>(window.innerWidth);
 
+  console.log('contractAddress', VITE_CONTRACT_ADDRESS);
+
   window.addEventListener('resize', () => {
     setPageWidth(window.innerWidth);
   });
