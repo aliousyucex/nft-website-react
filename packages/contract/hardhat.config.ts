@@ -27,15 +27,10 @@ const config: HardhatUserConfig = {
     browserUrl: "https://testnet.monadvision.com",
   },
   networks: {
-    abstractTestnet: {
-      url: process.env.RPC_URL || "https://api.testnet.abs.xyz",
+    monadMainnet: {
+      url: "https://rpc.monad.xyz",
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
-      chainId: 11124, // Abstract Testnet Chain ID
-    },
-    abstractMainnet: {
-      url: process.env.RPC_URL_MAINNET || "https://api.abs.xyz",
-      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
-      chainId: 2741, // Abstract Mainnet Chain ID (example, verify actual ID)
+      chainId: 143, // Monad Mainnet Chain ID
     },
     monadTestnet: {
       url: "https://testnet-rpc.monad.xyz",
@@ -50,19 +45,11 @@ const config: HardhatUserConfig = {
     apiKey: process.env.ETHERSCAN_API_KEY || "NO_API_KEY_NEEDED",
     customChains: [
       {
-        network: "abstractTestnet",
-        chainId: 11124,
+        network: "monadMainnet",
+        chainId: 143,
         urls: {
-          apiURL: "https://api-testnet.abscan.org/api",
-          browserURL: "https://testnet.abscan.org",
-        },
-      },
-      {
-        network: "abstractMainnet",
-        chainId: 2741,
-        urls: {
-          apiURL: "https://api.abscan.org/api",
-          browserURL: "https://abscan.org",
+          apiURL: "https://api.socialscan.io/monad-mainnet/v1/explorer/command_api/contract",
+          browserURL: "https://monad.socialscan.io",
         },
       },
       {

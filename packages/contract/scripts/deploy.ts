@@ -65,16 +65,14 @@ async function main() {
   console.log(`CONTRACT_ADDRESS=${contractAddress}`);
   console.log(`OWNER_ADDRESS=${deployerAddress}\n`);
 
-  // If on testnet, instructions for verification
-  if (network.name.includes("testnet") || network.chainId === BigInt(10143)) {
-    console.log("🔍 To verify contract, run:");
-    if (network.chainId === BigInt(10143)) {
-      console.log(`npx hardhat verify --network monadTestnet ${contractAddress}\n`);
-    } else if (network.name.includes("abstract")) {
-      console.log(`npx hardhat verify --network abstractTestnet ${contractAddress}\n`);
-    } else {
-      console.log(`npx hardhat verify --network ${network.name} ${contractAddress}\n`);
-    }
+  // Instructions for verification
+  console.log("🔍 To verify contract, run:");
+  if (network.chainId === BigInt(143)) {
+    console.log(`npm run verify:mainnet ${contractAddress}\n`);
+  } else if (network.chainId === BigInt(10143)) {
+    console.log(`npm run verify:testnet ${contractAddress}\n`);
+  } else {
+    console.log(`npx hardhat verify --network ${network.name} ${contractAddress}\n`);
   }
 }
 
